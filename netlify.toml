@@ -1,8 +1,6 @@
 [build]
-  command = "npm run build"
+  command = "npm run db:migrate && npm run build"
   publish = "dist"
 
-[dev]
-  command = "vite"
-  targetPort = 5173
-
+[build.environment]
+  NODE_VERSION = "24"

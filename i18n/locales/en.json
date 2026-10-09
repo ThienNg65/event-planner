@@ -1,0 +1,274 @@
+{
+  "app": {
+    "name": "Team Events",
+    "language": "Language"
+  },
+  "cancel": "Cancel",
+  "save": "Save",
+  "home": {
+    "title": "Events",
+    "new": "New event",
+    "empty": "Create an event, share the link, and let everyone vote on the day.",
+    "planning": "Planning",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "search": "Search events or venues…",
+    "all": "All",
+    "noMatch": "No events match your filter.",
+    "emptyTitle": "Plan something fun together",
+    "todo": {
+      "title": "Needs you",
+      "who": "Pick your name to see what needs you",
+      "none": "You're all caught up ✨",
+      "vote": "Vote for a day",
+      "rsvp": "Are you coming?",
+      "pay": "You owe {amount}",
+      "lock": "Lock the date",
+      "bill": "Enter the bill",
+      "settle": "Mark as settled"
+    }
+  },
+  "stage": {
+    "poll": "Polling",
+    "rsvp": "RSVP open",
+    "bill": "Splitting the bill",
+    "settled": "Settled"
+  },
+  "me": {
+    "label": "Who are you?",
+    "pick": "Pick your name",
+    "search": "Search names…",
+    "new": "I'm new",
+    "yourName": "Your display name",
+    "join": "Join",
+    "isThisYou": "\"{name}\" is already on the list. Is that you?",
+    "thatsMe": "Yes, that's me",
+    "switch": "That's you · switch"
+  },
+  "event": {
+    "dateTbd": "Date not set yet",
+    "seats": "seats",
+    "share": "Share",
+    "linkCopied": "Event link copied",
+    "details": "Details",
+    "attendees": "Attendees",
+    "waitlist": "{n} on waitlist",
+    "nobody": "Nobody yet"
+  },
+  "create": {
+    "title": "New event",
+    "name": "Event name",
+    "namePlaceholder": "e.g. October birthdays, Friday badminton",
+    "note": "Note",
+    "when": "When?",
+    "fixedDate": "Fixed date",
+    "pollDates": "Poll dates",
+    "where": "Where?",
+    "fixedVenue": "Fixed venue",
+    "pollVenue": "Let people suggest",
+    "venue": "Venue name",
+    "venueLink": "Link (Google Maps, website…)",
+    "pollVenueHint": "Everyone can suggest and upvote venues.",
+    "capacity": "Max seats",
+    "capacityHint": "Leave empty for no limit",
+    "bank": "Bank account for payments",
+    "bankHint": "Optional, used for the VietQR code",
+    "bankId": "Bank (e.g. VCB)",
+    "bankAccount": "Account number",
+    "bankHolder": "Account holder",
+    "submit": "Create event",
+    "pickFirst": "Pick your name first.",
+    "done": "Event created",
+    "keyHint": "This browser remembers you as organizer. Copy the manage link to manage it elsewhere.",
+    "quickStart": "Quick start:",
+    "payment": "Payment details (optional)",
+    "paymentLater": "You can add these later, when the bill comes in.",
+    "daysPicked": "{n} of {max} days picked",
+    "templates": {
+      "birthday": "Birthday party 🎂",
+      "lunch": "Team lunch 🍜",
+      "afterwork": "After-work drinks 🍻",
+      "sports": "Sports day ⚽",
+      "trip": "Weekend trip 🏕️"
+    }
+  },
+  "rsvp": {
+    "title": "RSVP",
+    "replies": "replies",
+    "guests": "Guests",
+    "guestsHint": "Adding guests moves you to the back of the queue if seats are full.",
+    "going": "Going",
+    "maybe": "Maybe",
+    "no": "Can't",
+    "onWaitlist": "You're #{n} on the waitlist.",
+    "list": {
+      "going": "Going",
+      "waitlist": "Waitlist",
+      "maybe": "Maybe",
+      "no": "Can't make it"
+    },
+    "update": "Update"
+  },
+  "manage": {
+    "copyLink": "Manage link",
+    "linkCopied": "Manage link copied",
+    "linkHint": "Anyone with this link can manage the event. Only share it with co-organizers.",
+    "delete": "Delete event",
+    "deleteConfirm": "Delete this event for good?",
+    "lock": "Lock the result and open RSVP",
+    "lockButton": "Lock & open RSVP",
+    "bill": "Bill total (₫)",
+    "billHint": "Saving moves the event to bill splitting",
+    "schedule": "Date & time",
+    "pollDays": "Days in the poll",
+    "removeDayHint": "Votes for removed days will no longer count."
+  },
+  "err": {
+    "generic": "Something went wrong, please try again.",
+    "invalid": "Invalid data.",
+    "notFound": "Event not found.",
+    "forbidden": "You can't manage this event.",
+    "stageClosed": "This part is closed.",
+    "nameRequired": "Please enter a name.",
+    "nameTaken": "That name is already on the list.",
+    "unknownMember": "Pick your name first.",
+    "titleRequired": "Please enter an event name.",
+    "invalidDate": "Pick a date and time (or days to poll).",
+    "invalidDays": "Invalid date.",
+    "invalidLink": "Links must start with http:// or https://",
+    "invalidCapacity": "Seats must be between 1 and 500.",
+    "invalidBill": "Invalid amount.",
+    "invalidBank": "Invalid bank details.",
+    "invalidGuests": "Guests must be between 0 and 10.",
+    "unknownVenue": "That venue doesn't exist.",
+    "invalidCover": "Pick a cover or paste an image link starting with https://"
+  },
+  "poll": {
+    "days": "Which days work for you?",
+    "top": "Top pick",
+    "venues": "Where to?",
+    "noVenues": "No suggestions yet. Be the first!",
+    "suggestedBy": "suggested by {name}",
+    "suggest": "Suggest a venue",
+    "add": "Add suggestion",
+    "tapHint": "Tap the days you can make"
+  },
+  "bill": {
+    "title": "Bill",
+    "pending": "The organizer hasn't entered the bill yet.",
+    "total": "Bill total",
+    "perSeat": "Per person",
+    "rounded": "split across {n} seats, rounded up to 1,000 ₫",
+    "youOwe": "You owe",
+    "withGuests": "incl. {n} guest | incl. {n} guests",
+    "qrAlt": "VietQR code for the transfer",
+    "noBank": "No bank account set, pay the organizer directly.",
+    "markPaid": "I've paid",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "collected": "Collected {paid} of {total}"
+  },
+  "nav": {
+    "events": "Events",
+    "calendar": "Calendar",
+    "new": "New event"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "today": "Today",
+    "prev": "Previous month",
+    "next": "Next month",
+    "tentative": "Tentative (poll)",
+    "empty": "No events this month."
+  },
+  "cover": {
+    "label": "Cover",
+    "url": "Or paste an image link (https://…)",
+    "preset": "Cover style {name}"
+  },
+  "card": {
+    "voting": "Voting · {n} days",
+    "vote": "Vote now",
+    "rsvp": "Reply",
+    "going": "Going",
+    "waitlist": "Waitlist",
+    "pay": "You owe {amount}",
+    "paid": "Paid"
+  },
+  "next": {
+    "who": {
+      "title": "First, who are you?",
+      "body": "Pick your name so your votes count. No sign-up needed."
+    },
+    "vote": {
+      "title": "Which days work for you?",
+      "body": "Tap every day you could make it.",
+      "cta": "Vote"
+    },
+    "voted": {
+      "title": "Thanks for voting!",
+      "body": "{n} people have voted so far. The organizer will lock the date.",
+      "cta": "Change my votes"
+    },
+    "rsvp": {
+      "title": "Are you coming?",
+      "body": "{when}",
+      "cta": "Reply"
+    },
+    "going": {
+      "title": "You're in 🎉",
+      "body": "See you {when}."
+    },
+    "waitlist": {
+      "title": "You're #{place} on the waitlist",
+      "body": "You'll move up automatically if a seat frees up."
+    },
+    "replied": {
+      "title": "Thanks for replying",
+      "body": "You can change your answer until the organizer closes RSVP.",
+      "cta": "Change"
+    },
+    "pay": {
+      "title": "You owe {amount}",
+      "body": "Scan the QR code below or pay the organizer.",
+      "cta": "Pay"
+    },
+    "paid": {
+      "title": "You're all paid ✓",
+      "body": "Thanks! Nothing else to do."
+    },
+    "done": {
+      "title": "You're all set",
+      "body": "Nothing needed from you right now."
+    },
+    "settled": {
+      "title": "🎉 All settled, thanks everyone!",
+      "body": "Hope it was a great one."
+    },
+    "action": {
+      "lock": "Lock date & open RSVP",
+      "bill": "Enter the bill",
+      "settle": "Mark as settled"
+    },
+    "lockDay": "Day and time",
+    "lockHint": "Everyone can then reply Going, Maybe or Can't.",
+    "billHint": "Split across {n} seats",
+    "billSave": "Save & split the bill"
+  },
+  "edit": {
+    "open": "Edit",
+    "title": "Edit event",
+    "description": "Changes are visible to everyone right away.",
+    "save": "Save changes",
+    "danger": "Danger zone",
+    "reopen": "Back to stage…",
+    "reopenButton": "Reopen",
+    "reopenConfirm": "Move the event back? Answers are kept."
+  },
+  "share": {
+    "poll": "Vote for a day: {title}",
+    "rsvp": "Are you coming? {title}",
+    "bill": "Time to settle up: {title}",
+    "settled": "{title}"
+  }
+}

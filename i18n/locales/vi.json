@@ -1,0 +1,274 @@
+{
+  "app": {
+    "name": "Sự kiện của team",
+    "language": "Ngôn ngữ"
+  },
+  "cancel": "Huỷ",
+  "save": "Lưu",
+  "home": {
+    "title": "Sự kiện",
+    "new": "Tạo sự kiện",
+    "empty": "Tạo sự kiện, chia sẻ link và để mọi người bình chọn ngày.",
+    "planning": "Đang lên kế hoạch",
+    "upcoming": "Sắp diễn ra",
+    "past": "Đã qua",
+    "search": "Tìm sự kiện hoặc địa điểm…",
+    "all": "Tất cả",
+    "noMatch": "Không có sự kiện nào phù hợp.",
+    "emptyTitle": "Cùng lên kế hoạch cho một buổi vui",
+    "todo": {
+      "title": "Việc của bạn",
+      "who": "Chọn tên của bạn để xem việc cần làm",
+      "none": "Bạn đã xong hết rồi ✨",
+      "vote": "Bình chọn ngày",
+      "rsvp": "Bạn có đi không?",
+      "pay": "Bạn cần trả {amount}",
+      "lock": "Chốt ngày",
+      "bill": "Nhập hoá đơn",
+      "settle": "Đánh dấu đã xong"
+    }
+  },
+  "stage": {
+    "poll": "Đang bình chọn",
+    "rsvp": "Mở đăng ký",
+    "bill": "Chia tiền",
+    "settled": "Hoàn tất"
+  },
+  "me": {
+    "label": "Bạn là ai?",
+    "pick": "Chọn tên của bạn",
+    "search": "Tìm tên…",
+    "new": "Tôi mới",
+    "yourName": "Tên hiển thị của bạn",
+    "join": "Tham gia",
+    "isThisYou": "Đã có \"{name}\" trong danh sách. Có phải bạn không?",
+    "thatsMe": "Đúng, là tôi",
+    "switch": "Là bạn · đổi người"
+  },
+  "event": {
+    "dateTbd": "Chưa chốt ngày",
+    "seats": "chỗ",
+    "share": "Chia sẻ",
+    "linkCopied": "Đã sao chép link sự kiện",
+    "details": "Thông tin",
+    "attendees": "Người tham gia",
+    "waitlist": "{n} người đang chờ",
+    "nobody": "Chưa có ai"
+  },
+  "create": {
+    "title": "Tạo sự kiện",
+    "name": "Tên sự kiện",
+    "namePlaceholder": "VD: Sinh nhật tháng 10, Cầu lông thứ Sáu",
+    "note": "Ghi chú",
+    "when": "Khi nào?",
+    "fixedDate": "Ngày cố định",
+    "pollDates": "Bình chọn ngày",
+    "where": "Ở đâu?",
+    "fixedVenue": "Địa điểm cố định",
+    "pollVenue": "Để mọi người đề xuất",
+    "venue": "Tên địa điểm",
+    "venueLink": "Link (Google Maps, website…)",
+    "pollVenueHint": "Mọi người sẽ đề xuất và bình chọn địa điểm.",
+    "capacity": "Số chỗ tối đa",
+    "capacityHint": "Bỏ trống nếu không giới hạn",
+    "bank": "Tài khoản nhận tiền",
+    "bankHint": "Không bắt buộc, dùng để tạo mã VietQR",
+    "bankId": "Ngân hàng (VD: VCB)",
+    "bankAccount": "Số tài khoản",
+    "bankHolder": "Chủ tài khoản",
+    "submit": "Tạo sự kiện",
+    "pickFirst": "Chọn tên của bạn trước.",
+    "done": "Đã tạo sự kiện",
+    "keyHint": "Trình duyệt này đã lưu quyền quản lý. Hãy sao chép link quản lý để dùng trên máy khác.",
+    "quickStart": "Bắt đầu nhanh:",
+    "payment": "Thông tin thanh toán (không bắt buộc)",
+    "paymentLater": "Bạn có thể thêm sau, khi có hoá đơn.",
+    "daysPicked": "Đã chọn {n}/{max} ngày",
+    "templates": {
+      "birthday": "Sinh nhật 🎂",
+      "lunch": "Ăn trưa cùng team 🍜",
+      "afterwork": "Đi nhậu sau giờ làm 🍻",
+      "sports": "Ngày thể thao ⚽",
+      "trip": "Du lịch cuối tuần 🏕️"
+    }
+  },
+  "rsvp": {
+    "title": "Đăng ký tham gia",
+    "replies": "phản hồi",
+    "guests": "Người đi cùng",
+    "guestsHint": "Thêm người đi cùng sẽ xếp bạn xuống cuối hàng chờ nếu đã đủ chỗ.",
+    "going": "Tham gia",
+    "maybe": "Có thể",
+    "no": "Bận",
+    "onWaitlist": "Bạn đang ở vị trí #{n} trong danh sách chờ.",
+    "list": {
+      "going": "Tham gia",
+      "waitlist": "Danh sách chờ",
+      "maybe": "Có thể",
+      "no": "Bận"
+    },
+    "update": "Cập nhật"
+  },
+  "manage": {
+    "copyLink": "Link quản lý",
+    "linkCopied": "Đã sao chép link quản lý",
+    "linkHint": "Ai có link này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
+    "delete": "Xoá sự kiện",
+    "deleteConfirm": "Xoá vĩnh viễn sự kiện này?",
+    "lock": "Chốt kết quả và mở đăng ký",
+    "lockButton": "Chốt & mở đăng ký",
+    "bill": "Tổng hoá đơn (₫)",
+    "billHint": "Lưu sẽ chuyển sang giai đoạn chia tiền",
+    "schedule": "Ngày giờ",
+    "pollDays": "Các ngày để bình chọn",
+    "removeDayHint": "Phiếu bầu cho ngày bị xoá sẽ không còn được tính."
+  },
+  "err": {
+    "generic": "Có lỗi xảy ra, vui lòng thử lại.",
+    "invalid": "Dữ liệu không hợp lệ.",
+    "notFound": "Không tìm thấy sự kiện.",
+    "forbidden": "Bạn không có quyền quản lý sự kiện này.",
+    "stageClosed": "Phần này đã đóng.",
+    "nameRequired": "Vui lòng nhập tên.",
+    "nameTaken": "Tên này đã có trong danh sách.",
+    "unknownMember": "Hãy chọn tên của bạn trước.",
+    "titleRequired": "Vui lòng nhập tên sự kiện.",
+    "invalidDate": "Hãy chọn ngày giờ (hoặc các ngày để bình chọn).",
+    "invalidDays": "Ngày không hợp lệ.",
+    "invalidLink": "Link phải bắt đầu bằng http:// hoặc https://",
+    "invalidCapacity": "Số chỗ phải từ 1 đến 500.",
+    "invalidBill": "Số tiền không hợp lệ.",
+    "invalidBank": "Thông tin ngân hàng không hợp lệ.",
+    "invalidGuests": "Số người đi cùng từ 0 đến 10.",
+    "unknownVenue": "Địa điểm không tồn tại.",
+    "invalidCover": "Chọn một ảnh bìa hoặc dán link ảnh bắt đầu bằng https://"
+  },
+  "poll": {
+    "days": "Ngày nào bạn đi được?",
+    "top": "Nhiều nhất",
+    "venues": "Đi đâu?",
+    "noVenues": "Chưa có đề xuất nào. Hãy là người đầu tiên!",
+    "suggestedBy": "đề xuất bởi {name}",
+    "suggest": "Đề xuất địa điểm",
+    "add": "Thêm đề xuất",
+    "tapHint": "Chạm vào những ngày bạn đi được"
+  },
+  "bill": {
+    "title": "Chia tiền",
+    "pending": "Ban tổ chức chưa nhập tổng hoá đơn.",
+    "total": "Tổng hoá đơn",
+    "perSeat": "Mỗi người",
+    "rounded": "chia {n} chỗ, làm tròn lên 1.000 ₫",
+    "youOwe": "Bạn cần trả",
+    "withGuests": "gồm {n} người đi cùng",
+    "qrAlt": "Mã VietQR để chuyển khoản",
+    "noBank": "Ban tổ chức chưa nhập tài khoản ngân hàng, hãy trả trực tiếp.",
+    "markPaid": "Tôi đã chuyển khoản",
+    "paid": "Đã trả",
+    "unpaid": "Chưa trả",
+    "collected": "Đã thu {paid} / {total}"
+  },
+  "nav": {
+    "events": "Sự kiện",
+    "calendar": "Lịch",
+    "new": "Tạo sự kiện"
+  },
+  "calendar": {
+    "title": "Lịch",
+    "today": "Hôm nay",
+    "prev": "Tháng trước",
+    "next": "Tháng sau",
+    "tentative": "Dự kiến (đang bình chọn)",
+    "empty": "Tháng này không có sự kiện."
+  },
+  "cover": {
+    "label": "Ảnh bìa",
+    "url": "Hoặc dán link ảnh (https://…)",
+    "preset": "Kiểu bìa {name}"
+  },
+  "card": {
+    "voting": "Đang bình chọn · {n} ngày",
+    "vote": "Bình chọn ngay",
+    "rsvp": "Trả lời",
+    "going": "Sẽ đi",
+    "waitlist": "Danh sách chờ",
+    "pay": "Cần trả {amount}",
+    "paid": "Đã trả"
+  },
+  "next": {
+    "who": {
+      "title": "Trước tiên, bạn là ai?",
+      "body": "Chọn tên của bạn để phiếu bầu được tính. Không cần đăng ký."
+    },
+    "vote": {
+      "title": "Ngày nào bạn đi được?",
+      "body": "Chạm vào tất cả những ngày bạn có thể tham gia.",
+      "cta": "Bình chọn"
+    },
+    "voted": {
+      "title": "Cảm ơn bạn đã bình chọn!",
+      "body": "Đã có {n} người bình chọn. Người tổ chức sẽ chốt ngày.",
+      "cta": "Sửa lựa chọn"
+    },
+    "rsvp": {
+      "title": "Bạn có đi không?",
+      "body": "{when}",
+      "cta": "Trả lời"
+    },
+    "going": {
+      "title": "Bạn đã có tên 🎉",
+      "body": "Hẹn gặp bạn {when}."
+    },
+    "waitlist": {
+      "title": "Bạn đang ở vị trí #{place} trong danh sách chờ",
+      "body": "Bạn sẽ tự động được lên nếu có chỗ trống."
+    },
+    "replied": {
+      "title": "Cảm ơn bạn đã trả lời",
+      "body": "Bạn có thể đổi câu trả lời cho đến khi người tổ chức đóng đăng ký.",
+      "cta": "Đổi"
+    },
+    "pay": {
+      "title": "Bạn cần trả {amount}",
+      "body": "Quét mã QR bên dưới hoặc trả trực tiếp cho người tổ chức.",
+      "cta": "Thanh toán"
+    },
+    "paid": {
+      "title": "Bạn đã thanh toán ✓",
+      "body": "Cảm ơn bạn! Không còn gì phải làm."
+    },
+    "done": {
+      "title": "Bạn đã xong",
+      "body": "Hiện không có gì cần bạn làm."
+    },
+    "settled": {
+      "title": "🎉 Đã xong xuôi, cảm ơn mọi người!",
+      "body": "Mong là một buổi thật vui."
+    },
+    "action": {
+      "lock": "Chốt ngày & mở đăng ký",
+      "bill": "Nhập hoá đơn",
+      "settle": "Đánh dấu đã xong"
+    },
+    "lockDay": "Ngày và giờ",
+    "lockHint": "Sau đó mọi người có thể trả lời Đi, Có thể hoặc Không.",
+    "billHint": "Chia cho {n} chỗ",
+    "billSave": "Lưu & chia tiền"
+  },
+  "edit": {
+    "open": "Sửa",
+    "title": "Sửa sự kiện",
+    "description": "Thay đổi sẽ hiển thị với mọi người ngay.",
+    "save": "Lưu thay đổi",
+    "danger": "Vùng nguy hiểm",
+    "reopen": "Quay lại bước…",
+    "reopenButton": "Mở lại",
+    "reopenConfirm": "Đưa sự kiện về bước trước? Câu trả lời vẫn được giữ."
+  },
+  "share": {
+    "poll": "Bình chọn ngày cho: {title}",
+    "rsvp": "Bạn có đi không? {title}",
+    "bill": "Đến lúc chia tiền: {title}",
+    "settled": "{title}"
+  }
+}

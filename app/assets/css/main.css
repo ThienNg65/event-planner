@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* Cover gradients live in shared/utils/cover.ts, outside app/. */
+@source "../../../shared";
+
+/* Modern SaaS foundations: Inter, neutral zinc surfaces, violet brand (colors picked in app.config.ts). */
+@theme {
+  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .page-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ui-text-highlighted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root,
+  .dark {
+    --ui-border: var(--ui-border-accented);
+    --ui-text-muted: var(--ui-text-toned);
+  }
+}
+
+/* app/utils/confetti.ts */
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confetti span {
+  position: absolute;
+  top: -16px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti-fall 1.5s ease-in forwards;
+}
+@keyframes confetti-fall {
+  to {
+    transform: translate(var(--dx), 105vh) rotate(var(--r));
+    opacity: 0.7;
+  }
+}
