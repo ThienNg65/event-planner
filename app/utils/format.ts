@@ -4,8 +4,19 @@ const TZ = 'Asia/Ho_Chi_Minh';
 /** "2026-10-23" + "19:00" in team time (UTC+7, no DST) → ISO instant. */
 export const teamTime = (day: string, time: string) => new Date(`${day}T${time}:00+07:00`).toISOString();
 
+// Node ICU renders vi weekdays as "Th 6", Chrome as "Thứ 6": use a fixed table so SSR and browser match.
+const VI_WEEKDAY: Record<string, string> = { Mon: 'T2', Tue: 'T3', Wed: 'T4', Thu: 'T5', Fri: 'T6', Sat: 'T7', Sun: 'CN' };
+
+/** Like Intl.DateTimeFormat#format, but the vi weekday comes from VI_WEEKDAY; en is untouched. */
+export const fmtParts = (date: Date, locale: string, opts: Intl.DateTimeFormatOptions) => {
+  const parts = new Intl.DateTimeFormat(locale, opts).formatToParts(date);
+  if (!locale.startsWith('vi') || !opts.weekday) return parts.map((p) => p.value).join('');
+  const en = new Intl.DateTimeFormat('en', { timeZone: opts.timeZone, weekday: 'short' }).format(date);
+  return parts.map((p) => (p.type === 'weekday' ? VI_WEEKDAY[en] : p.value)).join('');
+};
+
 export const fmtDateTime = (iso: string | Date, locale: string) =>
-  new Date(iso).toLocaleString(locale, {
+  fmtParts(new Date(iso), locale, {
     timeZone: TZ,
     weekday: 'short',
     day: 'numeric',
@@ -16,7 +27,7 @@ export const fmtDateTime = (iso: string | Date, locale: string) =>
 
 /** A poll day ("2026-10-23") is a calendar date, not an instant. */
 export const fmtDay = (day: string, locale: string) =>
-  new Date(`${day}T00:00:00Z`).toLocaleDateString(locale, { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
+  fmtParts(new Date(`${day}T00:00:00Z`), locale, { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
 
 /** Big day number + short month for a calendar-style date block, in team time. */
 export const dateBlock = (iso: string | Date, locale: string) => ({
@@ -43,7 +54,7 @@ export const toTeamInput = (iso: string) => new Date(new Date(iso).getTime() + 7
 export const dayParts = (day: string, locale: string) => {
   const d = new Date(`${day}T00:00:00Z`);
   return {
-    weekday: d.toLocaleDateString(locale, { timeZone: 'UTC', weekday: 'short' }),
+    weekday: fmtParts(d, locale, { timeZone: 'UTC', weekday: 'short' }),
     date: d.toLocaleDateString(locale, { timeZone: 'UTC', day: 'numeric', month: 'short' }),
   };
 };

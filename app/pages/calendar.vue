@@ -20,7 +20,7 @@ const title = computed(() =>
 const weekdays = computed(() =>
   monthGrid(2026, 5)
     .slice(0, 7)
-    .map((d) => new Date(`${d}T00:00:00Z`).toLocaleDateString(locale.value, { timeZone: 'UTC', weekday: 'short' }))
+    .map((d) => dayParts(d, locale.value).weekday)
 );
 
 const CHIP = {

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mineOf, nextStep, norm, rollCall, shareOf, vietqrUrl } from '../shared/utils/event.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
-import { monthGrid } from '../app/utils/format.ts';
+import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
 
 const at = (min: number) => new Date(Date.UTC(2026, 9, 1, 0, min));
 const going = (memberId: number, min: number, guests = 0) => ({ memberId, status: 'going', guests, goingAt: at(min) });
@@ -105,4 +105,11 @@ test('nextStep: one step per stage and answer, organizer moves only when due', (
   assert.equal(s('rsvp', null, { manager: true, started: true }).action, 'bill');
   assert.equal(s('bill', null, { manager: true }).action, null);
   assert.equal(s('bill', null, { manager: true, allPaid: true }).action, 'settle');
+});
+
+test('vi weekday is deterministic (fixed table), en unchanged', () => {
+  assert.equal(dayParts('2026-10-23', 'vi').weekday, 'T6');
+  assert.equal(dayParts('2026-10-25', 'vi').weekday, 'CN');
+  assert.match(fmtDateTime('2026-10-23T12:00:00Z', 'vi'), /^\d\d:\d\d T6|^T6/);
+  assert.equal(dayParts('2026-10-23', 'en').weekday, 'Fri');
 });
