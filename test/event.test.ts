@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mineOf, nextStep, norm, rollCall, shareOf, vietqrUrl } from '../shared/utils/event.ts';
+import { allPaid, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
 
@@ -79,9 +80,9 @@ test('monthGrid: 42 days, Monday-first, covering the whole month', () => {
 
 test('mineOf: votes, and only confirmed attendees owe share × (1 + guests)', () => {
   const row = { days: ['2026-10-23'], venueIds: [], status: 'going', guests: 2, paidAt: null };
-  assert.deepEqual(mineOf(row, true, false, 100_000), { voted: true, status: 'going', waitlisted: false, owes: 300_000, paid: false });
+  assert.deepEqual(mineOf(row, true, false, 100_000), { voted: true, status: 'going', waitlisted: false, owes: 300_000, paid: false, paidAmount: 0, left: 300_000 });
   assert.equal(mineOf(row, false, true, 100_000).owes, null);
-  assert.deepEqual(mineOf(undefined, false, false, null), { voted: false, status: null, waitlisted: false, owes: null, paid: false });
+  assert.deepEqual(mineOf(undefined, false, false, null), { voted: false, status: null, waitlisted: false, owes: null, paid: false, paidAmount: 0, left: 0 });
 });
 
 test('nextStep: one step per stage and answer, organizer moves only when due', () => {
@@ -112,4 +113,53 @@ test('vi weekday is deterministic (fixed table), en unchanged', () => {
   assert.equal(dayParts('2026-10-25', 'vi').weekday, 'CN');
   assert.match(fmtDateTime('2026-10-23T12:00:00Z', 'vi'), /^\d\d:\d\d T6|^T6/);
   assert.equal(dayParts('2026-10-23', 'en').weekday, 'Fri');
+});
+
+test('nextStep: cancelled overrides everything, a closed poll asks for the winner', () => {
+  const mine = mineOf(undefined, false, false, null);
+  const o = { stage: 'poll', mine, manager: true, allPaid: false, started: false };
+  assert.deepEqual(nextStep({ ...o, cancelled: true }), { step: 'cancelled', action: null });
+  assert.deepEqual(nextStep({ ...o, votingClosed: true }), { step: 'voteClosed', action: 'lock' });
+  assert.equal(nextStep({ ...o, manager: false, votingClosed: true }).step, 'voteClosed');
+});
+
+test('nextStep: a partial payment still asks the member to pay', () => {
+  const mine = mineOf({ days: [], venueIds: [], status: 'going', guests: 0, paidAt: new Date(), paidAmount: 40_000 }, true, false, 100_000);
+  assert.equal(mine.left, 60_000);
+  assert.equal(nextStep({ stage: 'bill', mine, manager: false, allPaid: false, started: true }).step, 'pay');
+});
+
+test('paymentOf: unpaid, partial, exact, overpaid and legacy rows', () => {
+  assert.deepEqual(paymentOf(undefined, 100), { paid: 0, left: 100, done: false });
+  assert.deepEqual(paymentOf({ paidAt: new Date(), paidAmount: 40 }, 100), { paid: 40, left: 60, done: false });
+  assert.equal(paymentOf({ paidAt: new Date(), paidAmount: 100 }, 100).done, true);
+  assert.deepEqual(paymentOf({ paidAt: new Date(), paidAmount: 150 }, 100), { paid: 150, left: 0, done: true });
+  assert.deepEqual(paymentOf({ paidAt: new Date(), paidAmount: null }, 100), { paid: 100, left: 0, done: true });
+  assert.equal(paymentOf({ paidAt: null, paidAmount: null }, 100).done, false);
+});
+
+test('allPaid: needs a share, someone confirmed, and everyone done', () => {
+  const paid = { guests: 1, paidAt: new Date(), paidAmount: null };
+  assert.equal(allPaid([paid], 100), true);
+  assert.equal(allPaid([paid, { guests: 0, paidAt: null, paidAmount: 50 }], 100), false);
+  assert.equal(allPaid([], 100), false);
+  assert.equal(allPaid([paid], null), false);
+});
+
+test('votingOpen: only while polling, not cancelled, before the deadline', () => {
+  const now = Date.UTC(2026, 9, 10);
+  assert.equal(votingOpen({ stage: 'poll' }, now), true);
+  assert.equal(votingOpen({ stage: 'rsvp' }, now), false);
+  assert.equal(votingOpen({ stage: 'poll', cancelledAt: new Date() }, now), false);
+  assert.equal(votingOpen({ stage: 'poll', voteDeadline: new Date(now + 1000) }, now), true);
+  assert.equal(votingOpen({ stage: 'poll', voteDeadline: new Date(now - 1000) }, now), false);
+});
+
+test('can: host does everything, co-host cannot reopen/cancel/delete/manage the co-host link, others nothing', () => {
+  const shared = ['edit', 'advance', 'removeVenue', 'setOthers'] as const;
+  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost'] as const;
+  for (const a of [...shared, ...hostOnly]) assert.equal(can('host', a), true, `host ${a}`);
+  for (const a of shared) assert.equal(can('cohost', a), true, `cohost ${a}`);
+  for (const a of hostOnly) assert.equal(can('cohost', a), false, `cohost ${a}`);
+  for (const a of [...shared, ...hostOnly]) assert.equal(can(null as Role, a), false, `participant ${a}`);
 });

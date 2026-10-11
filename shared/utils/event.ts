@@ -43,31 +43,84 @@ export function vietqrUrl(bankId: string, account: string, holder: string | null
   return `https://img.vietqr.io/image/${encodeURIComponent(bankId)}-${encodeURIComponent(account)}-compact2.png?${q}`;
 }
 
-/** The visitor's own state on one event, as the home list and the event page both need it. */
-export type Mine = { voted: boolean; status: string | null; waitlisted: boolean; owes: number | null; paid: boolean };
+type PayRow = { paidAt: unknown; paidAmount?: number | null };
 
-type MyRow = { days: string[]; venueIds: number[]; status: string | null; guests: number; paidAt: unknown };
+/** What a member has paid of `owes`; a legacy row (paidAt, no amount) counts as paid in full, an overpayment leaves nothing. */
+export function paymentOf(row: PayRow | undefined, owes: number) {
+  const paid = row?.paidAmount ?? (row?.paidAt ? owes : 0);
+  const left = Math.max(0, owes - paid);
+  return { paid, left, done: left === 0 };
+}
+
+/** True when there is a share and every confirmed attendee has paid theirs. */
+export const allPaid = (confirmed: (PayRow & { guests: number })[], share: number | null) =>
+  share !== null && confirmed.length > 0 && confirmed.every((r) => paymentOf(r, share * (1 + r.guests)).done);
+
+/** Voting is open while the event is polling, not cancelled and before the deadline (if any). */
+export const votingOpen = (ev: { stage: string; cancelledAt?: unknown; voteDeadline?: string | Date | null }, now = Date.now()) =>
+  ev.stage === 'poll' && !ev.cancelledAt && (!ev.voteDeadline || now < new Date(ev.voteDeadline).getTime());
+
+/** The visitor's own state on one event, as the home list and the event page both need it. */
+export type Mine = {
+  voted: boolean;
+  status: string | null;
+  waitlisted: boolean;
+  owes: number | null;
+  paid: boolean;
+  paidAmount: number;
+  left: number;
+};
+
+type MyRow = PayRow & { days: string[]; venueIds: number[]; status: string | null; guests: number };
 
 /** `row` is the member's response (absent if they never answered); only confirmed attendees owe a share. */
-export const mineOf = (row: MyRow | undefined, confirmed: boolean, waitlisted: boolean, share: number | null): Mine => ({
-  voted: !!row && (row.days.length > 0 || row.venueIds.length > 0),
-  status: row?.status ?? null,
-  waitlisted,
-  owes: confirmed && share !== null ? share * (1 + row!.guests) : null,
-  paid: !!row?.paidAt,
-});
+export function mineOf(row: MyRow | undefined, confirmed: boolean, waitlisted: boolean, share: number | null): Mine {
+  const owes = confirmed && share !== null ? share * (1 + row!.guests) : null;
+  const pay = owes === null ? null : paymentOf(row, owes);
+  return {
+    voted: !!row && (row.days.length > 0 || row.venueIds.length > 0),
+    status: row?.status ?? null,
+    waitlisted,
+    owes,
+    paid: !!pay?.done,
+    paidAmount: pay?.paid ?? 0,
+    left: pay?.left ?? 0,
+  };
+}
 
-export type Step = 'vote' | 'voted' | 'rsvp' | 'going' | 'waitlist' | 'replied' | 'pay' | 'paid' | 'done' | 'settled';
+export type Step =
+  | 'vote'
+  | 'voted'
+  | 'voteClosed'
+  | 'rsvp'
+  | 'going'
+  | 'waitlist'
+  | 'replied'
+  | 'pay'
+  | 'paid'
+  | 'done'
+  | 'settled'
+  | 'cancelled';
 export type OrganizerAction = 'lock' | 'bill' | 'settle';
 
 /**
  * What the visitor should do next, and the organizer's next move (null when not managing or nothing is due).
  * `started`: the event's date has passed, so RSVP no longer matters and the bill can be entered.
+ * `votingClosed`: the poll's deadline has passed; `cancelled` overrides everything.
  */
-export function nextStep(o: { stage: string; mine: Mine | null; manager: boolean; allPaid: boolean; started: boolean }) {
+export function nextStep(o: {
+  stage: string;
+  mine: Mine | null;
+  manager: boolean;
+  allPaid: boolean;
+  started: boolean;
+  cancelled?: boolean;
+  votingClosed?: boolean;
+}) {
   const { stage, mine, manager, allPaid, started } = o;
+  if (o.cancelled) return { step: 'cancelled' as Step, action: null };
   let step: Step = 'done';
-  if (stage === 'poll') step = mine?.voted ? 'voted' : 'vote';
+  if (stage === 'poll') step = o.votingClosed ? 'voteClosed' : mine?.voted ? 'voted' : 'vote';
   else if (stage === 'rsvp') {
     if (mine?.status === 'going') step = mine.waitlisted ? 'waitlist' : 'going';
     else if (mine?.status) step = 'replied';

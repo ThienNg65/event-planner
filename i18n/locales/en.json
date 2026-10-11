@@ -29,10 +29,11 @@
     }
   },
   "stage": {
-    "poll": "Polling",
-    "rsvp": "RSVP open",
-    "bill": "Splitting the bill",
-    "settled": "Settled"
+    "poll": "Voting",
+    "rsvp": "Confirmed",
+    "bill": "Paying",
+    "settled": "Completed",
+    "cancelled": "Cancelled"
   },
   "me": {
     "label": "Who are you?",
@@ -53,7 +54,13 @@
     "details": "Details",
     "attendees": "Attendees",
     "waitlist": "{n} on waitlist",
-    "nobody": "Nobody yet"
+    "nobody": "Nobody yet",
+    "hostedBy": "Hosted by {name}",
+    "goingCount": "{n} going",
+    "cancelledTitle": "This event was cancelled",
+    "restore": "Restore event",
+    "noticeTitle": "Update from the host",
+    "new": "New"
   },
   "create": {
     "title": "New event",
@@ -114,7 +121,7 @@
     "linkCopied": "Manage link copied",
     "linkHint": "Anyone with this link can manage the event. Only share it with co-organizers.",
     "delete": "Delete event",
-    "deleteConfirm": "Delete this event for good?",
+    "deleteConfirm": "Delete for good? This removes all votes and payments and cannot be undone.",
     "lock": "Lock the result and open RSVP",
     "lockButton": "Lock & open RSVP",
     "bill": "Bill total (₫)",
@@ -141,17 +148,35 @@
     "invalidBank": "Invalid bank details.",
     "invalidGuests": "Guests must be between 0 and 10.",
     "unknownVenue": "That venue doesn't exist.",
-    "invalidCover": "Pick a cover or paste an image link starting with https://"
+    "invalidCover": "Pick a cover or paste an image link starting with https://",
+    "notYou": "That's not you. Pick your own name.",
+    "hostOnly": "Only the host can do that.",
+    "cancelled": "This event is cancelled.",
+    "venueExists": "That place is already on the list.",
+    "tooManyDays": "The poll already has 20 days.",
+    "votingClosed": "Voting has closed."
   },
   "poll": {
     "days": "Which days work for you?",
     "top": "Top pick",
     "venues": "Where to?",
-    "noVenues": "No suggestions yet. Be the first!",
+    "noVenues": "No restaurants yet. Suggest one!",
     "suggestedBy": "suggested by {name}",
     "suggest": "Suggest a venue",
     "add": "Add suggestion",
-    "tapHint": "Tap the days you can make"
+    "tapHint": "Tap the days you can make",
+    "placeQ": "Which place works?",
+    "progress": "{n} of {total} voted",
+    "closes": "closes {when}",
+    "closed": "Voting is closed",
+    "pickName": "Pick your name above to vote",
+    "suggestDay": "Suggest a day",
+    "suggestPlace": "Suggest a place",
+    "dup": "Already on the list. We added your vote.",
+    "remove": "Remove",
+    "removeTitle": "Remove “{name}”?",
+    "removeBody": "{n} vote for it will be removed too. | {n} votes for it will be removed too.",
+    "voteFor": "Vote for {name}"
   },
   "bill": {
     "title": "Bill",
@@ -166,7 +191,18 @@
     "markPaid": "I've paid",
     "paid": "Paid",
     "unpaid": "Unpaid",
-    "collected": "Collected {paid} of {total}"
+    "collected": "Collected {paid} of {total}",
+    "share": "Your share",
+    "paidSoFar": "Paid {amount}",
+    "left": "{amount} left",
+    "iPaid": "I've paid…",
+    "amountLabel": "Amount you transferred (₫)",
+    "confirm": "Confirm payment",
+    "clear": "Clear my payment",
+    "paidFull": "Paid in full",
+    "bankFallback": "Transfer to {bank}",
+    "ledger": "Collected {paid} of {total} · {n} still owe",
+    "locked": "This event is completed, so payments are locked."
   },
   "nav": {
     "events": "Events",
@@ -193,7 +229,9 @@
     "going": "Going",
     "waitlist": "Waitlist",
     "pay": "You owe {amount}",
-    "paid": "Paid"
+    "paid": "Paid",
+    "cancelled": "Cancelled",
+    "closes": "Voting closes {when}"
   },
   "next": {
     "who": {
@@ -207,7 +245,7 @@
     },
     "voted": {
       "title": "Thanks for voting!",
-      "body": "{n} people have voted so far. The organizer will lock the date.",
+      "body": "{n} people have voted so far. The organizer will lock the result.",
       "cta": "Change my votes"
     },
     "rsvp": {
@@ -248,27 +286,91 @@
     "action": {
       "lock": "Lock date & open RSVP",
       "bill": "Enter the bill",
-      "settle": "Mark as settled"
+      "settle": "Mark as settled",
+      "pick": "Pick the winner"
     },
     "lockDay": "Day and time",
     "lockHint": "Everyone can then reply Going, Maybe or Can't.",
     "billHint": "Split across {n} seats",
-    "billSave": "Save & split the bill"
+    "billSave": "Save & split the bill",
+    "voteVenue": {
+      "title": "Which place works for you?",
+      "body": "Tap the places you like, or suggest one.",
+      "cta": "Vote"
+    },
+    "voteClosed": {
+      "title": "Voting is closed",
+      "body": "The organizer will pick the winner.",
+      "bodyHost": "Pick the winning day and place."
+    },
+    "cancelled": {
+      "title": "This event was cancelled",
+      "body": "{reason}"
+    },
+    "closes": "Voting closes {when}",
+    "tie": "It's a tie for first. Pick one.",
+    "votes": "{n} vote | {n} votes"
   },
   "edit": {
-    "open": "Edit",
-    "title": "Edit event",
+    "open": "Manage",
+    "title": "Manage event",
     "description": "Changes are visible to everyone right away.",
     "save": "Save changes",
     "danger": "Danger zone",
     "reopen": "Back to stage…",
     "reopenButton": "Reopen",
-    "reopenConfirm": "Move the event back? Answers are kept."
+    "reopenConfirm": "Move the event back? Votes and answers are kept, but the stage changes for everyone.",
+    "deadline": "Voting deadline",
+    "deadlineHint": "Optional. After it, only organizers can change votes.",
+    "notice": "Post an update",
+    "noticeHint": "Shown to everyone at the top of the event. Clear it to remove.",
+    "cohost": "Co-host link",
+    "cohostHint": "A co-host can edit, lock and settle, but can't reopen, cancel or delete.",
+    "cohostCreate": "Create co-host link",
+    "cohostActive": "Co-host link active",
+    "cohostNew": "New link (replaces the old one)",
+    "cohostRevoke": "Revoke",
+    "cohostCopied": "Co-host link copied",
+    "cancelEvent": "Cancel event",
+    "cancelReason": "Reason (optional)",
+    "cancelConfirm": "Everyone will see this event as cancelled. You can restore it later.",
+    "cancelledNote": "This event is cancelled. Restore it to edit.",
+    "restore": "Restore event",
+    "letKnow": "Let everyone know?",
+    "postUpdate": "Post update"
   },
   "share": {
     "poll": "Vote for a day: {title}",
     "rsvp": "Are you coming? {title}",
     "bill": "Time to settle up: {title}",
     "settled": "{title}"
+  },
+  "sum": {
+    "poll": "Voting closed · {n} voted",
+    "rsvp": "Attendance · {n} going"
+  },
+  "notice": {
+    "moved": "Date moved to {when}.",
+    "venue": "Venue changed to {venue}."
+  },
+  "people": {
+    "title": "People",
+    "empty": "Nobody yet.",
+    "voted": "Voted",
+    "going": "Going",
+    "waitlist": "Waitlist #{n}",
+    "maybe": "Maybe",
+    "no": "Can't",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "left": "{amount} left",
+    "showAll": "Show all {n}",
+    "showLess": "Show less",
+    "actions": "Actions for {name}",
+    "markPaid": "Mark paid in full",
+    "markUnpaid": "Mark unpaid",
+    "setAmount": "Set paid amount…",
+    "amount": "Amount paid (₫)",
+    "save": "Save"
   }
 }

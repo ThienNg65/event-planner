@@ -36,6 +36,7 @@ const byDay = computed(() => {
   const map = new Map<string, Entry[]>();
   const put = (day: string, e: Entry) => map.set(day, [...(map.get(day) ?? []), e]);
   for (const e of events.value) {
+    if (e.cancelledAt) continue;
     const base = { id: e.id, title: e.title, stage: e.stage };
     if (e.startsAt) put(toTeamInput(e.startsAt).slice(0, 10), { ...base, tentative: false, time: toTeamInput(e.startsAt).slice(11) });
     else for (const d of e.pollDays) put(d, { ...base, tentative: true, time: null });

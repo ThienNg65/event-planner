@@ -9,6 +9,7 @@ type Bucket = 'planning' | 'upcoming' | 'past';
 const now = Date.now();
 const started = (e: (typeof events.value)[number]) => e.startsAt !== null && new Date(e.startsAt).getTime() < now;
 const bucketOf = (e: (typeof events.value)[number]): Bucket => {
+  if (e.cancelledAt) return 'past';
   if (e.stage === 'poll') return 'planning';
   const past = e.stage === 'settled' || (e.startsAt !== null && new Date(e.startsAt).getTime() < now - 6 * 3600_000);
   return past ? 'past' : 'upcoming';
@@ -34,6 +35,8 @@ const todos = computed(() =>
       manager: mounted.value && hasManageKey(e.id),
       allPaid: e.allPaid,
       started: started(e),
+      cancelled: !!e.cancelledAt,
+      votingClosed: e.stage === 'poll' && !votingOpen(e),
     });
     const out: { key: string; event: typeof e; kind: keyof typeof TODO_ICON }[] = [];
     if (action) out.push({ key: `${e.id}-${action}`, event: e, kind: action });

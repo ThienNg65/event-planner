@@ -29,6 +29,12 @@ export function eventFields(b: Record<string, unknown>) {
     if (b.startsAt !== null && (typeof b.startsAt !== 'string' || Number.isNaN(d.getTime()))) fail(400, 'invalidDate');
     out.startsAt = b.startsAt === null ? null : d;
   }
+  if ('voteDeadline' in b) {
+    const d = new Date(String(b.voteDeadline));
+    if (b.voteDeadline !== null && (typeof b.voteDeadline !== 'string' || Number.isNaN(d.getTime()))) fail(400, 'invalidDate');
+    out.voteDeadline = b.voteDeadline === null ? null : d;
+  }
+  if ('notice' in b) out.notice = clean(b.notice, 280) || null;
   if ('venue' in b) out.venue = clean(b.venue, 100) || null;
   if ('venueLink' in b) {
     const link = clean(b.venueLink, 500);

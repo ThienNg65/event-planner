@@ -21,10 +21,37 @@ export function routeId(event: H3Event) {
   return id;
 }
 
-/** True when the request carries the event's manage key in the x-manage-key header. */
-export function isManager(event: H3Event, keyHash: string) {
+const hashMatches = (key: string, hash: string | null) =>
+  !!hash && timingSafeEqual(Buffer.from(sha256(key), 'hex'), Buffer.from(hash, 'hex'));
+
+/** The caller's role, from the x-manage-key header: the manage key is the host, the co-host key a co-host. */
+export function roleOf(event: H3Event, ev: { manageKeyHash: string; coHostKeyHash: string | null }): Role {
   const key = getHeader(event, 'x-manage-key');
-  return !!key && timingSafeEqual(Buffer.from(sha256(key), 'hex'), Buffer.from(keyHash, 'hex'));
+  if (!key) return null;
+  if (hashMatches(key, ev.manageKeyHash)) return 'host';
+  return hashMatches(key, ev.coHostKeyHash) ? 'cohost' : null;
+}
+
+/** The visitor's member id from the unsigned `me` cookie (guards against mistakes, not attackers). */
+export function meOf(event: H3Event) {
+  const me = Number(getCookie(event, 'me'));
+  return Number.isInteger(me) && me > 0 ? me : null;
+}
+
+/** A participant may only write their own answers; hosts and co-hosts may write anyone's. */
+export function requireSelf(event: H3Event, memberId: number, role: Role) {
+  if (role === null && memberId !== meOf(event)) fail(403, 'notYou');
+}
+
+export function requireCan(role: Role, action: Action) {
+  if (!can(role, action)) fail(403, role ? 'hostOnly' : 'forbidden');
+}
+
+/** Poll writes: not cancelled, still polling, and (for participants) before the deadline. */
+export function requireVoting(ev: Parameters<typeof votingOpen>[0], role: Role) {
+  if (ev.cancelledAt) fail(409, 'cancelled');
+  if (ev.stage !== 'poll') fail(409, 'stageClosed');
+  if (role === null && !votingOpen(ev)) fail(409, 'votingClosed');
 }
 
 export async function readJson(event: H3Event): Promise<Record<string, unknown>> {

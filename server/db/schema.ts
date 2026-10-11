@@ -32,6 +32,14 @@ export const events = pgTable(
       .notNull()
       .references(() => members.id),
     manageKeyHash: text().notNull(),
+    // Second, lower-privilege key: may edit and move the event forward, but not reopen, cancel or delete it.
+    coHostKeyHash: text(),
+    voteDeadline: timestamp({ withTimezone: true }),
+    // Cancelled is an overlay, not a stage, so restoring returns to the exact stage it was in.
+    cancelledAt: timestamp({ withTimezone: true }),
+    cancelReason: text(),
+    notice: text(),
+    noticeAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [check('events_stage', sql`${t.stage} in ('poll', 'rsvp', 'bill', 'settled')`)]
@@ -68,10 +76,13 @@ export const responses = pgTable(
     // Queue position for capacity: set when someone becomes "going" or adds guests.
     goingAt: timestamp({ withTimezone: true }),
     paidAt: timestamp({ withTimezone: true }),
+    // Null with paidAt set (legacy rows) means paid in full.
+    paidAmount: integer(),
   },
   (t) => [
     primaryKey({ columns: [t.eventId, t.memberId] }),
     check('responses_status', sql`${t.status} in ('going', 'maybe', 'no')`),
     check('responses_guests', sql`${t.guests} between 0 and 10`),
+    check('responses_paid_amount', sql`${t.paidAmount} >= 0`),
   ]
 );

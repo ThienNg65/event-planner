@@ -15,7 +15,10 @@ Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
 
   A **next step** card on each event tells you what to do now (vote, reply, pay), and gives the organizer the one button that moves the event on: lock the date, enter the bill, mark as settled. Confetti marks the big moments (first vote, Going, paid, locked, settled), except with reduced motion.
 - **Cover:** pick a gradient or paste an image link (`https://…`). Events without a cover get a gradient based on their id.
-- **Organizer:** whoever creates an event gets organizer rights in that browser. **Edit** opens a panel for the title, note, venue, date, seats, bill, bank account and cover, plus "reopen an earlier stage" and delete. **Manage link** copies a secret link that gives another browser or a co-organizer the same rights. Lose it and nobody can manage the event, so keep it somewhere safe.
+- **Roles:** the **host** (manage key, created with the event) can do everything. A **co-host** (separate link from Manage → Co-host link) can edit, remove places, lock, bill and settle, but not reopen an earlier stage, cancel, delete or manage the co-host link. Everyone else is a **participant**: they can only vote, suggest, RSVP and report payment for themselves (the server checks the `me` cookie), while that step is open. This guards against mistakes, not attackers: there is no login. Lose the manage link and nobody can manage the event, so keep it safe.
+- **Lifecycle:** Voting → Confirmed → Paying → Completed (stages `poll`, `rsvp`, `bill`, `settled`). **Cancelled** is an overlay, so restoring returns to the same stage. Voting can have a deadline; after it only organizers change votes. Participants can suggest days and places (duplicates add your vote).
+- **Payments** can be partial: a member reports what they transferred, the QR is for what is left, and organizers can correct anyone in the People list. Participants can't edit payments once the event is Completed.
+- **Manage** opens a panel for details, voting deadline, an update shown to everyone, co-host link, and (host only) reopen, cancel and delete.
 
 ## Requirements
 
@@ -30,7 +33,7 @@ Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
 
 ```bash
 npm install
-npm run db:migrate
+npm run db:migrate   # run again after pulling: migration 0002 adds roles, deadline, cancel, notice and partial payments
 npm run dev
 ```
 
@@ -58,9 +61,10 @@ Open http://localhost:3000.
 | Shell (sidebar, who-you-are, language, dark mode) | `app/layouts/default.vue` |
 | Pages | `app/pages/index.vue` (dashboard), `calendar.vue` (month and agenda), `new.vue` (create), `e/[id].vue` (event) |
 | Event blocks | `app/components/EventNextStep.vue` (what to do now), `EventPoll.vue`, `EventRsvp.vue`, `EventBill.vue`, `EventEdit.vue` (organizer panel), `EventCard.vue`, `CoverPicker.vue`, `PollDaysInput.vue` |
-| API | `server/api/members.*`, `server/api/events/**` |
+| API | `server/api/members.*`, `server/api/events/**` (roles in `server/utils/http.ts`) |
 | Schema and migrations | `server/db/schema.ts`, `server/db/migrations/` |
-| Waitlist, split, next step, name match, VietQR | `shared/utils/event.ts` (tested in `test/event.test.ts`) |
+| Waitlist, split, payments, voting window, next step, name match, VietQR | `shared/utils/event.ts` (tested in `test/event.test.ts`) |
+| Roles and permissions table (`can()`) | `shared/utils/roles.ts` |
 | Confetti | `app/utils/confetti.ts` |
 | Cover presets | `shared/utils/cover.ts` |
 | Strings | `i18n/locales/vi.json`, `en.json` |
@@ -74,7 +78,7 @@ The UI is a dashboard built with Nuxt UI's dashboard components:
 - a collapsible sidebar, which becomes a slide-over on phones
 - colors from the app icon: indigo brand, amber for "celebrate" moments (top pick, paid, settled), neutral zinc surfaces, and the Inter font. The icon (`public/app-icon.png`) is cut into `favicon.png`, `apple-touch-icon.png` and `icon-512.png` (share image)
 - light and dark mode (toggle in the sidebar)
-- a "needs you" list and event cards with your own status on the home page, and a hero header, stage stepper and next-step card on each event
+- a "needs you" list and event cards with your own status on the home page, and on each event a header with the key facts, a next-step card and only the section for the current stage
 
 It respects `prefers-reduced-motion` and `prefers-contrast`. Tokens live in `app/assets/css/main.css`, and component defaults in `app/app.config.ts`.
 

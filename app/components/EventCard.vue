@@ -26,6 +26,8 @@ const status = computed(() => {
     manager: false,
     allPaid: e.allPaid,
     started: !!e.startsAt && new Date(e.startsAt).getTime() < Date.now(),
+    cancelled: !!e.cancelledAt,
+    votingClosed: e.stage === 'poll' && !votingOpen(e),
   });
   return step in STATUS ? { ...STATUS[step as keyof typeof STATUS], label: t(`card.${step}`, { amount: fmtVnd(e.mine.owes ?? 0) }) } : null;
 });
@@ -39,7 +41,8 @@ const status = computed(() => {
     <div class="relative h-28" :class="'gradient' in cover && cover.gradient">
       <img v-if="'image' in cover" :src="cover.image" alt="" loading="lazy" class="size-full object-cover" />
       <UBadge v-if="status" :color="status.color" variant="solid" :icon="status.icon" :label="status.label" class="absolute top-3 left-3 shadow-sm" />
-      <UBadge :color="STAGE_COLOR[event.stage]" variant="solid" :label="t(`stage.${event.stage}`)" class="absolute top-3 right-3 shadow-sm" />
+      <UBadge v-if="event.cancelledAt" color="neutral" variant="solid" :label="t('card.cancelled')" class="absolute top-3 right-3 shadow-sm" />
+      <UBadge v-else :color="STAGE_COLOR[event.stage]" variant="solid" :label="t(`stage.${event.stage}`)" class="absolute top-3 right-3 shadow-sm" />
       <div v-if="block" class="absolute -bottom-6 left-4 grid min-w-12 place-items-center rounded-lg bg-default px-1.5 py-1 shadow-md ring ring-default">
         <span class="text-[0.625rem] font-semibold whitespace-nowrap text-primary uppercase">{{ block.month }}</span>
         <span class="text-lg leading-none font-bold text-highlighted">{{ block.day }}</span>
@@ -56,6 +59,9 @@ const status = computed(() => {
         <template v-if="event.startsAt">{{ fmtDateTime(event.startsAt, locale) }}</template>
         <template v-else-if="event.pollDays.length">{{ t('card.voting', { n: event.pollDays.length }) }}</template>
         <template v-else>{{ t('event.dateTbd') }}</template>
+      </p>
+      <p v-if="event.stage === 'poll' && event.voteDeadline && !event.cancelledAt" class="truncate text-xs text-muted">
+        {{ t('card.closes', { when: fmtDateTime(event.voteDeadline, locale) }) }}
       </p>
       <p v-if="event.venue" class="flex items-center gap-1 truncate text-sm text-muted">
         <UIcon name="i-lucide-map-pin" class="size-3.5 shrink-0" />{{ event.venue }}

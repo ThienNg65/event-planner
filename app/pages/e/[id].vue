@@ -11,16 +11,58 @@ const { data, refresh, error } = await useFetch(`/api/events/${id}`, {
     if (key.value) options.headers.set('x-manage-key', key.value);
   },
 });
-if (error.value) throw createError({ statusCode: 404, statusMessage: t('err.notFound'), fatal: true });
+if (error.value) {
+  const notFound = error.value.statusCode === 404;
+  throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'err.notFound' : 'err.generic'), fatal: true });
+}
 watch(key, (k) => k && refresh());
 
 const ev = computed(() => data.value!.event);
-const when = computed(() => (ev.value.startsAt ? fmtDateTime(ev.value.startsAt, locale.value) : t('event.dateTbd')));
+// The key is browser-only, so the server renders every visitor as a participant until it is known.
+const role = computed<Role>(() => (key.value ? data.value!.role : null));
+const when = computed(() => {
+  if (ev.value.startsAt) return fmtDateTime(ev.value.startsAt, locale.value);
+  return ev.value.pollDays.length ? t('card.voting', { n: ev.value.pollDays.length }) : t('event.dateTbd');
+});
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
-const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
-const steps = computed(() => STAGES.map((s) => ({ value: s, title: t(`stage.${s}`) })));
 const editing = ref(false);
-const attendees = computed(() => data.value!.confirmed.map((m) => data.value!.responses.find((r) => r.memberId === m)!));
+const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
+const voters = computed(() => data.value!.responses.filter((r) => r.days.length || r.venueIds.length).length);
+// Finished stages collapse to one line each.
+const done = computed(() => {
+  const past = STAGES.indexOf(ev.value.stage);
+  const out: string[] = [];
+  if (past > 0 && voters.value) out.push(t('sum.poll', { n: voters.value }));
+  if (past > 1) out.push(t('sum.rsvp', { n: data.value!.seats }));
+  return out;
+});
+
+// "New" dot on the host's update until this browser has seen that version of it.
+const unseen = ref(false);
+onMounted(() => {
+  const at = ev.value.noticeAt;
+  if (!at) return;
+  try {
+    const seen = JSON.parse(localStorage.getItem('te:notice') ?? '{}');
+    unseen.value = seen[id] !== at;
+    localStorage.setItem('te:notice', JSON.stringify({ ...seen, [id]: at }));
+  } catch {
+    /* storage blocked: the update just shows without the dot */
+  }
+});
+
+const { call } = useEventApi(
+  () => id,
+  () => key.value
+);
+const restoreActions = computed(() =>
+  can(role.value, 'cancel')
+    ? [{ label: t('event.restore'), color: 'neutral' as const, variant: 'outline' as const, onClick: restore }]
+    : []
+);
+async function restore() {
+  if (await call('', 'PATCH', { restore: true })) await refresh();
+}
 
 useSeoMeta({
   title: () => ev.value.title,
@@ -50,74 +92,73 @@ async function share() {
       <UDashboardNavbar :title="ev.title">
         <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
-          <UButton v-if="data?.manager && key" icon="i-lucide-pencil" color="neutral" variant="outline" @click="editing = true">{{ t('edit.open') }}</UButton>
-          <UButton icon="i-lucide-share" color="neutral" variant="outline" @click="share">{{ t('event.share') }}</UButton>
+          <UButton v-if="role" icon="i-lucide-settings-2" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
+            <span class="hidden sm:inline">{{ t('edit.open') }}</span>
+          </UButton>
+          <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
+            <span class="hidden sm:inline">{{ t('event.share') }}</span>
+          </UButton>
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
-      <div v-if="data" class="mx-auto w-full max-w-6xl space-y-6">
-        <section class="relative overflow-hidden rounded-2xl" :class="'gradient' in cover && cover.gradient">
-          <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
-          <div class="relative flex min-h-36 flex-col justify-end gap-2 bg-gradient-to-t from-black/70 via-black/25 to-transparent p-5 text-white sm:min-h-48 sm:p-6">
-            <UBadge :color="STAGE_COLOR[ev.stage]" variant="solid" :label="t(`stage.${ev.stage}`)" class="self-start" />
-            <h1 class="text-3xl font-bold tracking-tight break-words drop-shadow sm:text-4xl">{{ ev.title }}</h1>
-            <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/90">
+      <div v-if="data" class="mx-auto w-full max-w-3xl space-y-6">
+        <header class="space-y-3">
+          <div class="relative h-28 overflow-hidden rounded-2xl sm:h-36" :class="'gradient' in cover && cover.gradient">
+            <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
+          </div>
+          <div class="space-y-1.5">
+            <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" />
+            <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${ev.stage}`)" />
+            <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-3xl">{{ ev.title }}</h1>
+            <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
               <span class="flex items-center gap-1.5"><UIcon name="i-lucide-calendar" />{{ when }}</span>
-              <span v-if="ev.venue" class="flex items-center gap-1.5"><UIcon name="i-lucide-map-pin" />{{ ev.venue }}</span>
+              <span v-if="ev.venue" class="flex items-center gap-1.5">
+                <UIcon name="i-lucide-map-pin" />
+                <ULink v-if="ev.venueLink" :to="ev.venueLink" target="_blank" rel="noopener noreferrer" class="text-primary">{{ ev.venue }}</ULink>
+                <template v-else>{{ ev.venue }}</template>
+              </span>
+              <span class="flex items-center gap-1.5"><UIcon name="i-lucide-user-round" />{{ t('event.hostedBy', { name: data.hostName }) }}</span>
+              <span v-if="ev.stage !== 'poll'" class="flex items-center gap-1.5">
+                <UIcon name="i-lucide-users" />{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}
+              </span>
             </p>
           </div>
-        </section>
+        </header>
 
-        <UStepper :model-value="ev.stage" :items="steps" disabled size="sm" class="w-full" />
+        <UAlert
+          v-if="ev.cancelledAt"
+          role="status"
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-ban"
+          :title="t('event.cancelledTitle')"
+          :description="ev.cancelReason ?? undefined"
+          :actions="restoreActions"
+        />
+        <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice">
+          <template #title>
+            {{ t('event.noticeTitle') }}
+            <UBadge v-if="unseen" color="secondary" variant="solid" size="sm" :label="t('event.new')" class="ml-1" />
+          </template>
+        </UAlert>
 
-        <EventNextStep :data="data" :me="me" :manage-key="key" @changed="refresh" />
+        <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
 
-        <div class="grid items-start gap-6 lg:grid-cols-3">
-          <div class="space-y-6 lg:col-span-2">
-            <EventPoll :data="data" :me="me" :manage-key="key" @changed="refresh" />
-            <EventRsvp :data="data" :me="me" :manage-key="key" @changed="refresh" />
-            <EventBill :data="data" :me="me" :manage-key="key" @changed="refresh" />
-          </div>
+        <p v-for="line in done" :key="line" class="flex items-center gap-2 text-sm text-muted">
+          <UIcon name="i-lucide-circle-check" class="size-4 text-success" />{{ line }}
+        </p>
 
-          <aside class="space-y-6 lg:sticky lg:top-4">
-            <UCard>
-              <template #header>{{ t('event.details') }}</template>
-              <ul class="space-y-3 text-sm">
-                <li class="flex items-start gap-3">
-                  <UIcon name="i-lucide-calendar" class="mt-0.5 size-4 shrink-0 text-muted" />
-                  <span :class="ev.startsAt ? 'text-highlighted' : 'text-muted'">{{ when }}</span>
-                </li>
-                <li v-if="ev.venue" class="flex items-start gap-3">
-                  <UIcon name="i-lucide-map-pin" class="mt-0.5 size-4 shrink-0 text-muted" />
-                  <ULink v-if="ev.venueLink" :to="ev.venueLink" target="_blank" rel="noopener noreferrer" class="text-primary">{{ ev.venue }}</ULink>
-                  <span v-else class="text-highlighted">{{ ev.venue }}</span>
-                </li>
-                <li v-if="ev.stage !== 'poll'" class="flex items-start gap-3">
-                  <UIcon name="i-lucide-users" class="mt-0.5 size-4 shrink-0 text-muted" />
-                  <div class="flex-1">
-                    <span class="text-highlighted tabular-nums">{{ ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }} {{ t('event.seats') }}</span>
-                    <UProgress v-if="ev.capacity" :model-value="data.seats" :max="ev.capacity" size="xs" class="mt-1.5" />
-                  </div>
-                </li>
-                <li v-if="ev.note" class="border-t border-default pt-3 whitespace-pre-line text-toned">{{ ev.note }}</li>
-              </ul>
-            </UCard>
+        <EventPoll v-if="ev.stage === 'poll'" :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
+        <EventRsvp v-else-if="ev.stage === 'rsvp'" :data="data" :me="me" :manage-key="key" @changed="refresh" />
+        <EventBill v-else :data="data" :me="me" :manage-key="key" @changed="refresh" />
 
-            <UCard v-if="ev.stage !== 'poll'">
-              <template #header>{{ t('event.attendees') }}</template>
-              <div v-if="attendees.length" class="flex items-center justify-between gap-3">
-                <UAvatarGroup :max="6" size="sm">
-                  <UAvatar v-for="a in attendees" :key="a.memberId" :alt="a.name" :title="a.name" />
-                </UAvatarGroup>
-                <UBadge v-if="data.waitlist.length" color="warning" variant="subtle" :label="t('event.waitlist', { n: data.waitlist.length })" />
-              </div>
-              <p v-else class="text-sm text-muted">{{ t('event.nobody') }}</p>
-            </UCard>
-          </aside>
-        </div>
-        <EventEdit v-if="data.manager && key" v-model:open="editing" :data="data" :manage-key="key" @changed="refresh" />
+        <EventPeople :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
+
+        <p v-if="ev.note" class="border-t border-default pt-4 text-sm whitespace-pre-line text-toned">{{ ev.note }}</p>
+
+        <EventEdit v-if="role && key" v-model:open="editing" :data="data" :manage-key="key" :role="role" @changed="refresh" />
       </div>
     </template>
   </UDashboardPanel>

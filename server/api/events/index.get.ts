@@ -3,8 +3,7 @@ import { desc, eq } from 'drizzle-orm';
 export default defineEventHandler(async (event) => {
   const { events, responses } = schema;
   // The visitor's picked name (cookie set by useMe); no cookie → no personal status.
-  const me = Number(getCookie(event, 'me'));
-  const meId = Number.isInteger(me) && me > 0 ? me : null;
+  const meId = meOf(event);
   const [evs, going, mine] = await Promise.all([
     useDb()
       .select({
@@ -17,6 +16,8 @@ export default defineEventHandler(async (event) => {
         capacity: events.capacity,
         cover: events.cover,
         billTotal: events.billTotal,
+        voteDeadline: events.voteDeadline,
+        cancelledAt: events.cancelledAt,
       })
       .from(events)
       .orderBy(desc(events.createdAt)),
@@ -28,6 +29,7 @@ export default defineEventHandler(async (event) => {
         guests: responses.guests,
         goingAt: responses.goingAt,
         paidAt: responses.paidAt,
+        paidAmount: responses.paidAmount,
       })
       .from(responses)
       .where(eq(responses.status, 'going')),
@@ -39,17 +41,18 @@ export default defineEventHandler(async (event) => {
       going.filter((r) => r.eventId === e.id),
       e.capacity
     );
+    const share = shareOf(e.billTotal, seats);
     const row = mine.find((r) => r.eventId === e.id);
     return {
       ...e,
       seats,
-      allPaid: confirmed.length > 0 && confirmed.every((r) => r.paidAt),
+      allPaid: allPaid(confirmed, share),
       mine: meId
         ? mineOf(
             row,
             confirmed.some((r) => r.memberId === meId),
             waitlist.some((r) => r.memberId === meId),
-            shareOf(e.billTotal, seats)
+            share
           )
         : null,
     };

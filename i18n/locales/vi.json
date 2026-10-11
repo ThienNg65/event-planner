@@ -29,10 +29,11 @@
     }
   },
   "stage": {
-    "poll": "Đang bình chọn",
-    "rsvp": "Mở đăng ký",
-    "bill": "Chia tiền",
-    "settled": "Hoàn tất"
+    "poll": "Bình chọn",
+    "rsvp": "Đã chốt",
+    "bill": "Thu tiền",
+    "settled": "Hoàn tất",
+    "cancelled": "Đã huỷ"
   },
   "me": {
     "label": "Bạn là ai?",
@@ -53,7 +54,13 @@
     "details": "Thông tin",
     "attendees": "Người tham gia",
     "waitlist": "{n} người đang chờ",
-    "nobody": "Chưa có ai"
+    "nobody": "Chưa có ai",
+    "hostedBy": "Tổ chức bởi {name}",
+    "goingCount": "{n} người đi",
+    "cancelledTitle": "Sự kiện đã bị huỷ",
+    "restore": "Khôi phục sự kiện",
+    "noticeTitle": "Thông báo từ người tổ chức",
+    "new": "Mới"
   },
   "create": {
     "title": "Tạo sự kiện",
@@ -114,7 +121,7 @@
     "linkCopied": "Đã sao chép link quản lý",
     "linkHint": "Ai có link này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
     "delete": "Xoá sự kiện",
-    "deleteConfirm": "Xoá vĩnh viễn sự kiện này?",
+    "deleteConfirm": "Xoá vĩnh viễn? Toàn bộ phiếu và khoản thanh toán sẽ mất, không thể hoàn tác.",
     "lock": "Chốt kết quả và mở đăng ký",
     "lockButton": "Chốt & mở đăng ký",
     "bill": "Tổng hoá đơn (₫)",
@@ -141,17 +148,35 @@
     "invalidBank": "Thông tin ngân hàng không hợp lệ.",
     "invalidGuests": "Số người đi cùng từ 0 đến 10.",
     "unknownVenue": "Địa điểm không tồn tại.",
-    "invalidCover": "Chọn một ảnh bìa hoặc dán link ảnh bắt đầu bằng https://"
+    "invalidCover": "Chọn một ảnh bìa hoặc dán link ảnh bắt đầu bằng https://",
+    "notYou": "Đó không phải bạn. Hãy chọn đúng tên của bạn.",
+    "hostOnly": "Chỉ người tổ chức chính mới làm được.",
+    "cancelled": "Sự kiện đã bị huỷ.",
+    "venueExists": "Địa điểm này đã có trong danh sách.",
+    "tooManyDays": "Bình chọn đã có 20 ngày.",
+    "votingClosed": "Đã đóng bình chọn."
   },
   "poll": {
     "days": "Ngày nào bạn đi được?",
     "top": "Nhiều nhất",
     "venues": "Đi đâu?",
-    "noVenues": "Chưa có đề xuất nào. Hãy là người đầu tiên!",
+    "noVenues": "Chưa có nhà hàng nào. Hãy gợi ý một chỗ!",
     "suggestedBy": "đề xuất bởi {name}",
     "suggest": "Đề xuất địa điểm",
     "add": "Thêm đề xuất",
-    "tapHint": "Chạm vào những ngày bạn đi được"
+    "tapHint": "Chạm vào những ngày bạn đi được",
+    "placeQ": "Bạn thích chỗ nào?",
+    "progress": "{n}/{total} người đã chọn",
+    "closes": "đóng lúc {when}",
+    "closed": "Đã đóng bình chọn",
+    "pickName": "Chọn tên của bạn ở trên để bình chọn",
+    "suggestDay": "Gợi ý ngày",
+    "suggestPlace": "Gợi ý địa điểm",
+    "dup": "Đã có trong danh sách. Mình đã thêm phiếu của bạn.",
+    "remove": "Gỡ",
+    "removeTitle": "Gỡ “{name}”?",
+    "removeBody": "{n} phiếu cho chỗ này cũng sẽ bị xoá. | {n} phiếu cho chỗ này cũng sẽ bị xoá.",
+    "voteFor": "Chọn {name}"
   },
   "bill": {
     "title": "Chia tiền",
@@ -166,7 +191,18 @@
     "markPaid": "Tôi đã chuyển khoản",
     "paid": "Đã trả",
     "unpaid": "Chưa trả",
-    "collected": "Đã thu {paid} / {total}"
+    "collected": "Đã thu {paid} / {total}",
+    "share": "Phần của bạn",
+    "paidSoFar": "Đã trả {amount}",
+    "left": "Còn {amount}",
+    "iPaid": "Tôi đã trả…",
+    "amountLabel": "Số tiền bạn đã chuyển (₫)",
+    "confirm": "Xác nhận đã trả",
+    "clear": "Xoá khoản đã trả",
+    "paidFull": "Đã trả đủ",
+    "bankFallback": "Chuyển khoản tới {bank}",
+    "ledger": "Đã thu {paid}/{total} · {n} người còn nợ",
+    "locked": "Sự kiện đã hoàn tất nên không sửa được khoản thanh toán."
   },
   "nav": {
     "events": "Sự kiện",
@@ -193,7 +229,9 @@
     "going": "Sẽ đi",
     "waitlist": "Danh sách chờ",
     "pay": "Cần trả {amount}",
-    "paid": "Đã trả"
+    "paid": "Đã trả",
+    "cancelled": "Đã huỷ",
+    "closes": "Bình chọn đóng lúc {when}"
   },
   "next": {
     "who": {
@@ -207,7 +245,7 @@
     },
     "voted": {
       "title": "Cảm ơn bạn đã bình chọn!",
-      "body": "Đã có {n} người bình chọn. Người tổ chức sẽ chốt ngày.",
+      "body": "Đã có {n} người bình chọn. Người tổ chức sẽ chốt kết quả.",
       "cta": "Sửa lựa chọn"
     },
     "rsvp": {
@@ -248,27 +286,91 @@
     "action": {
       "lock": "Chốt ngày & mở đăng ký",
       "bill": "Nhập hoá đơn",
-      "settle": "Đánh dấu đã xong"
+      "settle": "Đánh dấu đã xong",
+      "pick": "Chọn kết quả"
     },
     "lockDay": "Ngày và giờ",
     "lockHint": "Sau đó mọi người có thể trả lời Đi, Có thể hoặc Không.",
     "billHint": "Chia cho {n} chỗ",
-    "billSave": "Lưu & chia tiền"
+    "billSave": "Lưu & chia tiền",
+    "voteVenue": {
+      "title": "Bạn thích chỗ nào?",
+      "body": "Chạm vào các chỗ bạn thích, hoặc gợi ý thêm.",
+      "cta": "Bình chọn"
+    },
+    "voteClosed": {
+      "title": "Đã đóng bình chọn",
+      "body": "Người tổ chức sẽ chọn kết quả.",
+      "bodyHost": "Chọn ngày và địa điểm thắng cuộc."
+    },
+    "cancelled": {
+      "title": "Sự kiện đã bị huỷ",
+      "body": "{reason}"
+    },
+    "closes": "Bình chọn đóng lúc {when}",
+    "tie": "Đang hoà ở vị trí đầu. Hãy chọn một.",
+    "votes": "{n} phiếu | {n} phiếu"
   },
   "edit": {
-    "open": "Sửa",
-    "title": "Sửa sự kiện",
+    "open": "Quản lý",
+    "title": "Quản lý sự kiện",
     "description": "Thay đổi sẽ hiển thị với mọi người ngay.",
     "save": "Lưu thay đổi",
     "danger": "Vùng nguy hiểm",
     "reopen": "Quay lại bước…",
     "reopenButton": "Mở lại",
-    "reopenConfirm": "Đưa sự kiện về bước trước? Câu trả lời vẫn được giữ."
+    "reopenConfirm": "Đưa sự kiện về bước trước? Phiếu và câu trả lời vẫn được giữ, nhưng bước thay đổi với mọi người.",
+    "deadline": "Hạn bình chọn",
+    "deadlineHint": "Tuỳ chọn. Sau hạn này chỉ người tổ chức mới sửa được phiếu.",
+    "notice": "Đăng thông báo",
+    "noticeHint": "Hiện cho mọi người ở đầu sự kiện. Xoá trống để gỡ.",
+    "cohost": "Link đồng tổ chức",
+    "cohostHint": "Đồng tổ chức được sửa, chốt và hoàn tất, nhưng không mở lại, huỷ hay xoá được sự kiện.",
+    "cohostCreate": "Tạo link đồng tổ chức",
+    "cohostActive": "Link đồng tổ chức đang hoạt động",
+    "cohostNew": "Link mới (thay link cũ)",
+    "cohostRevoke": "Thu hồi",
+    "cohostCopied": "Đã sao chép link đồng tổ chức",
+    "cancelEvent": "Huỷ sự kiện",
+    "cancelReason": "Lý do (không bắt buộc)",
+    "cancelConfirm": "Mọi người sẽ thấy sự kiện đã huỷ. Bạn có thể khôi phục sau.",
+    "cancelledNote": "Sự kiện đã huỷ. Hãy khôi phục để chỉnh sửa.",
+    "restore": "Khôi phục sự kiện",
+    "letKnow": "Báo cho mọi người?",
+    "postUpdate": "Đăng thông báo"
   },
   "share": {
     "poll": "Bình chọn ngày cho: {title}",
     "rsvp": "Bạn có đi không? {title}",
     "bill": "Đến lúc chia tiền: {title}",
     "settled": "{title}"
+  },
+  "sum": {
+    "poll": "Đã đóng bình chọn · {n} người chọn",
+    "rsvp": "Tham dự · {n} người đi"
+  },
+  "notice": {
+    "moved": "Đã dời sang {when}.",
+    "venue": "Đổi địa điểm sang {venue}."
+  },
+  "people": {
+    "title": "Mọi người",
+    "empty": "Chưa có ai.",
+    "voted": "Đã chọn",
+    "going": "Đi",
+    "waitlist": "Chờ #{n}",
+    "maybe": "Có thể",
+    "no": "Không đi",
+    "paid": "Đã trả",
+    "unpaid": "Chưa trả",
+    "left": "Còn {amount}",
+    "showAll": "Xem tất cả {n}",
+    "showLess": "Thu gọn",
+    "actions": "Thao tác cho {name}",
+    "markPaid": "Đã trả đủ",
+    "markUnpaid": "Chưa trả",
+    "setAmount": "Nhập số đã trả…",
+    "amount": "Số tiền đã trả (₫)",
+    "save": "Lưu"
   }
 }

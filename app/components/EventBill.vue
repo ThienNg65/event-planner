@@ -12,28 +12,38 @@ const ev = computed(() => props.data.event);
 const payers = computed(() =>
   props.data.confirmed.map((id) => {
     const r = props.data.responses.find((x) => x.memberId === id)!;
-    return { ...r, owes: (props.data.share ?? 0) * (1 + r.guests) };
+    const owes = (props.data.share ?? 0) * (1 + r.guests);
+    return { ...r, owes, ...paymentOf(r, owes) };
   })
 );
 const mine = computed(() => payers.value.find((p) => p.memberId === props.me?.id));
-const paidTotal = computed(() => payers.value.filter((p) => p.paidAt).reduce((s, p) => s + p.owes, 0));
+const collected = computed(() => payers.value.reduce((s, p) => s + Math.min(p.paid, p.owes), 0));
+const total = computed(() => payers.value.reduce((s, p) => s + p.owes, 0));
+const stillOwe = computed(() => payers.value.filter((p) => !p.done).length);
+const locked = computed(() => ev.value.stage === 'settled' || !!ev.value.cancelledAt);
+
+const qrFailed = ref(false);
 const qr = computed(() =>
-  mine.value && ev.value.bankId && ev.value.bankAccount
-    ? vietqrUrl(ev.value.bankId, ev.value.bankAccount, ev.value.bankHolder, mine.value.owes, `${ev.value.title} ${mine.value.name}`)
+  mine.value && !mine.value.done && ev.value.bankId && ev.value.bankAccount
+    ? vietqrUrl(ev.value.bankId, ev.value.bankAccount, ev.value.bankHolder, mine.value.left, `${ev.value.title} ${mine.value.name}`)
     : null
 );
+watch(qr, () => (qrFailed.value = false));
 
-async function setPaid(memberId: number, paid: boolean) {
-  if (await call('/response', 'PUT', { memberId, paid })) {
-    if (paid && memberId === props.me?.id) confetti();
-    emit('changed');
-  }
+// "I paid…" starts at what is still left, so one tap confirms the usual full payment.
+const amount = ref(0);
+watch(() => mine.value?.left, (l) => (amount.value = l ?? 0), { immediate: true });
+
+async function setPaid(paidAmount: number | null) {
+  const ok = await call('/response', 'PUT', { memberId: props.me!.id, paidAmount });
+  if (ok && paidAmount !== null && paidAmount >= mine.value!.owes) confetti();
+  emit('changed');
 }
 </script>
 
 <template>
-  <UCard v-if="ev.stage === 'bill' || ev.stage === 'settled'" id="bill" class="scroll-mt-4">
-    <template #header>{{ t('bill.title') }}</template>
+  <section id="bill" class="scroll-mt-4 space-y-4">
+    <h2 class="text-lg font-semibold text-highlighted">{{ t('bill.title') }}</h2>
 
     <p v-if="data.share === null" class="text-sm text-muted">{{ t('bill.pending') }}</p>
     <div v-else class="space-y-4">
@@ -51,44 +61,35 @@ async function setPaid(memberId: number, paid: boolean) {
 
       <div v-if="mine" class="space-y-4 rounded-2xl bg-elevated p-5 text-center">
         <div>
-          <p class="text-sm text-muted">{{ t('bill.youOwe') }}</p>
+          <p class="text-sm text-muted">{{ t('bill.share') }}</p>
           <p class="text-4xl font-bold tracking-tight text-highlighted tabular-nums">{{ fmtVnd(mine.owes) }}</p>
           <p v-if="mine.guests" class="text-sm text-muted">{{ t('bill.withGuests', { n: mine.guests }, mine.guests) }}</p>
+          <p v-if="mine.paid > 0" class="mt-1 text-sm text-muted tabular-nums">
+            {{ t('bill.paidSoFar', { amount: fmtVnd(mine.paid) }) }}<template v-if="!mine.done"> · <span class="font-semibold text-highlighted">{{ t('bill.left', { amount: fmtVnd(mine.left) }) }}</span></template>
+          </p>
         </div>
-        <img v-if="qr && !mine.paidAt" :src="qr" :alt="t('bill.qrAlt')" class="mx-auto w-64 max-w-full rounded-xl bg-white shadow-sm" />
-        <p v-else-if="!ev.bankAccount" class="text-sm text-muted">{{ t('bill.noBank') }}</p>
-        <UButton
-          :loading="busy"
-          :color="mine.paidAt ? 'secondary' : 'primary'"
-          :variant="mine.paidAt ? 'soft' : 'solid'"
-          :icon="mine.paidAt ? 'i-lucide-check' : undefined"
-          @click="setPaid(mine.memberId, !mine.paidAt)"
-        >
-          {{ mine.paidAt ? t('bill.paid') : t('bill.markPaid') }}
-        </UButton>
-      </div>
 
-      <div>
-        <p class="mb-2 text-sm font-semibold">{{ t('bill.collected', { paid: fmtVnd(paidTotal), total: fmtVnd(payers.reduce((s, p) => s + p.owes, 0)) }) }}</p>
-        <ul class="divide-y divide-default">
-          <li v-for="p in payers" :key="p.memberId" class="flex items-center justify-between gap-2 py-2">
-            <span class="min-w-0 truncate">{{ p.name }}<span v-if="p.guests" class="text-muted"> +{{ p.guests }}</span></span>
-            <span class="flex shrink-0 items-center gap-2">
-              <span class="text-sm">{{ fmtVnd(p.owes) }}</span>
-              <UButton
-                v-if="data.manager"
-                size="xs"
-                :loading="busy"
-                :color="p.paidAt ? 'success' : 'neutral'"
-                :variant="p.paidAt ? 'soft' : 'outline'"
-                :label="p.paidAt ? t('bill.paid') : t('bill.unpaid')"
-                @click="setPaid(p.memberId, !p.paidAt)"
-              />
-              <UBadge v-else :color="p.paidAt ? 'success' : 'neutral'" variant="subtle" :label="p.paidAt ? t('bill.paid') : t('bill.unpaid')" />
-            </span>
-          </li>
-        </ul>
+        <template v-if="mine.done">
+          <p class="flex items-center justify-center gap-1.5 font-semibold text-success"><UIcon name="i-lucide-badge-check" class="size-5" />{{ t('bill.paidFull') }}</p>
+          <UButton v-if="!locked" size="sm" color="neutral" variant="ghost" :loading="busy" @click="setPaid(null)">{{ t('bill.clear') }}</UButton>
+        </template>
+        <template v-else-if="!locked">
+          <img v-if="qr && !qrFailed" :src="qr" :alt="t('bill.qrAlt')" class="mx-auto w-64 max-w-full rounded-xl bg-white shadow-sm" @error="qrFailed = true" />
+          <p v-else-if="ev.bankAccount" class="text-sm text-muted">
+            {{ t('bill.bankFallback', { bank: [ev.bankId, ev.bankAccount, ev.bankHolder].filter(Boolean).join(' · ') }) }}
+          </p>
+          <p v-else class="text-sm text-muted">{{ t('bill.noBank') }}</p>
+          <div class="mx-auto flex max-w-xs flex-col gap-2 text-left">
+            <UFormField :label="t('bill.amountLabel')">
+              <UInputNumber v-model="amount" :min="1" :step="1000" :format-options="{ maximumFractionDigits: 0 }" class="w-full" />
+            </UFormField>
+            <UButton block :loading="busy" :disabled="!amount || amount < 1" @click="setPaid(mine.paid + amount)">{{ t('bill.confirm') }}</UButton>
+          </div>
+        </template>
       </div>
+      <p v-if="locked" class="text-sm text-muted">{{ t('bill.locked') }}</p>
+
+      <p class="text-sm font-semibold tabular-nums">{{ t('bill.ledger', { paid: fmtVnd(collected), total: fmtVnd(total), n: stillOwe }) }}</p>
     </div>
-  </UCard>
+  </section>
 </template>

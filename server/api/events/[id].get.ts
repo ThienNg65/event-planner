@@ -2,8 +2,9 @@ import { asc, eq, getTableColumns } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const { responses, members, venues } = schema;
-  const { manageKeyHash, ...ev } = await findEvent(routeId(event));
-  const [rs, vs] = await Promise.all([
+  const { manageKeyHash, coHostKeyHash, ...ev } = await findEvent(routeId(event));
+  const role = roleOf(event, { manageKeyHash, coHostKeyHash });
+  const [rs, vs, [host]] = await Promise.all([
     useDb()
       .select({ ...getTableColumns(responses), name: members.name })
       .from(responses)
@@ -16,6 +17,7 @@ export default defineEventHandler(async (event) => {
       .innerJoin(members, eq(members.id, venues.addedBy))
       .where(eq(venues.eventId, ev.id))
       .orderBy(asc(venues.createdAt)),
+    useDb().select({ name: members.name }).from(members).where(eq(members.id, ev.createdBy)),
   ]);
   const { confirmed, waitlist, seats } = rollCall(rs, ev.capacity);
   const venueList = vs
@@ -23,7 +25,11 @@ export default defineEventHandler(async (event) => {
     .sort((a, b) => b.upvotes.length - a.upvotes.length);
   return {
     event: ev,
-    manager: isManager(event, manageKeyHash),
+    role,
+    manager: role !== null,
+    hasCoHost: !!coHostKeyHash,
+    hostName: host?.name ?? '',
+    votingOpen: votingOpen(ev),
     responses: rs,
     confirmed: confirmed.map((r) => r.memberId),
     waitlist: waitlist.map((r) => r.memberId),
