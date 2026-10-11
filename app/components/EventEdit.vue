@@ -35,6 +35,14 @@ const blank = () => {
   };
 };
 const form = ref(blank());
+// What the form held when the panel opened: the baseline for "unsaved" and for the fields a save sends.
+const snapshot = ref(blank());
+const changes = computed(() => changedFields(snapshot.value, form.value));
+const dirty = computed(() => Object.keys(changes.value).length > 0);
+const errors = ref<Record<string, string>>({});
+const denied = ref(false);
+const saving = ref(false);
+const discarding = ref(false);
 const reopenTo = ref<(typeof STAGES)[number] | undefined>();
 const confirm = ref<'reopen' | 'cancel' | 'delete' | 'rotate' | null>(null);
 const cancelReason = ref('');
@@ -43,11 +51,23 @@ const coHostLink = ref('');
 watch(open, (o) => {
   if (!o) return;
   form.value = blank();
+  snapshot.value = blank();
+  errors.value = {};
+  denied.value = false;
+  discarding.value = false;
   reopenTo.value = undefined;
   confirm.value = null;
   cancelReason.value = '';
   coHostLink.value = '';
 });
+// A confirm row opens with focus on Cancel, never on the destructive button.
+const cancelBtn = useTemplateRef<{ $el: HTMLElement }>('cancelBtn');
+watch(confirm, async (c) => {
+  if (!c) return;
+  await nextTick();
+  cancelBtn.value?.$el.focus();
+});
+watch(form, () => (errors.value = {}), { deep: true });
 const earlier = computed(() => STAGES.slice(0, STAGES.indexOf(ev.value.stage)).map((s) => ({ label: t(`stage.${s}`), value: s })));
 
 async function patch(body: object) {
@@ -56,25 +76,44 @@ async function patch(body: object) {
   return true;
 }
 
+// Which form field a server error code belongs under.
+const FIELD_OF: Record<string, string> = {
+  titleRequired: 'title',
+  invalidLink: 'venueLink',
+  invalidCapacity: 'capacity',
+  invalidBank: 'bank',
+  invalidCover: 'cover',
+};
+
 async function save() {
-  const { startsAt, pollDays, billTotal, voteDeadline, ...f } = form.value;
+  const { startsAt, voteDeadline, pollDays, billTotal, ...f } = changes.value;
   const e = ev.value;
-  const dateMoved = !!startsAt && !!e.startsAt && startsAt !== toTeamInput(e.startsAt);
-  const venueMoved = !!f.venue && f.venue !== (e.venue ?? '');
   const startsAtIso = startsAt && teamTime(...(startsAt.split('T') as [string, string]));
-  // Only resend the days when the host changed them, or a day suggested meanwhile (and its votes) would be dropped.
-  const daysChanged = [...pollDays].sort().join() !== [...e.pollDays].sort().join();
-  const ok = await patch({
+  const body = {
     ...f,
-    capacity: f.capacity || null,
-    ...(editingDays.value ? daysChanged && { pollDays } : startsAt && { startsAt: startsAtIso }),
-    ...(e.stage === 'poll' && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
-    ...(e.stage !== 'poll' && { billTotal: billTotal ?? null }),
+    ...(pollDays && { pollDays }),
+    ...(startsAtIso && { startsAt: startsAtIso }),
+    ...('voteDeadline' in changes.value && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
+    ...('billTotal' in changes.value && { billTotal: billTotal ?? null }),
     // Entering (or changing) the bill while RSVP is open moves on to splitting it; a bill kept from a reopen does not.
-    ...(e.stage === 'rsvp' && billTotal != null && billTotal !== e.billTotal && { stage: 'bill' }),
-  });
-  if (!ok) return;
+    ...(e.stage === 'rsvp' && billTotal != null && { stage: 'bill' }),
+  };
+  if (!Object.keys(body).length) return;
+  saving.value = true;
+  errors.value = {};
+  try {
+    await $fetch(`/api/events/${e.id}`, { method: 'PATCH', body, headers: { 'x-manage-key': props.manageKey } });
+  } catch (err) {
+    onSaveError(err, 'voteDeadline' in body);
+    return;
+  } finally {
+    saving.value = false;
+  }
+  const dateMoved = !!startsAtIso && !!e.startsAt && startsAt !== toTeamInput(e.startsAt);
+  const venueMoved = !!f.venue && f.venue !== (e.venue ?? '');
+  snapshot.value = { ...form.value };
   open.value = false;
+  emit('changed');
   // Once people have answered, offer to tell them about a changed date or venue.
   if (e.stage !== 'poll' && (dateMoved || venueMoved)) {
     const text = [
@@ -91,6 +130,50 @@ async function save() {
   }
 }
 
+// A failed save leaves the form as it is. Field errors show next to the field; a lost key is explained and refreshed once the panel closes.
+function onSaveError(err: unknown, deadlineSent: boolean) {
+  const status = (err as { statusCode?: number }).statusCode;
+  const code = (err as { data?: { statusMessage?: string } }).data?.statusMessage ?? '';
+  if (status === 403) {
+    denied.value = true;
+    return;
+  }
+  let field = FIELD_OF[code];
+  if (code === 'invalidDate') field = deadlineSent ? 'voteDeadline' : 'startsAt';
+  if (field) errors.value = { [field]: errMsg(err) };
+  else toast.add({ color: 'error', title: errMsg(err) });
+}
+
+// Closing with unsaved edits asks first; "Keep editing" is focused.
+function tryClose() {
+  if (dirty.value) discarding.value = true;
+  else open.value = false;
+}
+
+// Reka would focus the first control; the safe choice must get the focus instead.
+const keepBtn = useTemplateRef<{ $el: HTMLElement }>('keepBtn');
+function focusKeep(e: Event) {
+  e.preventDefault();
+  keepBtn.value?.$el.focus();
+}
+
+function discard() {
+  discarding.value = false;
+  open.value = false;
+}
+
+// The key stopped working (e.g. the co-host link was revoked): refresh only after the panel closes, or the page would drop it with the edits.
+watch(open, (o) => {
+  if (!o && denied.value) emit('changed');
+});
+
+// Leaving the page (a link, back) or closing the tab with unsaved edits.
+onBeforeRouteLeave(() => !(open.value && dirty.value) || window.confirm(t('edit.discardBody')));
+function warnUnload(e: BeforeUnloadEvent) {
+  if (open.value && dirty.value) e.preventDefault();
+}
+onMounted(() => window.addEventListener('beforeunload', warnUnload));
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
 async function reopen() {
   if (reopenTo.value && (await patch({ stage: reopenTo.value }))) open.value = false;
 }
@@ -143,11 +226,15 @@ async function remove() {
 </script>
 
 <template>
-  <USlideover v-model:open="open" :title="t('edit.title')" :description="t('edit.description')">
+  <USlideover v-model:open="open" :title="t('edit.title')" :description="t('edit.description')" :dismissible="!dirty" :close="false" @close:prevent="tryClose">
+    <template #actions>
+      <UButton color="neutral" variant="ghost" icon="i-lucide-x" :aria-label="t('close')" @click="tryClose" />
+    </template>
     <template #body>
       <form v-if="!ev.cancelledAt" id="edit-event" class="space-y-6" @submit.prevent="save">
+        <UAlert v-if="denied" color="error" variant="subtle" icon="i-lucide-shield-x" :title="t('edit.noAccess')" :description="t('edit.noAccessHint')" />
         <section class="space-y-3">
-          <UFormField :label="t('create.name')" required>
+          <UFormField :label="t('create.name')" required :error="errors.title">
             <UInput v-model="form.title" :maxlength="100" class="w-full" />
           </UFormField>
           <UFormField :label="t('create.note')">
@@ -156,7 +243,7 @@ async function remove() {
           <UFormField :label="t('edit.notice')" :hint="t('edit.noticeHint')">
             <UTextarea v-model="form.notice" :maxlength="280" :rows="2" class="w-full" />
           </UFormField>
-          <UFormField :label="t('create.where')">
+          <UFormField :label="t('create.where')" :error="errors.venueLink">
             <div class="space-y-2">
               <UInput v-model="form.venue" :maxlength="100" :placeholder="t('create.venue')" class="w-full" />
               <UInput v-model="form.venueLink" type="url" :placeholder="t('create.venueLink')" class="w-full" />
@@ -164,16 +251,16 @@ async function remove() {
           </UFormField>
         </section>
 
-        <UFormField :label="editingDays ? t('manage.pollDays') : t('manage.schedule')" :hint="editingDays ? t('manage.removeDayHint') : undefined">
+        <UFormField :label="editingDays ? t('manage.pollDays') : t('manage.schedule')" :hint="editingDays ? t('manage.removeDayHint') : undefined" :error="errors.startsAt">
           <PollDaysInput v-if="editingDays" v-model="form.pollDays" />
           <UInput v-else v-model="form.startsAt" type="datetime-local" class="w-full" />
         </UFormField>
 
-        <UFormField v-if="ev.stage === 'poll'" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')">
+        <UFormField v-if="ev.stage === 'poll'" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')" :error="errors.voteDeadline">
           <UInput v-model="form.voteDeadline" type="datetime-local" class="w-full" />
         </UFormField>
 
-        <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')">
+        <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')" :error="errors.capacity">
           <UInputNumber v-model="form.capacity" :min="1" :max="500" class="w-40" />
         </UFormField>
 
@@ -181,7 +268,7 @@ async function remove() {
           <UFormField v-if="ev.stage !== 'poll'" :label="t('manage.bill')" :hint="ev.stage === 'rsvp' ? t('manage.billHint') : undefined">
             <UInputNumber v-model="form.billTotal" :min="0" :step="1000" :format-options="{ maximumFractionDigits: 0 }" class="w-48" />
           </UFormField>
-          <UFormField :label="t('create.bank')" :hint="t('create.bankHint')">
+          <UFormField :label="t('create.bank')" :hint="t('create.bankHint')" :error="errors.bank">
             <div class="grid gap-2 sm:grid-cols-3">
               <UInput v-model="form.bankId" :placeholder="t('create.bankId')" />
               <UInput v-model="form.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />
@@ -190,7 +277,7 @@ async function remove() {
           </UFormField>
         </section>
 
-        <UFormField :label="t('cover.label')">
+        <UFormField :label="t('cover.label')" :error="errors.cover">
           <CoverPicker v-model="form.cover" />
         </UFormField>
       </form>
@@ -212,8 +299,8 @@ async function remove() {
           </div>
           <div v-if="confirm === 'rotate'" class="flex flex-wrap items-center gap-2">
             <span class="text-sm">{{ t('edit.cohostRotateConfirm') }}</span>
-            <UButton color="warning" :loading="busy" autofocus @click="newCoHostLink">{{ t('edit.cohostNew') }}</UButton>
-            <UButton variant="ghost" color="neutral" @click="confirm = null">{{ t('cancel') }}</UButton>
+            <UButton color="warning" :loading="busy" @click="newCoHostLink">{{ t('edit.cohostNew') }}</UButton>
+            <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
           </div>
           <div v-else class="flex flex-wrap gap-2">
             <UButton color="neutral" variant="outline" icon="i-lucide-user-plus" :loading="busy" @click="data.hasCoHost ? (confirm = 'rotate') : newCoHostLink()">
@@ -233,8 +320,8 @@ async function remove() {
             </UButton>
             <template v-else>
               <span class="text-sm">{{ t('edit.reopenConfirm') }}</span>
-              <UButton color="warning" :loading="busy" autofocus @click="reopen">{{ t('edit.reopenButton') }}</UButton>
-              <UButton variant="ghost" color="neutral" @click="confirm = null">{{ t('cancel') }}</UButton>
+              <UButton color="warning" :loading="busy" @click="reopen">{{ t('edit.reopenButton') }}</UButton>
+              <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
             </template>
           </div>
 
@@ -245,8 +332,8 @@ async function remove() {
               <p class="text-sm">{{ t('edit.cancelConfirm') }}</p>
               <UInput v-model="cancelReason" :maxlength="200" :placeholder="t('edit.cancelReason')" class="w-full" />
               <div class="flex gap-2">
-                <UButton color="warning" :loading="busy" autofocus @click="cancelEvent">{{ t('edit.cancelEvent') }}</UButton>
-                <UButton variant="ghost" color="neutral" @click="confirm = null">{{ t('cancel') }}</UButton>
+                <UButton color="warning" :loading="busy" @click="cancelEvent">{{ t('edit.cancelEvent') }}</UButton>
+                <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
               </div>
             </div>
           </template>
@@ -256,18 +343,28 @@ async function remove() {
           </UButton>
           <div v-else class="flex flex-wrap items-center gap-2">
             <span class="text-sm">{{ t('manage.deleteConfirm') }}</span>
-            <UButton color="error" :loading="busy" autofocus @click="remove">{{ t('manage.delete') }}</UButton>
-            <UButton variant="ghost" color="neutral" @click="confirm = null">{{ t('cancel') }}</UButton>
+            <UButton color="error" :loading="busy" @click="remove">{{ t('manage.delete') }}</UButton>
+            <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
           </div>
         </div>
       </div>
     </template>
 
     <template #footer>
-      <div class="flex w-full justify-end gap-2">
-        <UButton color="neutral" variant="ghost" @click="open = false">{{ t('cancel') }}</UButton>
-        <UButton v-if="!ev.cancelledAt" type="submit" form="edit-event" :loading="busy" :disabled="!form.title.trim() || (editingDays && !form.pollDays.length)">{{ t('edit.save') }}</UButton>
+      <div class="flex w-full items-center justify-end gap-2">
+        <p v-if="dirty" role="status" class="mr-auto flex items-center gap-1.5 text-sm text-warning"><UIcon name="i-lucide-circle-dot" class="size-4" />{{ t('edit.unsaved') }}</p>
+        <UButton color="neutral" variant="ghost" @click="tryClose">{{ t('cancel') }}</UButton>
+        <UButton v-if="!ev.cancelledAt" type="submit" form="edit-event" :loading="saving" :disabled="!dirty || !form.title.trim() || (editingDays && !form.pollDays.length)">{{ t('edit.save') }}</UButton>
       </div>
     </template>
   </USlideover>
+
+  <UModal v-model:open="discarding" :title="t('edit.discardTitle')" :description="t('edit.discardBody')" :close="false" :content="{ onOpenAutoFocus: focusKeep }">
+    <template #footer>
+      <div class="flex w-full justify-end gap-2">
+        <UButton color="neutral" variant="ghost" @click="discard">{{ t('edit.discard') }}</UButton>
+        <UButton ref="keepBtn" @click="discarding = false">{{ t('edit.keepEditing') }}</UButton>
+      </div>
+    </template>
+  </UModal>
 </template>

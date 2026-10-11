@@ -4,6 +4,7 @@
     "language": "Language"
   },
   "cancel": "Cancel",
+  "close": "Close",
   "save": "Save",
   "home": {
     "title": "Events",
@@ -314,7 +315,7 @@
   "edit": {
     "open": "Manage",
     "title": "Manage event",
-    "description": "Changes are visible to everyone right away.",
+    "description": "Changes take effect for everyone when you save.",
     "save": "Save changes",
     "danger": "Danger zone",
     "reopen": "Back to stage…",
@@ -339,7 +340,14 @@
     "cancelledNote": "This event is cancelled. Restore it to edit.",
     "restore": "Restore event",
     "letKnow": "Let everyone know?",
-    "postUpdate": "Post update"
+    "postUpdate": "Post update",
+    "unsaved": "Unsaved changes",
+    "discardTitle": "Discard your changes?",
+    "discardBody": "You have unsaved changes. If you leave now, they're lost.",
+    "discard": "Discard",
+    "keepEditing": "Keep editing",
+    "noAccess": "You no longer have organizer access",
+    "noAccessHint": "Your edits are still here. Close this panel to refresh the page."
   },
   "share": {
     "poll": "Vote for a day: {title}",

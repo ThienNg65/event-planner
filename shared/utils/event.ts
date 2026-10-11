@@ -138,3 +138,26 @@ export function nextStep(o: {
 
 /** Steps that ask the visitor to do something. */
 export const TODO_STEPS: readonly Step[] = ['vote', 'rsvp', 'pay'];
+
+const isEmpty = (v: unknown) => v === null || v === undefined || v === '';
+const tidy = (v: unknown) => {
+  if (typeof v === 'string') return v.trim();
+  if (Array.isArray(v)) return [...v].sort().join();
+  return v;
+};
+
+/**
+ * The fields of `form` whose value differs from `snapshot`, with strings trimmed and empty values (null, undefined, '')
+ * as null. An untouched form gives `{}`, so a save only sends what the organizer actually edited.
+ */
+export function changedFields<T extends Record<string, unknown>>(snapshot: T, form: T): Partial<T> {
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(form)) {
+    const a = snapshot[k];
+    const b = form[k];
+    if (isEmpty(tidy(a)) && isEmpty(tidy(b))) continue;
+    if (tidy(a) === tidy(b)) continue;
+    out[k] = isEmpty(tidy(b)) ? null : typeof b === 'string' ? b.trim() : b;
+  }
+  return out as Partial<T>;
+}

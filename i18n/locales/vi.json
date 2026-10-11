@@ -4,6 +4,7 @@
     "language": "Ngôn ngữ"
   },
   "cancel": "Huỷ",
+  "close": "Đóng",
   "save": "Lưu",
   "home": {
     "title": "Sự kiện",
@@ -314,7 +315,7 @@
   "edit": {
     "open": "Quản lý",
     "title": "Quản lý sự kiện",
-    "description": "Thay đổi sẽ hiển thị với mọi người ngay.",
+    "description": "Thay đổi sẽ áp dụng cho mọi người khi bạn lưu.",
     "save": "Lưu thay đổi",
     "danger": "Vùng nguy hiểm",
     "reopen": "Quay lại bước…",
@@ -339,7 +340,14 @@
     "cancelledNote": "Sự kiện đã huỷ. Hãy khôi phục để chỉnh sửa.",
     "restore": "Khôi phục sự kiện",
     "letKnow": "Báo cho mọi người?",
-    "postUpdate": "Đăng thông báo"
+    "postUpdate": "Đăng thông báo",
+    "unsaved": "Chưa lưu thay đổi",
+    "discardTitle": "Bỏ các thay đổi?",
+    "discardBody": "Bạn có thay đổi chưa lưu. Nếu rời đi bây giờ, chúng sẽ mất.",
+    "discard": "Bỏ thay đổi",
+    "keepEditing": "Tiếp tục chỉnh sửa",
+    "noAccess": "Bạn không còn quyền ban tổ chức",
+    "noAccessHint": "Nội dung bạn đã sửa vẫn còn đây. Đóng bảng này để tải lại trang."
   },
   "share": {
     "poll": "Bình chọn ngày cho: {title}",

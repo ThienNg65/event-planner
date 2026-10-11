@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.2] - 2026-10-11
+
+### Changed
+- The edit panel now says changes apply for everyone when you save, shows "Unsaved changes", and keeps Save off until you change something.
+- Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
+
+### Fixed
+- Closing the edit panel (Esc, X, Cancel or clicking outside) or leaving the page with unsaved edits now asks before throwing them away.
+- A failed save keeps everything you typed and shows the error next to the field; if your organizer access was removed, it tells you instead of losing your edits.
+- The confirmations for reopen, cancel, delete and replacing the co-host link now start on Cancel, not on the destructive button.
+
 ## [0.2.1] - 2026-10-11
 
 ### Added

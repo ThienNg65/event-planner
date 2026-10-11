@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, changedFields, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
@@ -162,4 +162,30 @@ test('can: host does everything, co-host cannot reopen/cancel/delete/manage the 
   for (const a of shared) assert.equal(can('cohost', a), true, `cohost ${a}`);
   for (const a of hostOnly) assert.equal(can('cohost', a), false, `cohost ${a}`);
   for (const a of [...shared, ...hostOnly]) assert.equal(can(null as Role, a), false, `participant ${a}`);
+});
+
+test('changedFields: an untouched form has no changes', () => {
+  const snap = { title: 'Lunch', capacity: null, voteDeadline: '', pollDays: ['2026-10-02', '2026-10-01'] };
+  assert.deepEqual(changedFields(snap, { ...snap, pollDays: ['2026-10-01', '2026-10-02'] }), {});
+});
+
+test('changedFields: only edited keys, trimmed; an untouched deadline is absent', () => {
+  const snap = { title: 'Lunch', note: '', voteDeadline: '2026-10-05T19:00' };
+  assert.deepEqual(changedFields(snap, { ...snap, title: '  Dinner ' }), { title: 'Dinner' });
+});
+
+test('changedFields: null and empty string are the same, whitespace-only counts as empty', () => {
+  assert.deepEqual(changedFields({ venue: null }, { venue: '' }), {});
+  assert.deepEqual(changedFields({ venue: '' }, { venue: '   ' }), {});
+  assert.deepEqual(changedFields({ venue: 'Pho 24' }, { venue: '' }), { venue: null });
+});
+
+test('changedFields: capacity number vs null', () => {
+  assert.deepEqual(changedFields({ capacity: null as number | null }, { capacity: 8 }), { capacity: 8 });
+  assert.deepEqual(changedFields({ capacity: 8 as number | null }, { capacity: null }), { capacity: null });
+  assert.deepEqual(changedFields({ capacity: 8 as number | null }, { capacity: 8 }), {});
+});
+
+test('changedFields: changed day list is reported whole', () => {
+  assert.deepEqual(changedFields({ pollDays: ['2026-10-01'] }, { pollDays: ['2026-10-01', '2026-10-03'] }), { pollDays: ['2026-10-01', '2026-10-03'] });
 });
