@@ -127,9 +127,7 @@
     "lockButton": "Chốt & mở đăng ký",
     "bill": "Tổng hoá đơn (₫)",
     "billHint": "Lưu sẽ chuyển sang giai đoạn chia tiền",
-    "schedule": "Ngày giờ",
-    "pollDays": "Các ngày để bình chọn",
-    "removeDayHint": "Phiếu bầu cho ngày bị xoá sẽ không còn được tính."
+    "schedule": "Ngày giờ"
   },
   "err": {
     "generic": "Có lỗi xảy ra, vui lòng thử lại.",
@@ -155,7 +153,24 @@
     "cancelled": "Sự kiện đã bị huỷ.",
     "venueExists": "Địa điểm này đã có trong danh sách.",
     "tooManyDays": "Bình chọn đã có 20 ngày.",
-    "votingClosed": "Đã đóng bình chọn."
+    "votingClosed": "Đã đóng bình chọn.",
+    "daysRequired": "Giữ lại ít nhất một ngày trong bình chọn.",
+    "daysChanged": "Các ngày vừa thay đổi",
+    "venuesChanged": "Các địa điểm vừa thay đổi"
+  },
+  "days": {
+    "edit": "Sửa ngày",
+    "title": "Sửa các ngày",
+    "description": "Thêm hoặc bớt các ngày mọi người có thể bình chọn.",
+    "votes": "chưa có phiếu | {n} phiếu | {n} phiếu",
+    "new": "Mới",
+    "willLose": "Bớt ngày này sẽ xoá phiếu của {names}.",
+    "required": "Giữ lại ít nhất một ngày.",
+    "save": "Lưu các ngày",
+    "saved": "Đã cập nhật các ngày",
+    "confirmTitle": "{n} phiếu sẽ bị xoá | {n} phiếu sẽ bị xoá",
+    "confirmBody": "Không thể khôi phục. Những người này sẽ phải bình chọn lại.",
+    "confirmSave": "Xoá phiếu và lưu"
   },
   "poll": {
     "days": "Ngày nào bạn đi được?",

@@ -1,5 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { Pool } from '@neondatabase/serverless';
 
 const PORT = 3999;
 const BASE = `http://localhost:${PORT}`;
@@ -11,7 +12,9 @@ try {
 }
 
 let server: ChildProcess | undefined;
-const created: { id: number; key: string }[] = [];
+const created: { id: number; key: string; dayPoll: boolean }[] = [];
+let pool: Pool | undefined;
+const db = () => (pool ??= new Pool({ connectionString: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL }));
 
 /** Migrates the test database, starts the built server and waits until it answers. Call in `before`. */
 export async function startServer() {
@@ -35,11 +38,52 @@ export async function startServer() {
 export async function stopServer() {
   await cleanup();
   server?.kill();
+  await pool?.end();
 }
 
-/** Deletes every event created through `event()` since the last cleanup. Call in `afterEach`. */
+/** Runs SQL straight against the test database (the invariant checks and test setup use this). */
+export async function query(text: string, params: unknown[] = []) {
+  return (await db().query(text, params)).rows as Record<string, unknown>[];
+}
+
+/** An open interactive transaction: holds its row locks until `commit` or `rollback`, which pins down a request interleaving. */
+export async function transaction() {
+  const client = await db().connect();
+  await client.query('BEGIN');
+  const end = async (verb: string) => {
+    try {
+      await client.query(verb);
+    } finally {
+      client.release();
+    }
+  };
+  return { query: async (text: string, params: unknown[] = []) => (await client.query(text, params)).rows, commit: () => end('COMMIT'), rollback: () => end('ROLLBACK') };
+}
+
+/** Plan §10.2: I1 votes ⊆ candidate days, I2 votes ⊆ the event's places, I3 a day poll keeps 1–20 days. Throws on a violation. */
+export async function assertInvariants(id: number, dayPoll = true) {
+  const [i1] = await query(`SELECT count(*)::int AS n FROM responses r JOIN events e ON e.id = r.event_id WHERE r.event_id = $1 AND NOT (r.days <@ e.poll_days)`, [id]);
+  const [i2] = await query(
+    `SELECT count(*)::int AS n FROM responses r WHERE r.event_id = $1 AND NOT (r.venue_ids <@ COALESCE(ARRAY(SELECT v.id FROM venues v WHERE v.event_id = $1), '{}'::int[]))`,
+    [id]
+  );
+  const [i3] = await query(`SELECT count(*)::int AS n FROM events WHERE id = $1 AND stage = 'poll' AND cardinality(poll_days) NOT BETWEEN 1 AND 20`, [id]);
+  const broken = [i1.n && `I1: ${i1.n} response(s) hold a day that is not a candidate`, i2.n && `I2: ${i2.n} response(s) hold a removed place`, dayPoll && i3.n && 'I3: the day poll has no days or more than 20'].filter(Boolean);
+  if (broken.length) throw new Error(`event ${id}: ${broken.join('; ')}`);
+}
+
+/** Asserts I1–I3 for, then deletes, every event created through `event()` since the last cleanup. Call in `afterEach`. */
 export async function cleanup() {
-  for (const { id, key } of created.splice(0)) await api(`/api/events/${id}`, { method: 'DELETE', key });
+  const broken: string[] = [];
+  for (const { id, key, dayPoll } of created.splice(0)) {
+    try {
+      await assertInvariants(id, dayPoll);
+    } catch (e) {
+      broken.push((e as Error).message);
+    }
+    await api(`/api/events/${id}`, { method: 'DELETE', key });
+  }
+  if (broken.length) throw new Error(broken.join(', '));
 }
 
 type Opts = { method?: string; body?: unknown; key?: string; me?: number };
@@ -71,7 +115,7 @@ export async function event(extra: Record<string, unknown> = {}) {
   const res = await api('/api/events', { method: 'POST', body: { title: `zz-test-${randomBytes(4).toString('hex')}`, pollDays: [day(10), day(11)], createdBy, ...extra } });
   if (res.status !== 201) throw new Error(`event() failed: ${res.status} ${res.message}`);
   const made = { id: res.body.id as number, key: res.body.key as string };
-  created.push(made);
+  created.push({ ...made, dayPoll: !!(extra.pollDays ?? [1]).length });
   return { ...made, createdBy };
 }
 

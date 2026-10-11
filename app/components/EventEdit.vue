@@ -12,7 +12,7 @@ const { busy, call } = useEventApi(
 const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 const ev = computed(() => props.data.event);
 const isHost = computed(() => can(props.role, 'cancel'));
-// A running date poll edits its candidate days; otherwise the fixed date and time.
+// A running date poll has no fixed date to edit; its days change in the Edit days dialog.
 const editingDays = computed(() => ev.value.stage === 'poll' && ev.value.pollDays.length > 0);
 
 const blank = () => {
@@ -25,7 +25,6 @@ const blank = () => {
     venueLink: e.venueLink ?? '',
     startsAt: e.startsAt ? toTeamInput(e.startsAt) : '',
     voteDeadline: e.voteDeadline ? toTeamInput(e.voteDeadline) : '',
-    pollDays: [...e.pollDays],
     capacity: e.capacity,
     billTotal: e.billTotal,
     bankId: e.bankId ?? '',
@@ -86,12 +85,11 @@ const FIELD_OF: Record<string, string> = {
 };
 
 async function save() {
-  const { startsAt, voteDeadline, pollDays, billTotal, ...f } = changes.value;
+  const { startsAt, voteDeadline, billTotal, ...f } = changes.value;
   const e = ev.value;
   const startsAtIso = startsAt && teamTime(...(startsAt.split('T') as [string, string]));
   const body = {
     ...f,
-    ...(pollDays && { pollDays }),
     ...(startsAtIso && { startsAt: startsAtIso }),
     ...('voteDeadline' in changes.value && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
     ...('billTotal' in changes.value && { billTotal: billTotal ?? null }),
@@ -251,9 +249,8 @@ async function remove() {
           </UFormField>
         </section>
 
-        <UFormField :label="editingDays ? t('manage.pollDays') : t('manage.schedule')" :hint="editingDays ? t('manage.removeDayHint') : undefined" :error="errors.startsAt">
-          <PollDaysInput v-if="editingDays" v-model="form.pollDays" />
-          <UInput v-else v-model="form.startsAt" type="datetime-local" class="w-full" />
+        <UFormField v-if="!editingDays" :label="t('manage.schedule')" :error="errors.startsAt">
+          <UInput v-model="form.startsAt" type="datetime-local" class="w-full" />
         </UFormField>
 
         <UFormField v-if="ev.stage === 'poll'" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')" :error="errors.voteDeadline">
@@ -354,7 +351,7 @@ async function remove() {
       <div class="flex w-full items-center justify-end gap-2">
         <p v-if="dirty" role="status" class="mr-auto flex items-center gap-1.5 text-sm text-warning"><UIcon name="i-lucide-circle-dot" class="size-4" />{{ t('edit.unsaved') }}</p>
         <UButton color="neutral" variant="ghost" @click="tryClose">{{ t('cancel') }}</UButton>
-        <UButton v-if="!ev.cancelledAt" type="submit" form="edit-event" :loading="saving" :disabled="!dirty || !form.title.trim() || (editingDays && !form.pollDays.length)">{{ t('edit.save') }}</UButton>
+        <UButton v-if="!ev.cancelledAt" type="submit" form="edit-event" :loading="saving" :disabled="!dirty || !form.title.trim()">{{ t('edit.save') }}</UButton>
       </div>
     </template>
   </USlideover>

@@ -8,10 +8,13 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Automated checks of the server rules (who may change what, voting deadlines, removing a place), run with `npm run test:api`.
 
 ### Changed
+- Days are now edited from "Sửa ngày" / "Edit days" above the poll. It lists who voted for each day you remove, and asks a second time before deleting those votes. The edit panel no longer has the day picker.
 - The edit panel now says changes apply for everyone when you save, shows "Unsaved changes", and keeps Save off until you change something.
 - Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
 
 ### Fixed
+- A day suggested while an organizer was editing days is no longer lost, and a vote can no longer bring back a day or place that was just removed. Someone voting for a day that just disappeared sees "The days just changed" and the page refreshes.
+- Removing every day from a poll is refused.
 - Closing the edit panel (Esc, X, Cancel or clicking outside) or leaving the page with unsaved edits now asks before throwing them away.
 - A failed save keeps everything you typed and shows the error next to the field; if your organizer access was removed, it tells you instead of losing your edits.
 - The confirmations for reopen, cancel, delete and replacing the co-host link now start on Cancel, not on the destructive button.

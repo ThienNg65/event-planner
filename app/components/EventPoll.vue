@@ -46,6 +46,7 @@ async function save(body: object) {
 
 const today = parseDate(toTeamInput(new Date().toISOString()).slice(0, 10));
 const dayOpen = ref(false);
+const daysOpen = ref(false);
 async function suggestDay(v: unknown) {
   if (!v || Array.isArray(v) || !('year' in (v as object))) return;
   const day = (v as DateValue).toString();
@@ -99,12 +100,15 @@ async function remove() {
     <div v-if="ev.pollDays.length" class="space-y-3">
       <div class="flex items-center justify-between gap-2">
         <h2 class="text-lg font-semibold text-highlighted">{{ t('poll.days') }}</h2>
-        <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
-          <UButton size="sm" variant="soft" icon="i-lucide-plus" :loading="busy">{{ t('poll.suggestDay') }}</UButton>
-          <template #content>
-            <UCalendar :min-value="today" :week-starts-on="1" :aria-label="t('poll.suggestDay')" class="p-2" @update:model-value="suggestDay" />
-          </template>
-        </UPopover>
+        <div class="flex items-center gap-2">
+          <UButton v-if="can(role, 'edit')" size="sm" variant="outline" color="neutral" icon="i-lucide-calendar-cog" @click="daysOpen = true">{{ t('days.edit') }}</UButton>
+          <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
+            <UButton size="sm" variant="soft" icon="i-lucide-plus" :loading="busy">{{ t('poll.suggestDay') }}</UButton>
+            <template #content>
+              <UCalendar :min-value="today" :week-starts-on="1" :aria-label="t('poll.suggestDay')" class="p-2" @update:model-value="suggestDay" />
+            </template>
+          </UPopover>
+        </div>
       </div>
       <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
         <button
@@ -187,6 +191,8 @@ async function remove() {
         />
       </div>
     </div>
+
+    <EventDaysDialog v-if="can(role, 'edit')" v-model:open="daysOpen" :data="data" :manage-key="manageKey" @changed="emit('changed')" />
 
     <UModal v-model:open="removeOpen" :title="t('poll.removeTitle', { name: removing?.name ?? '' })">
       <template #body>

@@ -161,3 +161,12 @@ export function changedFields<T extends Record<string, unknown>>(snapshot: T, fo
   }
   return out as Partial<T>;
 }
+
+/** The votes that dropping days from the poll would delete: one entry per removed day that has voters, in date order. */
+export function dayRemovalImpact(current: string[], next: string[], responses: { name: string; days: string[] }[]) {
+  return current
+    .filter((d) => !next.includes(d))
+    .sort()
+    .map((day) => ({ day, names: responses.filter((r) => r.days.includes(day)).map((r) => r.name) }))
+    .filter((r) => r.names.length > 0);
+}

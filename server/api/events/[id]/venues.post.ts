@@ -17,10 +17,10 @@ export default defineEventHandler(async (event) => {
   const known = await useDb().select().from(schema.venues).where(eq(schema.venues.eventId, ev.id));
   const same = known.find((v) => norm(v.name) === norm(name));
   if (same) throw createError({ statusCode: 409, statusMessage: 'venueExists', data: { id: same.id } });
-  const [venue] = await useDb()
-    .insert(schema.venues)
-    .values({ eventId: ev.id, name, link, note, addedBy: member.id })
-    .returning();
+  // The event-row lock serializes this with votes for places (PUT /response) and with place removal.
+  const lock = useDb().select({ id: schema.events.id }).from(schema.events).where(eq(schema.events.id, ev.id)).for('update');
+  const insert = useDb().insert(schema.venues).values({ eventId: ev.id, name, link, note, addedBy: member.id }).returning();
+  const [, [venue]] = await useDb().batch([lock, insert]);
   setResponseStatus(event, 201);
   return venue;
 });

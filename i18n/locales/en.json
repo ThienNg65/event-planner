@@ -127,9 +127,7 @@
     "lockButton": "Lock & open RSVP",
     "bill": "Bill total (₫)",
     "billHint": "Saving moves the event to bill splitting",
-    "schedule": "Date & time",
-    "pollDays": "Days in the poll",
-    "removeDayHint": "Votes for removed days will no longer count."
+    "schedule": "Date & time"
   },
   "err": {
     "generic": "Something went wrong, please try again.",
@@ -155,7 +153,24 @@
     "cancelled": "This event is cancelled.",
     "venueExists": "That place is already on the list.",
     "tooManyDays": "The poll already has 20 days.",
-    "votingClosed": "Voting has closed."
+    "votingClosed": "Voting has closed.",
+    "daysRequired": "Keep at least one day in the poll.",
+    "daysChanged": "The days just changed",
+    "venuesChanged": "The places just changed"
+  },
+  "days": {
+    "edit": "Edit days",
+    "title": "Edit days",
+    "description": "Add or remove the days people can vote on.",
+    "votes": "no votes | {n} vote | {n} votes",
+    "new": "New",
+    "willLose": "Removing it deletes the votes of {names}.",
+    "required": "Keep at least one day.",
+    "save": "Save days",
+    "saved": "Days updated",
+    "confirmTitle": "{n} vote will be deleted | {n} votes will be deleted",
+    "confirmBody": "They can't be restored. These people will need to vote again.",
+    "confirmSave": "Delete votes and save"
   },
   "poll": {
     "days": "Which days work for you?",

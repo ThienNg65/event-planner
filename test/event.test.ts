@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, changedFields, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
@@ -188,4 +188,15 @@ test('changedFields: capacity number vs null', () => {
 
 test('changedFields: changed day list is reported whole', () => {
   assert.deepEqual(changedFields({ pollDays: ['2026-10-01'] }, { pollDays: ['2026-10-01', '2026-10-03'] }), { pollDays: ['2026-10-01', '2026-10-03'] });
+});
+
+test('dayRemovalImpact: lists the voters of each removed day, skips unvoted days', () => {
+  const votes = [
+    { name: 'An', days: ['2026-10-03', '2026-10-01'] },
+    { name: 'Binh', days: ['2026-10-03'] },
+    { name: 'Chi', days: ['2026-10-01'] },
+  ];
+  assert.deepEqual(dayRemovalImpact(['2026-10-01', '2026-10-02', '2026-10-03'], ['2026-10-01'], votes), [{ day: '2026-10-03', names: ['An', 'Binh'] }]);
+  assert.deepEqual(dayRemovalImpact(['2026-10-01', '2026-10-03'], ['2026-10-01', '2026-10-03'], votes), []);
+  assert.deepEqual(dayRemovalImpact(['2026-10-03', '2026-10-01'], [], votes).map((r) => r.day), ['2026-10-01', '2026-10-03']);
 });
