@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.2.2] - 2026-10-11
+## [0.3.0] - 2026-10-11
 
 ### Added
 - Co-hosts are now invited by name with a single-use link that expires after 7 days. The host sees who is invited, active or expired, can send a new link, cut someone's access or revoke them, and a co-host can leave. The old shared co-host link keeps working until revoked, and active co-hosts are listed on the event.
@@ -17,14 +17,20 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Before you save, the edit panel shows who moves to the waitlist or gets a seat when you change the seat limit, that choosing a place ends the place vote, and what each person's share becomes when you correct the bill.
 - When you change the date or place after people have answered, you can post an update about it in the same save.
 - The voting deadline can only be edited while voting is open, and the bill can no longer be entered from the edit panel before the paying stage (use the next step).
-- The edit panel now says changes apply for everyone when you save, shows "Unsaved changes", and keeps Save off until you change something.
-- Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
 
 ### Fixed
 - Editing the deadline of a closed poll no longer reopens it by accident, and reopening a poll no longer leaves an expired deadline or the old locked date in place.
 - The event can no longer be moved forward by several stages in one step.
 - A day suggested while an organizer was editing days is no longer lost, and a vote can no longer bring back a day or place that was just removed. Someone voting for a day that just disappeared sees "The days just changed" and the page refreshes.
 - Removing every day from a poll is refused.
+
+## [0.2.2] - 2026-10-11
+
+### Changed
+- The edit panel now says changes apply for everyone when you save, shows "Unsaved changes", and keeps Save off until you change something.
+- Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
+
+### Fixed
 - Closing the edit panel (Esc, X, Cancel or clicking outside) or leaving the page with unsaved edits now asks before throwing them away.
 - A failed save keeps everything you typed and shows the error next to the field; if your organizer access was removed, it tells you instead of losing your edits.
 - The confirmations for reopen, cancel, delete and replacing the co-host link now start on Cancel, not on the destructive button.
