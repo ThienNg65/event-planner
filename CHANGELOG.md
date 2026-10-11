@@ -5,6 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [0.2.2] - 2026-10-11
 
 ### Added
+- Organizers can close voting at any time and reopen it later (with no deadline or a new one), without losing a single vote. The lock dialog now shows how many people voted, who has not, a vote bar per day, and what locking does.
 - Automated checks of the server rules (who may change what, voting deadlines, removing a place), run with `npm run test:api`.
 
 ### Changed
@@ -19,6 +20,8 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
 
 ### Fixed
+- Editing the deadline of a closed poll no longer reopens it by accident, and reopening a poll no longer leaves an expired deadline or the old locked date in place.
+- The event can no longer be moved forward by several stages in one step.
 - A day suggested while an organizer was editing days is no longer lost, and a vote can no longer bring back a day or place that was just removed. Someone voting for a day that just disappeared sees "The days just changed" and the page refreshes.
 - Removing every day from a poll is refused.
 - Closing the edit panel (Esc, X, Cancel or clicking outside) or leaving the page with unsaved edits now asks before throwing them away.

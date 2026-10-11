@@ -305,7 +305,9 @@
       "lock": "Lock date & open RSVP",
       "bill": "Enter the bill",
       "settle": "Mark as settled",
-      "pick": "Pick the winner"
+      "pick": "Pick the winner",
+      "close": "Close voting",
+      "reopen": "Reopen voting"
     },
     "lockDay": "Day and time",
     "lockHint": "Everyone can then reply Going, Maybe or Can't.",
@@ -318,7 +320,7 @@
     },
     "voteClosed": {
       "title": "Voting is closed",
-      "body": "The organizer will pick the winner.",
+      "body": "The organizers are picking the date.",
       "bodyHost": "Pick the winning day and place."
     },
     "cancelled": {
@@ -327,7 +329,18 @@
     },
     "closes": "Voting closes {when}",
     "tie": "It's a tie for first. Pick one.",
-    "votes": "{n} vote | {n} votes"
+    "votes": "{n} vote | {n} votes",
+    "closeTitle": "Close voting now?",
+    "closeBody": "Participants can't change their votes any more. Organizers still can, every vote is kept, and you can reopen voting later.",
+    "reopenTitle": "Reopen voting",
+    "reopenBody": "Every vote is kept. The earlier deadline is replaced by the choice below.",
+    "reopenNone": "No deadline",
+    "reopenDate": "New deadline",
+    "consequences": {
+      "end": "Voting ends",
+      "rsvp": "Everyone can answer Going, Maybe or Can't",
+      "kept": "Votes are kept if the host reopens voting"
+    }
   },
   "edit": {
     "open": "Edit",
@@ -358,7 +371,7 @@
     "noAccess": "You no longer have organizer access",
     "noAccessHint": "Your edits are still here. Close this panel to refresh the page.",
     "noShare": "no bill",
-    "votingClosed": "Voting is closed.",
+    "votingClosed": "Voting is closed. Reopen it from the event page.",
     "capWaitlist": "{n} person moves to the waitlist | {n} people move to the waitlist",
     "capPromote": "{n} person gets a seat | {n} people get a seat",
     "billHint": "Correcting the total changes what everyone owes.",
@@ -414,7 +427,8 @@
     "cancelButton": "Cancel event",
     "deleteTitle": "Delete this event?",
     "deleteBody": "Delete for good? This removes all votes and payments and cannot be undone.",
-    "deleteButton": "Delete event"
+    "deleteButton": "Delete event",
+    "votingChoice": "Voting after reopening"
   },
   "org": {
     "title": "Organizers",

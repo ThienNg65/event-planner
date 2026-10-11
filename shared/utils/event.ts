@@ -191,3 +191,9 @@ export const pendingVoters = <M extends { id: number }>(roster: M[], responses: 
   const voted = new Set(responses.filter((r) => r.days.length || r.venueIds.length).map((r) => r.memberId));
   return roster.filter((m) => !voted.has(m.id));
 };
+
+/** Poll days ranked by the number of voters, most first; equal counts keep date order. */
+export const rankDays = (days: string[], responses: { days: string[] }[]) =>
+  days
+    .map((day) => ({ day, n: responses.filter((r) => r.days.includes(day)).length }))
+    .sort((a, b) => b.n - a.n || a.day.localeCompare(b.day));

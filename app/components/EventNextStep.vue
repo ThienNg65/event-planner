@@ -2,6 +2,7 @@
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
+const { members } = useMe();
 const { busy, call } = useEventApi(
   () => props.data.event.id,
   () => props.manageKey
@@ -77,14 +78,13 @@ async function patch(body: object) {
 
 // Finalize: days and places ranked by votes with the leader preselected, read when the dialog opens (votes keep coming in).
 const lockOpen = ref(false);
-const dayVotes = (d: string) => props.data.responses.filter((r) => r.days.includes(d)).length;
+const voted = computed(() => props.data.responses.filter((r) => r.days.length || r.venueIds.length).length);
+const pending = computed(() => pendingVoters(members.value, props.data.responses));
 const lock = reactive({ day: '', time: '19:00', venueId: undefined as number | undefined });
 const dayRank = computed(() =>
-  ev.value.pollDays
-    .map((d) => ({ value: d, n: dayVotes(d) }))
-    .sort((a, b) => b.n - a.n)
-    .map((d) => ({ value: d.value, n: d.n, label: fmtDay(d.value, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
+  rankDays(ev.value.pollDays, props.data.responses).map((d) => ({ value: d.day, n: d.n, label: fmtDay(d.day, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
 );
+const bar = (n: number) => `${voted.value ? Math.round((n / voted.value) * 100) : 0}%`;
 const venueRank = computed(() =>
   props.data.venues.map((v) => ({ value: v.id, n: v.upvotes.length, label: v.name, description: t('next.votes', { n: v.upvotes.length }, v.upvotes.length) }))
 );
@@ -105,6 +105,31 @@ async function lockEvent() {
     lockOpen.value = false;
     confetti();
   }
+}
+
+// Close voting stops participants now; reopening names a new deadline (or none). Votes are never touched.
+const closeOpen = ref(false);
+async function closeVoting() {
+  if (await patch({ closeVoting: true })) closeOpen.value = false;
+}
+const reopenOpen = ref(false);
+const reopen = reactive({ mode: 'none' as 'none' | 'date', when: '' });
+watch(reopenOpen, (o) => {
+  if (!o) return;
+  const d = ev.value.voteDeadline;
+  const keep = !!d && new Date(d).getTime() > Date.now();
+  Object.assign(reopen, { mode: keep ? 'date' : 'none', when: keep ? toTeamInput(d as string) : '' });
+});
+const reopenDeadline = computed(() => (reopen.mode === 'date' && reopen.when ? teamTime(...(reopen.when.split('T') as [string, string])) : null));
+const reopenInvalid = computed(() => reopen.mode === 'date' && (!reopenDeadline.value || new Date(reopenDeadline.value).getTime() <= Date.now()));
+async function reopenVoting() {
+  if (await patch({ reopenVoting: true, voteDeadline: reopenDeadline.value })) reopenOpen.value = false;
+}
+// Reka would focus the first control; the safe choice (Cancel) must get the focus instead.
+const cancelBtn = useTemplateRef<{ $el: HTMLElement }>('cancelBtn');
+function focusCancel(e: Event) {
+  e.preventDefault();
+  cancelBtn.value?.$el.focus();
 }
 
 const billOpen = ref(false);
@@ -144,6 +169,15 @@ async function settle() {
     <div class="flex min-w-0 flex-1 items-start gap-3">
       <span class="grid size-10 shrink-0 place-items-center rounded-full" :class="ui.tone"><UIcon :name="ui.icon" class="size-5" /></span>
       <div class="min-w-0">
+        <UBadge
+          v-if="ev.stage === 'poll' && !ev.cancelledAt"
+          :color="votingClosed ? 'warning' : 'success'"
+          variant="subtle"
+          size="sm"
+          :icon="votingClosed ? 'i-lucide-lock' : 'i-lucide-vote'"
+          :label="t(votingClosed ? 'overview.closed' : 'overview.open')"
+          class="mb-1"
+        />
         <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
         <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
         <p v-if="closes" class="mt-0.5 flex items-center gap-1 text-xs text-muted"><UIcon name="i-lucide-clock" class="size-3.5" />{{ closes }}</p>
@@ -156,7 +190,10 @@ async function settle() {
       <UButton v-if="ui.jump" :variant="next.action ? 'outline' : 'solid'" :color="next.action ? 'neutral' : 'primary'" trailing-icon="i-lucide-arrow-down" @click="jump(ui.jump)">
         {{ t(`next.${copy}.cta`) }}
       </UButton>
-      <UButton v-if="next.action === 'lock'" icon="i-lucide-lock" @click="lockOpen = true">
+      <UButton v-if="next.action === 'lock'" color="neutral" variant="outline" :icon="votingClosed ? 'i-lucide-lock-open' : 'i-lucide-lock'" @click="votingClosed ? (reopenOpen = true) : (closeOpen = true)">
+        {{ t(votingClosed ? 'next.action.reopen' : 'next.action.close') }}
+      </UButton>
+      <UButton v-if="next.action === 'lock'" icon="i-lucide-calendar-check" @click="lockOpen = true">
         {{ t(next.step === 'voteClosed' ? 'next.action.pick' : 'next.action.lock') }}
       </UButton>
       <UButton v-if="next.action === 'bill'" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
@@ -167,9 +204,22 @@ async function settle() {
   <UModal v-model:open="lockOpen" :title="t('manage.lock')">
     <template #body>
       <div class="space-y-4">
+        <div class="space-y-1 rounded-lg bg-elevated/50 p-3 text-sm">
+          <p class="font-medium tabular-nums">{{ t('overview.voted', { n: voted, total: Math.max(members.length, voted) }) }}</p>
+          <p v-if="pending.length" class="text-muted">
+            {{ t('overview.notVoted', { names: pending.slice(0, 5).map((m) => m.name).join(', ') }) }}<template v-if="pending.length > 5">{{ ' ' + t('overview.more', { n: pending.length - 5 }) }}</template>
+          </p>
+        </div>
         <UFormField v-if="dayRank.length" :label="t('next.lockDay')">
           <div class="space-y-3">
-            <URadioGroup v-model="lock.day" :items="dayRank" class="max-h-56 overflow-y-auto" />
+            <URadioGroup v-model="lock.day" :items="dayRank" class="max-h-56 overflow-y-auto">
+              <template #description="{ item }">
+                <span class="tabular-nums">{{ item.description }}</span>
+                <span class="mt-1 block h-1 w-40 max-w-full overflow-hidden rounded-full bg-elevated" aria-hidden="true">
+                  <span class="block h-full rounded-full bg-primary" :style="{ width: bar((item as { n: number }).n) }" />
+                </span>
+              </template>
+            </URadioGroup>
             <p v-if="tied(dayRank)" class="text-sm text-warning">{{ t('next.tie') }}</p>
             <UInput v-model="lock.time" type="time" class="w-32" />
           </div>
@@ -180,13 +230,42 @@ async function settle() {
             <p v-if="tied(venueRank)" class="text-sm text-warning">{{ t('next.tie') }}</p>
           </div>
         </UFormField>
-        <p class="text-sm text-muted">{{ t('next.lockHint') }}</p>
+        <div class="space-y-1 text-sm text-muted">
+          <p class="font-medium text-default">{{ t('next.lockHint') }}</p>
+          <ul class="list-disc space-y-0.5 pl-5">
+            <li v-for="k in ['end', 'rsvp', 'kept']" :key="k">{{ t(`next.consequences.${k}`) }}</li>
+          </ul>
+        </div>
       </div>
     </template>
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton color="neutral" variant="ghost" @click="lockOpen = false">{{ t('cancel') }}</UButton>
         <UButton icon="i-lucide-lock" :loading="busy" :disabled="!!ev.pollDays.length && !lock.day" @click="lockEvent">{{ t('manage.lockButton') }}</UButton>
+      </div>
+    </template>
+  </UModal>
+
+  <UModal v-model:open="closeOpen" :title="t('next.closeTitle')" :description="t('next.closeBody')" :content="{ onOpenAutoFocus: focusCancel }">
+    <template #footer>
+      <div class="flex w-full justify-end gap-2">
+        <UButton ref="cancelBtn" color="neutral" variant="ghost" @click="closeOpen = false">{{ t('cancel') }}</UButton>
+        <UButton color="warning" icon="i-lucide-lock" :loading="busy" @click="closeVoting">{{ t('next.action.close') }}</UButton>
+      </div>
+    </template>
+  </UModal>
+
+  <UModal v-model:open="reopenOpen" :title="t('next.reopenTitle')" :description="t('next.reopenBody')">
+    <template #body>
+      <div class="space-y-3">
+        <URadioGroup v-model="reopen.mode" :items="[{ value: 'none', label: t('next.reopenNone') }, { value: 'date', label: t('next.reopenDate') }]" />
+        <UInput v-if="reopen.mode === 'date'" v-model="reopen.when" type="datetime-local" class="w-full" :aria-label="t('next.reopenDate')" />
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2">
+        <UButton color="neutral" variant="ghost" @click="reopenOpen = false">{{ t('cancel') }}</UButton>
+        <UButton icon="i-lucide-lock-open" :loading="busy" :disabled="reopenInvalid" @click="reopenVoting">{{ t('next.action.reopen') }}</UButton>
       </div>
     </template>
   </UModal>

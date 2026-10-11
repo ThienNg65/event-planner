@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
@@ -232,4 +232,15 @@ test('pendingVoters: members with no day and no place picked, in roster order', 
   assert.deepEqual(pendingVoters(roster, rs), [{ id: 2 }, { id: 4 }]);
   assert.deepEqual(pendingVoters(roster, []), roster);
   assert.deepEqual(pendingVoters([], rs), []);
+});
+
+test('rankDays: most votes first, ties and unvoted days in date order', () => {
+  const rs = [{ days: ['2026-10-03', '2026-10-01'] }, { days: ['2026-10-03', '2026-10-02'] }, { days: ['2026-10-02'] }];
+  assert.deepEqual(rankDays(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'], rs), [
+    { day: '2026-10-02', n: 2 },
+    { day: '2026-10-03', n: 2 },
+    { day: '2026-10-01', n: 1 },
+    { day: '2026-10-04', n: 0 },
+  ]);
+  assert.deepEqual(rankDays(['2026-10-02', '2026-10-01'], []), [{ day: '2026-10-01', n: 0 }, { day: '2026-10-02', n: 0 }]);
 });

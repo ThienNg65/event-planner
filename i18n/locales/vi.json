@@ -305,7 +305,9 @@
       "lock": "Chốt ngày & mở đăng ký",
       "bill": "Nhập hoá đơn",
       "settle": "Đánh dấu đã xong",
-      "pick": "Chọn kết quả"
+      "pick": "Chọn kết quả",
+      "close": "Đóng bình chọn",
+      "reopen": "Mở lại bình chọn"
     },
     "lockDay": "Ngày và giờ",
     "lockHint": "Sau đó mọi người có thể trả lời Đi, Có thể hoặc Không.",
@@ -318,7 +320,7 @@
     },
     "voteClosed": {
       "title": "Đã đóng bình chọn",
-      "body": "Người tổ chức sẽ chọn kết quả.",
+      "body": "Người tổ chức đang chọn ngày.",
       "bodyHost": "Chọn ngày và địa điểm thắng cuộc."
     },
     "cancelled": {
@@ -327,7 +329,18 @@
     },
     "closes": "Bình chọn đóng lúc {when}",
     "tie": "Đang hoà ở vị trí đầu. Hãy chọn một.",
-    "votes": "{n} phiếu | {n} phiếu"
+    "votes": "{n} phiếu | {n} phiếu",
+    "closeTitle": "Đóng bình chọn ngay?",
+    "closeBody": "Người tham gia không đổi được phiếu nữa. Người tổ chức vẫn đổi được, mọi phiếu đều được giữ, và bạn có thể mở lại sau.",
+    "reopenTitle": "Mở lại bình chọn",
+    "reopenBody": "Mọi phiếu đều được giữ. Hạn cũ sẽ được thay bằng lựa chọn bên dưới.",
+    "reopenNone": "Không có hạn",
+    "reopenDate": "Hạn mới",
+    "consequences": {
+      "end": "Bình chọn kết thúc",
+      "rsvp": "Mọi người trả lời Đi, Có thể hoặc Không",
+      "kept": "Phiếu vẫn được giữ nếu người tổ chức mở lại bình chọn"
+    }
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -358,7 +371,7 @@
     "noAccess": "Bạn không còn quyền ban tổ chức",
     "noAccessHint": "Nội dung bạn đã sửa vẫn còn đây. Đóng bảng này để tải lại trang.",
     "noShare": "chưa có hoá đơn",
-    "votingClosed": "Bình chọn đã đóng.",
+    "votingClosed": "Bình chọn đã đóng. Hãy mở lại từ trang sự kiện.",
     "capWaitlist": "{n} người chuyển sang danh sách chờ | {n} người chuyển sang danh sách chờ",
     "capPromote": "{n} người được thêm chỗ | {n} người được thêm chỗ",
     "billHint": "Sửa tổng hoá đơn sẽ thay đổi số tiền mỗi người phải trả.",
@@ -414,7 +427,8 @@
     "cancelButton": "Huỷ sự kiện",
     "deleteTitle": "Xoá sự kiện này?",
     "deleteBody": "Xoá vĩnh viễn? Toàn bộ phiếu và khoản thanh toán sẽ mất, không thể hoàn tác.",
-    "deleteButton": "Xoá sự kiện"
+    "deleteButton": "Xoá sự kiện",
+    "votingChoice": "Bình chọn sau khi mở lại"
   },
   "org": {
     "title": "Ban tổ chức",

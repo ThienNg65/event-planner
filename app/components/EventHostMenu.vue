@@ -20,12 +20,17 @@ const open = computed({
 });
 const reopenTo = ref<(typeof STAGES)[number] | undefined>();
 const reason = ref('');
+// Reopening to the poll also decides how voting restarts.
+const voting = reactive({ mode: 'none' as 'none' | 'date', when: '' });
+const votingDeadline = computed(() => (voting.mode === 'date' && voting.when ? teamTime(...(voting.when.split('T') as [string, string])) : null));
+const votingInvalid = computed(() => reopenTo.value === 'poll' && voting.mode === 'date' && (!votingDeadline.value || new Date(votingDeadline.value).getTime() <= Date.now()));
 const error = ref('');
 const busy = ref(false);
 
 function show(v: 'reopen' | 'cancel' | 'delete') {
   reopenTo.value = undefined;
   reason.value = '';
+  Object.assign(voting, { mode: 'none', when: '' });
   error.value = '';
   view.value = v;
 }
@@ -61,7 +66,8 @@ async function confirm() {
     if (await run('DELETE')) await navigateTo('/');
     return;
   }
-  const body = v === 'reopen' ? { stage: reopenTo.value } : { cancel: reason.value };
+  const reopening = reopenTo.value === 'poll' ? { reopenVoting: true, voteDeadline: votingDeadline.value } : {};
+  const body = v === 'reopen' ? { stage: reopenTo.value, ...reopening } : { cancel: reason.value };
   if (!(await run('PATCH', body))) return;
   view.value = null;
   emit('changed');
@@ -93,6 +99,12 @@ function focusCancel(e: Event) {
     <template #body>
       <div class="space-y-3">
         <USelect v-if="view === 'reopen'" v-model="reopenTo" :items="earlier" :placeholder="t('edit.reopen')" class="w-full" />
+        <UFormField v-if="view === 'reopen' && reopenTo === 'poll'" :label="t('host.votingChoice')">
+          <div class="space-y-2">
+            <URadioGroup v-model="voting.mode" :items="[{ value: 'none', label: t('next.reopenNone') }, { value: 'date', label: t('next.reopenDate') }]" />
+            <UInput v-if="voting.mode === 'date'" v-model="voting.when" type="datetime-local" class="w-full" :aria-label="t('next.reopenDate')" />
+          </div>
+        </UFormField>
         <UInput v-else-if="view === 'cancel'" v-model="reason" :maxlength="200" :placeholder="t('edit.cancelReason')" class="w-full" />
         <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-circle-alert" :title="error" />
       </div>
@@ -100,7 +112,7 @@ function focusCancel(e: Event) {
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton ref="cancelBtn" color="neutral" variant="ghost" @click="open = false">{{ t('cancel') }}</UButton>
-        <UButton :color="view === 'delete' ? 'error' : 'warning'" :loading="busy" :disabled="view === 'reopen' && !reopenTo" @click="confirm">
+        <UButton :color="view === 'delete' ? 'error' : 'warning'" :loading="busy" :disabled="(view === 'reopen' && !reopenTo) || votingInvalid" @click="confirm">
           {{ view ? t(`host.${view}Button`) : '' }}
         </UButton>
       </div>
