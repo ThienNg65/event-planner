@@ -34,6 +34,7 @@ const when = computed(() => {
 });
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
 const editing = ref(false);
+const organizing = ref(false);
 const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 const voters = computed(() => data.value!.responses.filter((r) => r.days.length || r.venueIds.length).length);
 // Finished stages collapse to one line each.
@@ -59,7 +60,7 @@ onMounted(() => {
   }
 });
 
-const { call } = useEventApi(
+const { busy, call } = useEventApi(
   () => id,
   () => key.value
 );
@@ -71,6 +72,23 @@ const restoreActions = computed(() =>
 async function restore() {
   if (await call('', 'PATCH', { restore: true })) await refresh();
 }
+
+// The host's update publishes at once (unlike the drawer, which saves on request).
+const canPost = computed(() => can(role.value, 'edit') && !ev.value.cancelledAt);
+const posting = ref(false);
+const noticeText = ref('');
+function openNotice() {
+  noticeText.value = ev.value.notice ?? '';
+  posting.value = true;
+}
+async function postNotice(text: string) {
+  if (!(await call('', 'PATCH', { notice: text }))) return;
+  posting.value = false;
+  await refresh();
+}
+const noticeActions = computed(() =>
+  canPost.value ? [{ label: t('post.edit'), color: 'neutral' as const, variant: 'outline' as const, onClick: openNotice }] : []
+);
 
 useSeoMeta({
   title: () => ev.value.title,
@@ -100,12 +118,17 @@ async function share() {
       <UDashboardNavbar :title="ev.title">
         <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
-          <UButton v-if="role" icon="i-lucide-settings-2" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
+          <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
             <span class="hidden sm:inline">{{ t('edit.open') }}</span>
+          </UButton>
+          <!-- Temporary entry: Phase 2 moves it to the organizers card in the rail. -->
+          <UButton v-if="role" icon="i-lucide-users-round" color="neutral" variant="outline" :aria-label="t('org.open')" @click="organizing = true">
+            <span class="hidden sm:inline">{{ t('org.open') }}</span>
           </UButton>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
             <span class="hidden sm:inline">{{ t('event.share') }}</span>
           </UButton>
+          <EventHostMenu v-if="can(role, 'cancel') && key" :data="data!" :manage-key="key" @changed="refresh" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -145,12 +168,13 @@ async function share() {
           :description="ev.cancelReason ?? undefined"
           :actions="restoreActions"
         />
-        <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice">
+        <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions">
           <template #title>
             {{ t('event.noticeTitle') }}
             <UBadge v-if="unseen" color="secondary" variant="solid" size="sm" :label="t('event.new')" class="ml-1" />
           </template>
         </UAlert>
+        <UButton v-else-if="canPost" icon="i-lucide-megaphone" color="neutral" variant="outline" size="sm" @click="openNotice">{{ t('post.open') }}</UButton>
 
         <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
 
@@ -166,7 +190,21 @@ async function share() {
 
         <p v-if="ev.note" class="border-t border-default pt-4 text-sm whitespace-pre-line text-toned">{{ ev.note }}</p>
 
-        <EventEdit v-if="role && key" v-model:open="editing" :data="data" :manage-key="key" :role="role" @changed="refresh" />
+        <EventEdit v-if="role && key" v-model:open="editing" :data="data" :manage-key="key" @changed="refresh" />
+        <EventOrganizersDialog v-if="role && key" v-model:open="organizing" :data="data" :manage-key="key" :role="role" @changed="refresh" />
+
+        <UModal v-model:open="posting" :title="t('post.title')" :description="t('post.body')">
+          <template #body>
+            <UTextarea v-model="noticeText" :maxlength="280" :rows="3" class="w-full" :aria-label="t('post.title')" />
+          </template>
+          <template #footer>
+            <div class="flex w-full items-center justify-end gap-2">
+              <UButton v-if="ev.notice" color="neutral" variant="ghost" class="mr-auto" :loading="busy" @click="postNotice('')">{{ t('post.remove') }}</UButton>
+              <UButton color="neutral" variant="ghost" @click="posting = false">{{ t('cancel') }}</UButton>
+              <UButton :loading="busy" :disabled="!noticeText.trim()" @click="postNotice(noticeText)">{{ t('post.publish') }}</UButton>
+            </div>
+          </template>
+        </UModal>
       </div>
     </template>
   </UDashboardPanel>

@@ -121,12 +121,9 @@
     "copyLink": "Link quản lý",
     "linkCopied": "Đã sao chép link quản lý",
     "linkHint": "Ai có link này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
-    "delete": "Xoá sự kiện",
-    "deleteConfirm": "Xoá vĩnh viễn? Toàn bộ phiếu và khoản thanh toán sẽ mất, không thể hoàn tác.",
     "lock": "Chốt kết quả và mở đăng ký",
     "lockButton": "Chốt & mở đăng ký",
     "bill": "Tổng hoá đơn (₫)",
-    "billHint": "Lưu sẽ chuyển sang giai đoạn chia tiền",
     "schedule": "Ngày giờ"
   },
   "err": {
@@ -328,18 +325,13 @@
     "votes": "{n} phiếu | {n} phiếu"
   },
   "edit": {
-    "open": "Quản lý",
-    "title": "Quản lý sự kiện",
+    "open": "Chỉnh sửa",
+    "title": "Chỉnh sửa sự kiện",
     "description": "Thay đổi sẽ áp dụng cho mọi người khi bạn lưu.",
     "save": "Lưu thay đổi",
-    "danger": "Vùng nguy hiểm",
     "reopen": "Quay lại bước…",
-    "reopenButton": "Mở lại",
-    "reopenConfirm": "Đưa sự kiện về bước trước? Phiếu và câu trả lời vẫn được giữ, nhưng bước thay đổi với mọi người.",
     "deadline": "Hạn bình chọn",
     "deadlineHint": "Tuỳ chọn. Sau hạn này chỉ người tổ chức mới sửa được phiếu.",
-    "notice": "Đăng thông báo",
-    "noticeHint": "Hiện cho mọi người ở đầu sự kiện. Xoá trống để gỡ.",
     "cohost": "Link đồng tổ chức",
     "cohostHint": "Đồng tổ chức được sửa, chốt và hoàn tất, nhưng không mở lại, huỷ hay xoá được sự kiện.",
     "cohostCreate": "Tạo link đồng tổ chức",
@@ -349,12 +341,9 @@
     "cohostCopied": "Đã sao chép link đồng tổ chức",
     "cohostCopy": "Sao chép link đồng tổ chức",
     "cohostRotateConfirm": "Link đồng tổ chức hiện tại sẽ ngừng hoạt động. Tiếp tục?",
-    "cancelEvent": "Huỷ sự kiện",
     "cancelReason": "Lý do (không bắt buộc)",
-    "cancelConfirm": "Mọi người sẽ thấy sự kiện đã huỷ. Bạn có thể khôi phục sau.",
     "cancelledNote": "Sự kiện đã huỷ. Hãy khôi phục để chỉnh sửa.",
     "restore": "Khôi phục sự kiện",
-    "letKnow": "Báo cho mọi người?",
     "postUpdate": "Đăng thông báo",
     "unsaved": "Chưa lưu thay đổi",
     "discardTitle": "Bỏ các thay đổi?",
@@ -362,7 +351,16 @@
     "discard": "Bỏ thay đổi",
     "keepEditing": "Tiếp tục chỉnh sửa",
     "noAccess": "Bạn không còn quyền ban tổ chức",
-    "noAccessHint": "Nội dung bạn đã sửa vẫn còn đây. Đóng bảng này để tải lại trang."
+    "noAccessHint": "Nội dung bạn đã sửa vẫn còn đây. Đóng bảng này để tải lại trang.",
+    "noShare": "chưa có hoá đơn",
+    "votingClosed": "Bình chọn đã đóng.",
+    "capWaitlist": "{n} người chuyển sang danh sách chờ | {n} người chuyển sang danh sách chờ",
+    "capPromote": "{n} người được thêm chỗ | {n} người được thêm chỗ",
+    "billHint": "Sửa tổng hoá đơn sẽ thay đổi số tiền mỗi người phải trả.",
+    "shareChange": "Mỗi chỗ: {from} → {to}",
+    "shareChangeHint": "Số tiền còn lại của mỗi người được tính lại theo những gì họ đã trả.",
+    "endsPlaceVote": "Chọn địa điểm sẽ kết thúc bình chọn địa điểm ({n} gợi ý) | Chọn địa điểm sẽ kết thúc bình chọn địa điểm ({n} gợi ý)",
+    "postUpdateHint": "Báo cho mọi người biết điều gì đã đổi. Thông báo hiện ở đầu sự kiện khi bạn lưu."
   },
   "share": {
     "poll": "Bình chọn ngày cho: {title}",
@@ -397,5 +395,50 @@
     "setAmount": "Nhập số đã trả…",
     "amount": "Số tiền đã trả (₫)",
     "save": "Lưu"
+  },
+  "host": {
+    "menu": "Thao tác khác",
+    "reopen": "Mở lại một bước trước…",
+    "cancel": "Huỷ sự kiện…",
+    "delete": "Xoá sự kiện…",
+    "reopenTitle": "Mở lại một bước trước",
+    "reopenBody": "Đưa sự kiện về bước trước? Phiếu và câu trả lời vẫn được giữ, nhưng bước thay đổi với mọi người.",
+    "reopenButton": "Mở lại",
+    "cancelTitle": "Huỷ sự kiện này?",
+    "cancelBody": "Mọi người sẽ thấy sự kiện đã huỷ. Bạn có thể khôi phục sau.",
+    "cancelButton": "Huỷ sự kiện",
+    "deleteTitle": "Xoá sự kiện này?",
+    "deleteBody": "Xoá vĩnh viễn? Toàn bộ phiếu và khoản thanh toán sẽ mất, không thể hoàn tác.",
+    "deleteButton": "Xoá sự kiện"
+  },
+  "org": {
+    "open": "Ban tổ chức",
+    "title": "Ban tổ chức",
+    "description": "Ai quản lý được sự kiện này và mỗi vai trò làm được gì.",
+    "yourRole": "Vai trò của bạn:",
+    "host": "Người tổ chức",
+    "cohost": "Đồng tổ chức",
+    "participant": "Người tham gia",
+    "can": "Được phép",
+    "yes": "Có",
+    "no": "Không",
+    "rows": {
+      "answer": "Bình chọn, đăng ký và thanh toán cho chính mình",
+      "edit": "Sửa thông tin và tài khoản ngân hàng",
+      "advance": "Chốt ngày, nhập hoá đơn, hoàn tất",
+      "removeVenue": "Xoá địa điểm được gợi ý",
+      "setOthers": "Sửa đăng ký và thanh toán của người khác",
+      "reopen": "Mở lại một bước trước",
+      "cancel": "Huỷ, khôi phục hoặc xoá sự kiện",
+      "cohost": "Quản lý link quản lý và link đồng tổ chức"
+    }
+  },
+  "post": {
+    "open": "Đăng thông báo",
+    "title": "Đăng thông báo",
+    "body": "Mọi người sẽ thấy thông báo này ở đầu sự kiện ngay lập tức.",
+    "publish": "Đăng",
+    "remove": "Gỡ thông báo",
+    "edit": "Sửa thông báo"
   }
 }

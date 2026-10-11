@@ -9,6 +9,10 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ### Changed
 - Days are now edited from "Sửa ngày" / "Edit days" above the poll. It lists who voted for each day you remove, and asks a second time before deleting those votes. The edit panel no longer has the day picker.
+- **Manage** is now **Edit**, and only holds the event details. Reopening an earlier stage, cancelling and deleting moved to a **⋯** menu for the host; the co-host link and manage link moved to **Organizers**; posting an update has its own button on the event.
+- Before you save, the edit panel shows who moves to the waitlist or gets a seat when you change the seat limit, that choosing a place ends the place vote, and what each person's share becomes when you correct the bill.
+- When you change the date or place after people have answered, you can post an update about it in the same save.
+- The voting deadline can only be edited while voting is open, and the bill can no longer be entered from the edit panel before the paying stage (use the next step).
 - The edit panel now says changes apply for everyone when you save, shows "Unsaved changes", and keeps Save off until you change something.
 - Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
 

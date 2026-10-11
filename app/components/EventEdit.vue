@@ -1,17 +1,11 @@
 <script setup lang="ts">
-const props = defineProps<{ data: EventDetail; manageKey: string; role: Role }>();
+const props = defineProps<{ data: EventDetail; manageKey: string }>();
 const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
 const toast = useToast();
-const { busy, call } = useEventApi(
-  () => props.data.event.id,
-  () => props.manageKey
-);
 
-const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 const ev = computed(() => props.data.event);
-const isHost = computed(() => can(props.role, 'cancel'));
 // A running date poll has no fixed date to edit; its days change in the Edit days dialog.
 const editingDays = computed(() => ev.value.stage === 'poll' && ev.value.pollDays.length > 0);
 
@@ -20,7 +14,6 @@ const blank = () => {
   return {
     title: e.title,
     note: e.note,
-    notice: e.notice ?? '',
     venue: e.venue ?? '',
     venueLink: e.venueLink ?? '',
     startsAt: e.startsAt ? toTeamInput(e.startsAt) : '',
@@ -42,10 +35,8 @@ const errors = ref<Record<string, string>>({});
 const denied = ref(false);
 const saving = ref(false);
 const discarding = ref(false);
-const reopenTo = ref<(typeof STAGES)[number] | undefined>();
-const confirm = ref<'reopen' | 'cancel' | 'delete' | 'rotate' | null>(null);
-const cancelReason = ref('');
-const coHostLink = ref('');
+const postUpdate = ref(true);
+const updateText = ref('');
 // Fresh copy of the event every time the panel opens, so it never shows stale values.
 watch(open, (o) => {
   if (!o) return;
@@ -54,26 +45,41 @@ watch(open, (o) => {
   errors.value = {};
   denied.value = false;
   discarding.value = false;
-  reopenTo.value = undefined;
-  confirm.value = null;
-  cancelReason.value = '';
-  coHostLink.value = '';
-});
-// A confirm row opens with focus on Cancel, never on the destructive button.
-const cancelBtn = useTemplateRef<{ $el: HTMLElement }>('cancelBtn');
-watch(confirm, async (c) => {
-  if (!c) return;
-  await nextTick();
-  cancelBtn.value?.$el.focus();
+  postUpdate.value = true;
 });
 watch(form, () => (errors.value = {}), { deep: true });
-const earlier = computed(() => STAGES.slice(0, STAGES.indexOf(ev.value.stage)).map((s) => ({ label: t(`stage.${s}`), value: s })));
 
-async function patch(body: object) {
-  if (!(await call('', 'PATCH', body))) return false;
-  emit('changed');
-  return true;
-}
+// What this save would do to people, shown before it happens.
+const queue = computed(() => props.data.responses.map((r) => ({ ...r, goingAt: r.goingAt ? new Date(r.goingAt) : null })));
+const seatMoves = computed(() => ('capacity' in changes.value ? capacityImpact(queue.value, ev.value.capacity, changes.value.capacity ?? null) : null));
+const names = (rs: { name: string }[]) => rs.map((r) => r.name).join(', ');
+// Setting a place during the poll ends the place vote.
+const endsPlaceVote = computed(() => ev.value.stage === 'poll' && !ev.value.venue && !!changes.value.venue && props.data.venues.length > 0);
+const voteOpen = computed(() => votingOpen(ev.value));
+// A bill is entered from the next step; here it can only be corrected once the cost is being split.
+const billCorrectable = computed(() => ev.value.stage === 'bill' || ev.value.stage === 'settled');
+const shareChange = computed(() => {
+  if (!billCorrectable.value || !('billTotal' in changes.value)) return null;
+  return { from: shareOf(ev.value.billTotal, props.data.seats), to: shareOf(changes.value.billTotal ?? null, props.data.seats) };
+});
+const fmtShare = (n: number | null) => (n === null ? t('edit.noShare') : fmtVnd(n));
+// Once people have answered, a changed date or place can be announced with the save.
+const startsAtIso = computed(() => {
+  const v = changes.value.startsAt;
+  return v ? teamTime(...(v.split('T') as [string, string])) : '';
+});
+const prefill = computed(() => {
+  const e = ev.value;
+  if (e.stage === 'poll') return '';
+  const dateMoved = !!startsAtIso.value && !!e.startsAt && changes.value.startsAt !== toTeamInput(e.startsAt);
+  return [
+    dateMoved && t('notice.moved', { when: fmtDateTime(startsAtIso.value, locale.value) }),
+    !!changes.value.venue && t('notice.venue', { venue: changes.value.venue }),
+  ]
+    .filter(Boolean)
+    .join(' ');
+});
+watch(prefill, (v) => (updateText.value = v), { immediate: true });
 
 // Which form field a server error code belongs under.
 const FIELD_OF: Record<string, string> = {
@@ -87,14 +93,13 @@ const FIELD_OF: Record<string, string> = {
 async function save() {
   const { startsAt, voteDeadline, billTotal, ...f } = changes.value;
   const e = ev.value;
-  const startsAtIso = startsAt && teamTime(...(startsAt.split('T') as [string, string]));
+  const notice = prefill.value && postUpdate.value ? updateText.value.trim() : '';
   const body = {
     ...f,
-    ...(startsAtIso && { startsAt: startsAtIso }),
+    ...(startsAt && { startsAt: startsAtIso.value }),
     ...('voteDeadline' in changes.value && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
     ...('billTotal' in changes.value && { billTotal: billTotal ?? null }),
-    // Entering (or changing) the bill while RSVP is open moves on to splitting it; a bill kept from a reopen does not.
-    ...(e.stage === 'rsvp' && billTotal != null && { stage: 'bill' }),
+    ...(notice && { notice }),
   };
   if (!Object.keys(body).length) return;
   saving.value = true;
@@ -107,25 +112,9 @@ async function save() {
   } finally {
     saving.value = false;
   }
-  const dateMoved = !!startsAtIso && !!e.startsAt && startsAt !== toTeamInput(e.startsAt);
-  const venueMoved = !!f.venue && f.venue !== (e.venue ?? '');
   snapshot.value = { ...form.value };
   open.value = false;
   emit('changed');
-  // Once people have answered, offer to tell them about a changed date or venue.
-  if (e.stage !== 'poll' && (dateMoved || venueMoved)) {
-    const text = [
-      dateMoved && t('notice.moved', { when: fmtDateTime(startsAtIso as string, locale.value) }),
-      venueMoved && t('notice.venue', { venue: f.venue }),
-    ]
-      .filter(Boolean)
-      .join(' ');
-    toast.add({
-      title: t('edit.letKnow'),
-      description: text,
-      actions: [{ label: t('edit.postUpdate'), onClick: async () => void (await patch({ notice: text })) }],
-    });
-  }
 }
 
 // A failed save leaves the form as it is. Field errors show next to the field; a lost key is explained and refreshed once the panel closes.
@@ -172,55 +161,6 @@ function warnUnload(e: BeforeUnloadEvent) {
 }
 onMounted(() => window.addEventListener('beforeunload', warnUnload));
 onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
-async function reopen() {
-  if (reopenTo.value && (await patch({ stage: reopenTo.value }))) open.value = false;
-}
-
-async function cancelEvent() {
-  if (await patch({ cancel: cancelReason.value })) open.value = false;
-}
-
-async function restore() {
-  if (await patch({ restore: true })) open.value = false;
-}
-
-const origin = () => `${location.origin}/e/${ev.value.id}`;
-async function copyLink() {
-  await navigator.clipboard.writeText(`${origin()}?key=${props.manageKey}`);
-  toast.add({ title: t('manage.linkCopied'), description: t('manage.linkHint') });
-}
-
-// The co-host key is only shown once (we store its hash), so the new link stays on screen until the panel closes.
-// Copying is a separate tap: Safari rejects clipboard writes that follow an await.
-async function newCoHostLink() {
-  try {
-    const { key } = await $fetch<{ key: string }>(`/api/events/${ev.value.id}/cohost`, { method: 'POST', headers: { 'x-manage-key': props.manageKey } });
-    coHostLink.value = `${origin()}?key=${key}`;
-    confirm.value = null;
-    emit('changed');
-  } catch (e) {
-    toast.add({ color: 'error', title: errMsg(e) });
-  }
-}
-
-async function copyCoHostLink() {
-  try {
-    await navigator.clipboard.writeText(coHostLink.value);
-    toast.add({ title: t('edit.cohostCopied'), description: t('edit.cohostHint') });
-  } catch {
-    /* clipboard blocked: the link is still shown to copy by hand */
-  }
-}
-
-async function revokeCoHost() {
-  if (!(await call('/cohost', 'DELETE'))) return;
-  coHostLink.value = '';
-  emit('changed');
-}
-
-async function remove() {
-  if (await call('', 'DELETE')) await navigateTo('/');
-}
 </script>
 
 <template>
@@ -238,33 +178,56 @@ async function remove() {
           <UFormField :label="t('create.note')">
             <UTextarea v-model="form.note" :maxlength="500" :rows="3" class="w-full" />
           </UFormField>
-          <UFormField :label="t('edit.notice')" :hint="t('edit.noticeHint')">
-            <UTextarea v-model="form.notice" :maxlength="280" :rows="2" class="w-full" />
-          </UFormField>
           <UFormField :label="t('create.where')" :error="errors.venueLink">
             <div class="space-y-2">
               <UInput v-model="form.venue" :maxlength="100" :placeholder="t('create.venue')" class="w-full" />
               <UInput v-model="form.venueLink" type="url" :placeholder="t('create.venueLink')" class="w-full" />
             </div>
           </UFormField>
+          <UAlert v-if="endsPlaceVote" color="warning" variant="subtle" icon="i-lucide-map-pin-check" :title="t('edit.endsPlaceVote', { n: data.venues.length })" />
         </section>
 
         <UFormField v-if="!editingDays" :label="t('manage.schedule')" :error="errors.startsAt">
           <UInput v-model="form.startsAt" type="datetime-local" class="w-full" />
         </UFormField>
 
-        <UFormField v-if="ev.stage === 'poll'" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')" :error="errors.voteDeadline">
+        <UFormField v-if="ev.stage === 'poll' && voteOpen" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')" :error="errors.voteDeadline">
           <UInput v-model="form.voteDeadline" type="datetime-local" class="w-full" />
         </UFormField>
+        <p v-else-if="ev.stage === 'poll'" class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-lock" class="size-4" />{{ t('edit.votingClosed') }}</p>
 
         <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')" :error="errors.capacity">
           <UInputNumber v-model="form.capacity" :min="1" :max="500" class="w-40" />
         </UFormField>
+        <UAlert
+          v-if="seatMoves?.waitlisted.length"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-hourglass"
+          :title="t('edit.capWaitlist', { n: seatMoves.waitlisted.length })"
+          :description="names(seatMoves.waitlisted)"
+        />
+        <UAlert
+          v-if="seatMoves?.promoted.length"
+          color="info"
+          variant="subtle"
+          icon="i-lucide-armchair"
+          :title="t('edit.capPromote', { n: seatMoves.promoted.length })"
+          :description="names(seatMoves.promoted)"
+        />
 
         <section class="space-y-3">
-          <UFormField v-if="ev.stage !== 'poll'" :label="t('manage.bill')" :hint="ev.stage === 'rsvp' ? t('manage.billHint') : undefined">
+          <UFormField v-if="billCorrectable" :label="t('manage.bill')" :hint="t('edit.billHint')">
             <UInputNumber v-model="form.billTotal" :min="0" :step="1000" :format-options="{ maximumFractionDigits: 0 }" class="w-48" />
           </UFormField>
+          <UAlert
+            v-if="shareChange"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-receipt"
+            :title="t('edit.shareChange', { from: fmtShare(shareChange.from), to: fmtShare(shareChange.to) })"
+            :description="t('edit.shareChangeHint')"
+          />
           <UFormField :label="t('create.bank')" :hint="t('create.bankHint')" :error="errors.bank">
             <div class="grid gap-2 sm:grid-cols-3">
               <UInput v-model="form.bankId" :placeholder="t('create.bankId')" />
@@ -277,74 +240,13 @@ async function remove() {
         <UFormField :label="t('cover.label')" :error="errors.cover">
           <CoverPicker v-model="form.cover" />
         </UFormField>
+
+        <section v-if="prefill" class="space-y-2 rounded-lg p-3 ring ring-default">
+          <UCheckbox v-model="postUpdate" :label="t('edit.postUpdate')" :description="t('edit.postUpdateHint')" />
+          <UTextarea v-if="postUpdate" v-model="updateText" :maxlength="280" :rows="2" class="w-full" :aria-label="t('edit.postUpdate')" />
+        </section>
       </form>
       <UAlert v-else color="neutral" variant="subtle" icon="i-lucide-ban" :title="t('edit.cancelledNote')" />
-
-      <div v-if="isHost" class="mt-8 space-y-6 border-t border-default pt-6">
-        <div class="space-y-2">
-          <UButton color="neutral" variant="outline" icon="i-lucide-key-round" @click="copyLink">{{ t('manage.copyLink') }}</UButton>
-          <p class="text-xs text-muted">{{ t('manage.linkHint') }}</p>
-        </div>
-
-        <div class="space-y-2">
-          <p class="text-sm font-semibold">{{ t('edit.cohost') }}</p>
-          <p class="text-xs text-muted">{{ t('edit.cohostHint') }}</p>
-          <p v-if="data.hasCoHost" class="flex items-center gap-1.5 text-sm text-success"><UIcon name="i-lucide-circle-check" class="size-4" />{{ t('edit.cohostActive') }}</p>
-          <div v-if="coHostLink" class="flex gap-2">
-            <UInput :model-value="coHostLink" readonly class="min-w-0 flex-1" />
-            <UButton color="neutral" variant="outline" icon="i-lucide-copy" :aria-label="t('edit.cohostCopy')" @click="copyCoHostLink" />
-          </div>
-          <div v-if="confirm === 'rotate'" class="flex flex-wrap items-center gap-2">
-            <span class="text-sm">{{ t('edit.cohostRotateConfirm') }}</span>
-            <UButton color="warning" :loading="busy" @click="newCoHostLink">{{ t('edit.cohostNew') }}</UButton>
-            <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
-          </div>
-          <div v-else class="flex flex-wrap gap-2">
-            <UButton color="neutral" variant="outline" icon="i-lucide-user-plus" :loading="busy" @click="data.hasCoHost ? (confirm = 'rotate') : newCoHostLink()">
-              {{ data.hasCoHost ? t('edit.cohostNew') : t('edit.cohostCreate') }}
-            </UButton>
-            <UButton v-if="data.hasCoHost" color="neutral" variant="ghost" :loading="busy" @click="revokeCoHost">{{ t('edit.cohostRevoke') }}</UButton>
-          </div>
-        </div>
-
-        <div class="space-y-3 rounded-lg p-3 ring ring-error/30">
-          <p class="text-sm font-semibold text-error">{{ t('edit.danger') }}</p>
-
-          <div v-if="!ev.cancelledAt && earlier.length" class="flex flex-wrap items-center gap-2">
-            <USelect v-model="reopenTo" :items="earlier" :placeholder="t('edit.reopen')" class="min-w-44" />
-            <UButton v-if="confirm !== 'reopen'" color="warning" variant="soft" :disabled="!reopenTo" @click="confirm = 'reopen'">
-              {{ t('edit.reopenButton') }}
-            </UButton>
-            <template v-else>
-              <span class="text-sm">{{ t('edit.reopenConfirm') }}</span>
-              <UButton color="warning" :loading="busy" @click="reopen">{{ t('edit.reopenButton') }}</UButton>
-              <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
-            </template>
-          </div>
-
-          <UButton v-if="ev.cancelledAt" color="neutral" variant="outline" icon="i-lucide-undo-2" :loading="busy" @click="restore">{{ t('edit.restore') }}</UButton>
-          <template v-else>
-            <UButton v-if="confirm !== 'cancel'" color="warning" variant="soft" icon="i-lucide-ban" @click="confirm = 'cancel'">{{ t('edit.cancelEvent') }}</UButton>
-            <div v-else class="space-y-2">
-              <p class="text-sm">{{ t('edit.cancelConfirm') }}</p>
-              <UInput v-model="cancelReason" :maxlength="200" :placeholder="t('edit.cancelReason')" class="w-full" />
-              <div class="flex gap-2">
-                <UButton color="warning" :loading="busy" @click="cancelEvent">{{ t('edit.cancelEvent') }}</UButton>
-                <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
-              </div>
-            </div>
-          </template>
-
-          <UButton v-if="confirm !== 'delete'" color="error" variant="ghost" icon="i-lucide-trash-2" @click="confirm = 'delete'">
-            {{ t('manage.delete') }}
-          </UButton>
-          <div v-else class="flex flex-wrap items-center gap-2">
-            <span class="text-sm">{{ t('manage.deleteConfirm') }}</span>
-            <UButton color="error" :loading="busy" @click="remove">{{ t('manage.delete') }}</UButton>
-            <UButton variant="ghost" color="neutral" ref="cancelBtn" @click="confirm = null">{{ t('cancel') }}</UButton>
-          </div>
-        </div>
-      </div>
     </template>
 
     <template #footer>

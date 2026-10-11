@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
@@ -199,4 +199,25 @@ test('dayRemovalImpact: lists the voters of each removed day, skips unvoted days
   assert.deepEqual(dayRemovalImpact(['2026-10-01', '2026-10-02', '2026-10-03'], ['2026-10-01'], votes), [{ day: '2026-10-03', names: ['An', 'Binh'] }]);
   assert.deepEqual(dayRemovalImpact(['2026-10-01', '2026-10-03'], ['2026-10-01', '2026-10-03'], votes), []);
   assert.deepEqual(dayRemovalImpact(['2026-10-03', '2026-10-01'], [], votes).map((r) => r.day), ['2026-10-01', '2026-10-03']);
+});
+
+test('capacityImpact: lowering the limit waitlists the whole party that no longer fits, and everyone after it', () => {
+  const rs = [going(1, 1), going(2, 2, 1), going(3, 3)];
+  const r = capacityImpact(rs, 5, 2);
+  assert.deepEqual(ids(r.waitlisted), [2, 3]);
+  assert.deepEqual(r.promoted, []);
+});
+
+test('capacityImpact: no limit set or a limit that still fits changes nobody', () => {
+  const rs = [going(1, 1), going(2, 2)];
+  assert.deepEqual(capacityImpact(rs, null, 2), { waitlisted: [], promoted: [] });
+  assert.deepEqual(capacityImpact(rs, 2, 10), { waitlisted: [], promoted: [] });
+});
+
+test('capacityImpact: raising the limit or removing it promotes the waitlist; people already waiting are not reported as moved', () => {
+  const rs = [going(1, 1), going(2, 2), going(3, 3)];
+  assert.deepEqual(ids(capacityImpact(rs, 1, 2).promoted), [2]);
+  assert.deepEqual(ids(capacityImpact(rs, 1, null).promoted), [2, 3]);
+  assert.deepEqual(capacityImpact(rs, 1, 1).waitlisted, []);
+  assert.deepEqual(ids(capacityImpact(rs, 2, 1).waitlisted), [2]);
 });

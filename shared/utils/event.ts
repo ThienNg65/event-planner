@@ -170,3 +170,18 @@ export function dayRemovalImpact(current: string[], next: string[], responses: {
     .map((day) => ({ day, names: responses.filter((r) => r.days.includes(day)).map((r) => r.name) }))
     .filter((r) => r.names.length > 0);
 }
+
+/**
+ * Who a seat limit change (`from` → `to`) moves: `waitlisted` were confirmed and now wait, `promoted` were waiting and now get a seat.
+ * It runs `rollCall` on both limits, so it follows the same strict first-come rules the page shows.
+ */
+export function capacityImpact<T extends QueueEntry>(responses: T[], from: number | null, to: number | null) {
+  const before = rollCall(responses, from);
+  const after = rollCall(responses, to);
+  const wasWaiting = new Set(before.waitlist.map((r) => r.memberId));
+  const nowWaiting = new Set(after.waitlist.map((r) => r.memberId));
+  return {
+    waitlisted: after.waitlist.filter((r) => !wasWaiting.has(r.memberId)),
+    promoted: after.confirmed.filter((r) => wasWaiting.has(r.memberId) && !nowWaiting.has(r.memberId)),
+  };
+}

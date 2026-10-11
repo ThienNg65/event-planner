@@ -121,12 +121,9 @@
     "copyLink": "Manage link",
     "linkCopied": "Manage link copied",
     "linkHint": "Anyone with this link can manage the event. Only share it with co-organizers.",
-    "delete": "Delete event",
-    "deleteConfirm": "Delete for good? This removes all votes and payments and cannot be undone.",
     "lock": "Lock the result and open RSVP",
     "lockButton": "Lock & open RSVP",
     "bill": "Bill total (₫)",
-    "billHint": "Saving moves the event to bill splitting",
     "schedule": "Date & time"
   },
   "err": {
@@ -328,18 +325,13 @@
     "votes": "{n} vote | {n} votes"
   },
   "edit": {
-    "open": "Manage",
-    "title": "Manage event",
+    "open": "Edit",
+    "title": "Edit event",
     "description": "Changes take effect for everyone when you save.",
     "save": "Save changes",
-    "danger": "Danger zone",
     "reopen": "Back to stage…",
-    "reopenButton": "Reopen",
-    "reopenConfirm": "Move the event back? Votes and answers are kept, but the stage changes for everyone.",
     "deadline": "Voting deadline",
     "deadlineHint": "Optional. After it, only organizers can change votes.",
-    "notice": "Post an update",
-    "noticeHint": "Shown to everyone at the top of the event. Clear it to remove.",
     "cohost": "Co-host link",
     "cohostHint": "A co-host can edit, lock and settle, but can't reopen, cancel or delete.",
     "cohostCreate": "Create co-host link",
@@ -349,12 +341,9 @@
     "cohostCopied": "Co-host link copied",
     "cohostCopy": "Copy co-host link",
     "cohostRotateConfirm": "The current co-host link will stop working. Continue?",
-    "cancelEvent": "Cancel event",
     "cancelReason": "Reason (optional)",
-    "cancelConfirm": "Everyone will see this event as cancelled. You can restore it later.",
     "cancelledNote": "This event is cancelled. Restore it to edit.",
     "restore": "Restore event",
-    "letKnow": "Let everyone know?",
     "postUpdate": "Post update",
     "unsaved": "Unsaved changes",
     "discardTitle": "Discard your changes?",
@@ -362,7 +351,16 @@
     "discard": "Discard",
     "keepEditing": "Keep editing",
     "noAccess": "You no longer have organizer access",
-    "noAccessHint": "Your edits are still here. Close this panel to refresh the page."
+    "noAccessHint": "Your edits are still here. Close this panel to refresh the page.",
+    "noShare": "no bill",
+    "votingClosed": "Voting is closed.",
+    "capWaitlist": "{n} person moves to the waitlist | {n} people move to the waitlist",
+    "capPromote": "{n} person gets a seat | {n} people get a seat",
+    "billHint": "Correcting the total changes what everyone owes.",
+    "shareChange": "Share per seat: {from} → {to}",
+    "shareChangeHint": "Everyone's remaining amount is recalculated from what they have already paid.",
+    "endsPlaceVote": "Setting a place ends the place vote ({n} suggestion) | Setting a place ends the place vote ({n} suggestions)",
+    "postUpdateHint": "Tell everyone what changed. It shows at the top of the event when you save."
   },
   "share": {
     "poll": "Vote for a day: {title}",
@@ -397,5 +395,50 @@
     "setAmount": "Set paid amount…",
     "amount": "Amount paid (₫)",
     "save": "Save"
+  },
+  "host": {
+    "menu": "More actions",
+    "reopen": "Reopen an earlier stage…",
+    "cancel": "Cancel event…",
+    "delete": "Delete event…",
+    "reopenTitle": "Reopen an earlier stage",
+    "reopenBody": "Move the event back? Votes and answers are kept, but the stage changes for everyone.",
+    "reopenButton": "Reopen",
+    "cancelTitle": "Cancel this event?",
+    "cancelBody": "Everyone will see this event as cancelled. You can restore it later.",
+    "cancelButton": "Cancel event",
+    "deleteTitle": "Delete this event?",
+    "deleteBody": "Delete for good? This removes all votes and payments and cannot be undone.",
+    "deleteButton": "Delete event"
+  },
+  "org": {
+    "open": "Organizers",
+    "title": "Organizers",
+    "description": "Who can manage this event, and what each role can do.",
+    "yourRole": "Your role:",
+    "host": "Host",
+    "cohost": "Co-host",
+    "participant": "Participant",
+    "can": "Can",
+    "yes": "Yes",
+    "no": "No",
+    "rows": {
+      "answer": "Vote, RSVP and pay for themselves",
+      "edit": "Edit details and bank account",
+      "advance": "Lock the date, enter the bill, settle",
+      "removeVenue": "Remove suggested places",
+      "setOthers": "Change other people's RSVP and payments",
+      "reopen": "Reopen an earlier stage",
+      "cancel": "Cancel, restore or delete the event",
+      "cohost": "Manage the manage link and the co-host link"
+    }
+  },
+  "post": {
+    "open": "Post an update",
+    "title": "Post an update",
+    "body": "Everyone will see this at the top of the event right away.",
+    "publish": "Publish",
+    "remove": "Remove update",
+    "edit": "Edit update"
   }
 }
