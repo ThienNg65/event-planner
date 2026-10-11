@@ -8,6 +8,8 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Automated checks of the server rules (who may change what, voting deadlines, removing a place), run with `npm run test:api`.
 
 ### Changed
+- On wide screens the event page has a side panel with an overview (voting progress, deadline, seats or payments) and the organizers. Organizers also see who has not voted yet. The note sits under the title, the cover is smaller, and "Hosted by" now reads "Created by".
+- Day cards in the poll show a tick circle, a "Most votes" label, a vote bar and who voted, and only the card you tap shows a spinner. Suggesting a place opens in a dialog.
 - Days are now edited from "Sửa ngày" / "Edit days" above the poll. It lists who voted for each day you remove, and asks a second time before deleting those votes. The edit panel no longer has the day picker.
 - **Manage** is now **Edit**, and only holds the event details. Reopening an earlier stage, cancelling and deleting moved to a **⋯** menu for the host; the co-host link and manage link moved to **Organizers**; posting an update has its own button on the event.
 - Before you save, the edit panel shows who moves to the waitlist or gets a seat when you change the seat limit, that choosing a place ends the place vote, and what each person's share becomes when you correct the bill.

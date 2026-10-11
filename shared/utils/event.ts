@@ -185,3 +185,9 @@ export function capacityImpact<T extends QueueEntry>(responses: T[], from: numbe
     promoted: after.confirmed.filter((r) => wasWaiting.has(r.memberId) && !nowWaiting.has(r.memberId)),
   };
 }
+
+/** Roster members who have not voted yet (no day and no place picked), in roster order. */
+export const pendingVoters = <M extends { id: number }>(roster: M[], responses: { memberId: number; days: unknown[]; venueIds: unknown[] }[]) => {
+  const voted = new Set(responses.filter((r) => r.days.length || r.venueIds.length).map((r) => r.memberId));
+  return roster.filter((m) => !voted.has(m.id));
+};

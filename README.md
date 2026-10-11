@@ -61,7 +61,7 @@ Open http://localhost:3000.
 |---|---|
 | Shell (sidebar, who-you-are, language, dark mode) | `app/layouts/default.vue` |
 | Pages | `app/pages/index.vue` (dashboard), `calendar.vue` (month and agenda), `new.vue` (create), `e/[id].vue` (event) |
-| Event blocks | `app/components/EventNextStep.vue` (what to do now), `EventPoll.vue`, `EventRsvp.vue`, `EventBill.vue`, `EventEdit.vue` (details panel), `EventHostMenu.vue` (reopen, cancel, delete), `EventOrganizersDialog.vue` (roles, manage and co-host links), `EventCard.vue`, `CoverPicker.vue`, `PollDaysInput.vue` |
+| Event blocks | `app/components/EventNextStep.vue` (what to do now), `EventPoll.vue`, `EventRsvp.vue`, `EventBill.vue`, `EventEdit.vue` (details panel), `EventHostMenu.vue` (reopen, cancel, delete), `EventOverview.vue` and `EventOrganizers.vue` (the status rail), `EventOrganizersDialog.vue` (roles, manage and co-host links), `EventCard.vue`, `CoverPicker.vue`, `PollDaysInput.vue` |
 | API | `server/api/members.*`, `server/api/events/**` (roles in `server/utils/http.ts`) |
 | Schema and migrations | `server/db/schema.ts`, `server/db/migrations/` |
 | Waitlist, split, payments, voting window, next step, name match, VietQR | `shared/utils/event.ts` (tested in `test/event.test.ts`) |

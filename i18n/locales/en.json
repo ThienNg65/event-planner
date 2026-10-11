@@ -56,12 +56,14 @@
     "attendees": "Attendees",
     "waitlist": "{n} on waitlist",
     "nobody": "Nobody yet",
-    "hostedBy": "Hosted by {name}",
+    "hostedBy": "Created by {name}",
     "goingCount": "{n} going",
     "cancelledTitle": "This event was cancelled",
     "restore": "Restore event",
     "noticeTitle": "Update from the host",
-    "new": "New"
+    "new": "New",
+    "more": "More",
+    "less": "Less"
   },
   "create": {
     "title": "New event",
@@ -171,7 +173,7 @@
   },
   "poll": {
     "days": "Which days work for you?",
-    "top": "Top pick",
+    "top": "Most votes",
     "venues": "Where to?",
     "noVenues": "No restaurants yet. Suggest one!",
     "suggestedBy": "suggested by {name}",
@@ -179,9 +181,6 @@
     "add": "Add suggestion",
     "tapHint": "Tap the days you can make",
     "placeQ": "Which place works?",
-    "progress": "{n} of {total} voted",
-    "closes": "closes {when}",
-    "closed": "Voting is closed",
     "pickName": "Pick your name above to vote",
     "suggestDay": "Suggest a day",
     "suggestPlace": "Suggest a place",
@@ -189,7 +188,13 @@
     "remove": "Remove",
     "removeTitle": "Remove “{name}”?",
     "removeBody": "{n} vote for it will be removed too. | {n} votes for it will be removed too.",
-    "voteFor": "Vote for {name}"
+    "voteFor": "Vote for {name}",
+    "people": "{n} person | {n} people",
+    "dayLabel": "{day}, {people}, {state}",
+    "selected": "selected",
+    "notSelected": "not selected",
+    "closedDeadline": "Voting closed: the deadline passed",
+    "closedCancelled": "Voting closed: the event was cancelled"
   },
   "bill": {
     "title": "Bill",
@@ -412,7 +417,6 @@
     "deleteButton": "Delete event"
   },
   "org": {
-    "open": "Organizers",
     "title": "Organizers",
     "description": "Who can manage this event, and what each role can do.",
     "yourRole": "Your role:",
@@ -431,7 +435,10 @@
       "reopen": "Reopen an earlier stage",
       "cancel": "Cancel, restore or delete the event",
       "cohost": "Manage the manage link and the co-host link"
-    }
+    },
+    "legacyActive": "A co-host link is active",
+    "legacyNone": "No co-host link",
+    "manage": "Manage organizers"
   },
   "post": {
     "open": "Post an update",
@@ -440,5 +447,24 @@
     "publish": "Publish",
     "remove": "Remove update",
     "edit": "Edit update"
+  },
+  "overview": {
+    "title": "Overview",
+    "open": "Voting open",
+    "closed": "Voting closed, date not locked",
+    "voted": "{n} of {total} in the team voted",
+    "closes": "Closes {when}",
+    "notVoted": "Not voted yet: {names}",
+    "more": "+{n} more",
+    "locked": "Date locked: {when}",
+    "seatsOf": "{n} of {cap} seats taken",
+    "seats": "{n} seats taken",
+    "going": "Going {n}",
+    "maybe": "Maybe {n}",
+    "no": "Can't {n}",
+    "paid": "{n} of {total} paid",
+    "collected": "{got} of {total} collected",
+    "share": "{amount} per seat",
+    "settled": "All settled · {n} seats"
   }
 }

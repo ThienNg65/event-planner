@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
@@ -220,4 +220,16 @@ test('capacityImpact: raising the limit or removing it promotes the waitlist; pe
   assert.deepEqual(ids(capacityImpact(rs, 1, null).promoted), [2, 3]);
   assert.deepEqual(capacityImpact(rs, 1, 1).waitlisted, []);
   assert.deepEqual(ids(capacityImpact(rs, 2, 1).waitlisted), [2]);
+});
+
+test('pendingVoters: members with no day and no place picked, in roster order', () => {
+  const roster = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+  const rs = [
+    { memberId: 1, days: ['2026-10-01'], venueIds: [] },
+    { memberId: 2, days: [], venueIds: [] },
+    { memberId: 3, days: [], venueIds: [7] },
+  ];
+  assert.deepEqual(pendingVoters(roster, rs), [{ id: 2 }, { id: 4 }]);
+  assert.deepEqual(pendingVoters(roster, []), roster);
+  assert.deepEqual(pendingVoters([], rs), []);
 });

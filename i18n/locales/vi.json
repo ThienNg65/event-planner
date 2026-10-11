@@ -56,12 +56,14 @@
     "attendees": "Người tham gia",
     "waitlist": "{n} người đang chờ",
     "nobody": "Chưa có ai",
-    "hostedBy": "Tổ chức bởi {name}",
+    "hostedBy": "Tạo bởi {name}",
     "goingCount": "{n} người đi",
     "cancelledTitle": "Sự kiện đã bị huỷ",
     "restore": "Khôi phục sự kiện",
     "noticeTitle": "Thông báo từ người tổ chức",
-    "new": "Mới"
+    "new": "Mới",
+    "more": "Xem thêm",
+    "less": "Thu gọn"
   },
   "create": {
     "title": "Tạo sự kiện",
@@ -171,7 +173,7 @@
   },
   "poll": {
     "days": "Ngày nào bạn đi được?",
-    "top": "Nhiều nhất",
+    "top": "Nhiều phiếu nhất",
     "venues": "Đi đâu?",
     "noVenues": "Chưa có nhà hàng nào. Hãy gợi ý một chỗ!",
     "suggestedBy": "đề xuất bởi {name}",
@@ -179,9 +181,6 @@
     "add": "Thêm đề xuất",
     "tapHint": "Chạm vào những ngày bạn đi được",
     "placeQ": "Bạn thích chỗ nào?",
-    "progress": "{n}/{total} người đã chọn",
-    "closes": "đóng lúc {when}",
-    "closed": "Đã đóng bình chọn",
     "pickName": "Chọn tên của bạn ở trên để bình chọn",
     "suggestDay": "Gợi ý ngày",
     "suggestPlace": "Gợi ý địa điểm",
@@ -189,7 +188,13 @@
     "remove": "Gỡ",
     "removeTitle": "Gỡ “{name}”?",
     "removeBody": "{n} phiếu cho chỗ này cũng sẽ bị xoá. | {n} phiếu cho chỗ này cũng sẽ bị xoá.",
-    "voteFor": "Chọn {name}"
+    "voteFor": "Chọn {name}",
+    "people": "{n} người | {n} người",
+    "dayLabel": "{day}, {people}, {state}",
+    "selected": "đã chọn",
+    "notSelected": "chưa chọn",
+    "closedDeadline": "Đã đóng bình chọn: quá hạn",
+    "closedCancelled": "Đã đóng bình chọn: sự kiện bị huỷ"
   },
   "bill": {
     "title": "Chia tiền",
@@ -412,7 +417,6 @@
     "deleteButton": "Xoá sự kiện"
   },
   "org": {
-    "open": "Ban tổ chức",
     "title": "Ban tổ chức",
     "description": "Ai quản lý được sự kiện này và mỗi vai trò làm được gì.",
     "yourRole": "Vai trò của bạn:",
@@ -431,7 +435,10 @@
       "reopen": "Mở lại một bước trước",
       "cancel": "Huỷ, khôi phục hoặc xoá sự kiện",
       "cohost": "Quản lý link quản lý và link đồng tổ chức"
-    }
+    },
+    "legacyActive": "Đang có link đồng tổ chức",
+    "legacyNone": "Chưa có link đồng tổ chức",
+    "manage": "Quản lý ban tổ chức"
   },
   "post": {
     "open": "Đăng thông báo",
@@ -440,5 +447,24 @@
     "publish": "Đăng",
     "remove": "Gỡ thông báo",
     "edit": "Sửa thông báo"
+  },
+  "overview": {
+    "title": "Tổng quan",
+    "open": "Đang bình chọn",
+    "closed": "Đã đóng bình chọn, chưa chốt ngày",
+    "voted": "{n}/{total} người trong team đã chọn",
+    "closes": "Đóng lúc {when}",
+    "notVoted": "Chưa chọn: {names}",
+    "more": "+{n} người nữa",
+    "locked": "Đã chốt ngày: {when}",
+    "seatsOf": "Đã có {n}/{cap} chỗ",
+    "seats": "Đã có {n} chỗ",
+    "going": "Đi {n}",
+    "maybe": "Có thể {n}",
+    "no": "Không đi {n}",
+    "paid": "{n}/{total} người đã trả",
+    "collected": "Đã thu {got} / {total}",
+    "share": "{amount} mỗi chỗ",
+    "settled": "Đã hoàn tất · {n} chỗ"
   }
 }
