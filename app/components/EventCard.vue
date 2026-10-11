@@ -29,7 +29,7 @@ const status = computed(() => {
     cancelled: !!e.cancelledAt,
     votingClosed: e.stage === 'poll' && !votingOpen(e),
   });
-  return step in STATUS ? { ...STATUS[step as keyof typeof STATUS], label: t(`card.${step}`, { amount: fmtVnd(e.mine.owes ?? 0) }) } : null;
+  return step in STATUS ? { ...STATUS[step as keyof typeof STATUS], label: t(`card.${step}`, { amount: fmtVnd(e.mine.left) }) } : null;
 });
 </script>
 

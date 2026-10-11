@@ -15,6 +15,16 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ### Fixed
 - Removing a poll day no longer stops people who had voted for it from voting again.
+- Opening a co-host link in the host's own browser no longer takes away the host's rights.
+- Saving event edits no longer drops days that someone suggested while the form was open.
+- Editing an event after moving it back from paying to RSVP no longer sends it straight back to paying.
+- Home and event cards now show what you still owe, not your full share.
+- People marked as paid stay paid when the bill or guest count changes later.
+- A payment no longer overwrites an organizer's correction made at the same time.
+- The people list no longer shows everyone as paid before the bill is entered.
+- A new co-host link stays on screen to copy (it was lost on iPhone), and replacing the old one asks first.
+- A revoked co-host link no longer shows organizer tasks on the home page.
+- Suggesting a place someone else just added now counts your vote for it.
 
 ## [0.2.0] - 2026-10-09
 

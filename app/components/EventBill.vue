@@ -34,9 +34,9 @@ watch(qr, () => (qrFailed.value = false));
 const amount = ref(0);
 watch(() => mine.value?.left, (l) => (amount.value = l ?? 0), { immediate: true });
 
-async function setPaid(paidAmount: number | null) {
-  const ok = await call('/response', 'PUT', { memberId: props.me!.id, paidAmount });
-  if (ok && paidAmount !== null && paidAmount >= mine.value!.owes) confetti();
+async function setPaid(body: { paidAmount: null } | { addPaid: number }) {
+  const ok = await call('/response', 'PUT', { memberId: props.me!.id, ...body });
+  if (ok && 'addPaid' in body && mine.value!.paid + body.addPaid >= mine.value!.owes) confetti();
   emit('changed');
 }
 </script>
@@ -71,7 +71,7 @@ async function setPaid(paidAmount: number | null) {
 
         <template v-if="mine.done">
           <p class="flex items-center justify-center gap-1.5 font-semibold text-success"><UIcon name="i-lucide-badge-check" class="size-5" />{{ t('bill.paidFull') }}</p>
-          <UButton v-if="!locked" size="sm" color="neutral" variant="ghost" :loading="busy" @click="setPaid(null)">{{ t('bill.clear') }}</UButton>
+          <UButton v-if="!locked" size="sm" color="neutral" variant="ghost" :loading="busy" @click="setPaid({ paidAmount: null })">{{ t('bill.clear') }}</UButton>
         </template>
         <template v-else-if="!locked">
           <img v-if="qr && !qrFailed" :src="qr" :alt="t('bill.qrAlt')" class="mx-auto w-64 max-w-full rounded-xl bg-white shadow-sm" @error="qrFailed = true" />
@@ -83,7 +83,7 @@ async function setPaid(paidAmount: number | null) {
             <UFormField :label="t('bill.amountLabel')">
               <UInputNumber v-model="amount" :min="1" :step="1000" :format-options="{ maximumFractionDigits: 0 }" class="w-full" />
             </UFormField>
-            <UButton block :loading="busy" :disabled="!amount || amount < 1" @click="setPaid(mine.paid + amount)">{{ t('bill.confirm') }}</UButton>
+            <UButton block :loading="busy" :disabled="!amount || amount < 1" @click="setPaid({ addPaid: amount })">{{ t('bill.confirm') }}</UButton>
           </div>
         </template>
       </div>

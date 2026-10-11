@@ -36,8 +36,9 @@ const blank = () => {
 };
 const form = ref(blank());
 const reopenTo = ref<(typeof STAGES)[number] | undefined>();
-const confirm = ref<'reopen' | 'cancel' | 'delete' | null>(null);
+const confirm = ref<'reopen' | 'cancel' | 'delete' | 'rotate' | null>(null);
 const cancelReason = ref('');
+const coHostLink = ref('');
 // Fresh copy of the event every time the panel opens, so it never shows stale values.
 watch(open, (o) => {
   if (!o) return;
@@ -45,6 +46,7 @@ watch(open, (o) => {
   reopenTo.value = undefined;
   confirm.value = null;
   cancelReason.value = '';
+  coHostLink.value = '';
 });
 const earlier = computed(() => STAGES.slice(0, STAGES.indexOf(ev.value.stage)).map((s) => ({ label: t(`stage.${s}`), value: s })));
 
@@ -60,14 +62,16 @@ async function save() {
   const dateMoved = !!startsAt && !!e.startsAt && startsAt !== toTeamInput(e.startsAt);
   const venueMoved = !!f.venue && f.venue !== (e.venue ?? '');
   const startsAtIso = startsAt && teamTime(...(startsAt.split('T') as [string, string]));
+  // Only resend the days when the host changed them, or a day suggested meanwhile (and its votes) would be dropped.
+  const daysChanged = [...pollDays].sort().join() !== [...e.pollDays].sort().join();
   const ok = await patch({
     ...f,
     capacity: f.capacity || null,
-    ...(editingDays.value ? { pollDays } : startsAt && { startsAt: startsAtIso }),
+    ...(editingDays.value ? daysChanged && { pollDays } : startsAt && { startsAt: startsAtIso }),
     ...(e.stage === 'poll' && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
     ...(e.stage !== 'poll' && { billTotal: billTotal ?? null }),
-    // Entering the bill while RSVP is open moves on to splitting it.
-    ...(e.stage === 'rsvp' && billTotal != null && { stage: 'bill' }),
+    // Entering (or changing) the bill while RSVP is open moves on to splitting it; a bill kept from a reopen does not.
+    ...(e.stage === 'rsvp' && billTotal != null && billTotal !== e.billTotal && { stage: 'bill' }),
   });
   if (!ok) return;
   open.value = false;
@@ -105,20 +109,32 @@ async function copyLink() {
   toast.add({ title: t('manage.linkCopied'), description: t('manage.linkHint') });
 }
 
-// The co-host key is only shown once (we store its hash), so creating or rotating copies the new link straight away.
+// The co-host key is only shown once (we store its hash), so the new link stays on screen until the panel closes.
+// Copying is a separate tap: Safari rejects clipboard writes that follow an await.
 async function newCoHostLink() {
   try {
     const { key } = await $fetch<{ key: string }>(`/api/events/${ev.value.id}/cohost`, { method: 'POST', headers: { 'x-manage-key': props.manageKey } });
-    await navigator.clipboard.writeText(`${origin()}?key=${key}`);
-    toast.add({ title: t('edit.cohostCopied'), description: t('edit.cohostHint') });
+    coHostLink.value = `${origin()}?key=${key}`;
+    confirm.value = null;
     emit('changed');
   } catch (e) {
     toast.add({ color: 'error', title: errMsg(e) });
   }
 }
 
+async function copyCoHostLink() {
+  try {
+    await navigator.clipboard.writeText(coHostLink.value);
+    toast.add({ title: t('edit.cohostCopied'), description: t('edit.cohostHint') });
+  } catch {
+    /* clipboard blocked: the link is still shown to copy by hand */
+  }
+}
+
 async function revokeCoHost() {
-  if (await call('/cohost', 'DELETE')) emit('changed');
+  if (!(await call('/cohost', 'DELETE'))) return;
+  coHostLink.value = '';
+  emit('changed');
 }
 
 async function remove() {
@@ -190,8 +206,17 @@ async function remove() {
           <p class="text-sm font-semibold">{{ t('edit.cohost') }}</p>
           <p class="text-xs text-muted">{{ t('edit.cohostHint') }}</p>
           <p v-if="data.hasCoHost" class="flex items-center gap-1.5 text-sm text-success"><UIcon name="i-lucide-circle-check" class="size-4" />{{ t('edit.cohostActive') }}</p>
-          <div class="flex flex-wrap gap-2">
-            <UButton color="neutral" variant="outline" icon="i-lucide-user-plus" :loading="busy" @click="newCoHostLink">
+          <div v-if="coHostLink" class="flex gap-2">
+            <UInput :model-value="coHostLink" readonly class="min-w-0 flex-1" />
+            <UButton color="neutral" variant="outline" icon="i-lucide-copy" :aria-label="t('edit.cohostCopy')" @click="copyCoHostLink" />
+          </div>
+          <div v-if="confirm === 'rotate'" class="flex flex-wrap items-center gap-2">
+            <span class="text-sm">{{ t('edit.cohostRotateConfirm') }}</span>
+            <UButton color="warning" :loading="busy" autofocus @click="newCoHostLink">{{ t('edit.cohostNew') }}</UButton>
+            <UButton variant="ghost" color="neutral" @click="confirm = null">{{ t('cancel') }}</UButton>
+          </div>
+          <div v-else class="flex flex-wrap gap-2">
+            <UButton color="neutral" variant="outline" icon="i-lucide-user-plus" :loading="busy" @click="data.hasCoHost ? (confirm = 'rotate') : newCoHostLink()">
               {{ data.hasCoHost ? t('edit.cohostNew') : t('edit.cohostCreate') }}
             </UButton>
             <UButton v-if="data.hasCoHost" color="neutral" variant="ghost" :loading="busy" @click="revokeCoHost">{{ t('edit.cohostRevoke') }}</UButton>

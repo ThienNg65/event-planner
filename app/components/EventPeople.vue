@@ -23,7 +23,8 @@ const rows = computed(() =>
       const waitPlace = props.data.waitlist.indexOf(r.memberId) + 1;
       const answered = ev.value.stage !== 'poll';
       const kind = !answered ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : (r.status ?? 'voted');
-      const owes = kind === 'going' ? (props.data.share ?? 0) * (1 + r.guests) : null;
+      // No share yet (bill not entered): nothing is owed, so no payment state to show.
+      const owes = kind === 'going' && props.data.share !== null ? props.data.share * (1 + r.guests) : null;
       return { r, kind: kind as (typeof ORDER)[number], waitPlace, owes, pay: owes === null ? null : paymentOf(r, owes) };
     })
     .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind) || a.r.name.localeCompare(b.r.name))
@@ -46,7 +47,7 @@ function menu(row: (typeof rows.value)[number]) {
   }
   if (paying.value && row.pay) {
     items.push(
-      { label: t('people.markPaid'), icon: 'i-lucide-badge-check', onSelect: () => put(row.r.memberId, { paidAmount: row.owes }) },
+      { label: t('people.markPaid'), icon: 'i-lucide-badge-check', onSelect: () => put(row.r.memberId, { paid: true }) },
       { label: t('people.setAmount'), icon: 'i-lucide-pencil', onSelect: () => openAmount(row.r) },
       { label: t('people.markUnpaid'), icon: 'i-lucide-circle-slash', onSelect: () => put(row.r.memberId, { paidAmount: null }) }
     );

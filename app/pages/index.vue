@@ -96,7 +96,7 @@ const tabs = computed(() =>
               <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-secondary/15 text-secondary"><UIcon :name="TODO_ICON[td.kind]" class="size-5" /></span>
               <span class="min-w-0 flex-1">
                 <span class="block text-sm font-semibold text-highlighted">
-                  {{ t(`home.todo.${td.kind}`, { amount: fmtVnd(td.event.mine?.owes ?? 0) }) }}
+                  {{ t(`home.todo.${td.kind}`, { amount: fmtVnd(td.event.mine?.left ?? 0) }) }}
                 </span>
                 <span class="block truncate text-sm text-muted">{{ td.event.title }}</span>
               </span>

@@ -32,12 +32,22 @@ export default defineEventHandler(async (event) => {
     set.status = b.status as (typeof STATUSES)[number] | null;
     set.guests = guests;
   }
-  if ('paidAmount' in b) {
+  if ('paidAmount' in b || 'addPaid' in b || b.paid === true) {
     // Participants stop editing once the event is Completed; organizers may still correct the ledger.
     if (!(role !== null ? ['bill', 'settled'] : ['bill']).includes(ev.stage)) fail(409, 'stageClosed');
-    if (b.paidAmount !== null && !intIn(b.paidAmount, 0, 1_000_000_000)) fail(400, 'invalid');
-    set.paidAmount = b.paidAmount || null;
-    set.paidAt = b.paidAmount ? new Date() : null;
+    if (b.paid === true) {
+      // Paid in full: no amount, so it stays full if the bill or guests change later.
+      set.paidAmount = null;
+      set.paidAt = new Date();
+    } else if ('addPaid' in b) {
+      if (!intIn(b.addPaid, 1, 1_000_000_000)) fail(400, 'invalid');
+      set.paidAmount = b.addPaid;
+      set.paidAt = new Date();
+    } else {
+      if (b.paidAmount !== null && !intIn(b.paidAmount, 0, 1_000_000_000)) fail(400, 'invalid');
+      set.paidAmount = b.paidAmount || null;
+      set.paidAt = b.paidAmount ? new Date() : null;
+    }
   }
   if (!Object.keys(set).length) fail(400, 'invalid');
 
@@ -51,7 +61,12 @@ export default defineEventHandler(async (event) => {
     .values({ ...set, eventId: ev.id, memberId: member.id, goingAt: set.status === 'going' ? sql`now()` : null })
     .onConflictDoUpdate({
       target: [responses.eventId, responses.memberId],
-      set: 'status' in set ? { ...set, goingAt } : set,
+      set: {
+        ...set,
+        ...('status' in set && { goingAt }),
+        // An increment, so a payment never overwrites a correction made since the page loaded.
+        ...('addPaid' in b && { paidAmount: sql`COALESCE(${responses.paidAmount}, 0) + ${set.paidAmount}` }),
+      },
     });
   return { ok: true };
 });

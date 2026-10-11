@@ -6,7 +6,7 @@ const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
 const toast = useToast();
 const { members } = useMe();
-const { busy, call } = useEventApi(
+const { busy, call, error } = useEventApi(
   () => props.data.event.id,
   () => props.manageKey
 );
@@ -56,14 +56,22 @@ async function suggestDay(v: unknown) {
 
 const showForm = ref(false);
 const form = reactive({ name: '', link: '', note: '' });
+const voteFor = async (id: number) => {
+  if (!mine.value?.venueIds.includes(id)) await save({ venueIds: [...(mine.value?.venueIds ?? []), id] });
+};
 async function suggest() {
   const same = props.data.venues.find((v) => norm(v.name) === norm(form.name));
   if (same) {
     toast.add({ title: t('poll.dup') });
-    if (!mine.value?.venueIds.includes(same.id)) await save({ venueIds: [...(mine.value?.venueIds ?? []), same.id] });
+    await voteFor(same.id);
   } else if (await call('/venues', 'POST', { ...form, addedBy: props.me!.id })) {
     emit('changed');
-  } else return;
+  } else {
+    // Someone added it after our list loaded: the server names the existing place, so vote for that one.
+    const dupId = (error.value as { data?: { data?: { id?: number } } } | null)?.data?.data?.id;
+    if (dupId === undefined) return;
+    await voteFor(dupId);
+  }
   Object.assign(form, { name: '', link: '', note: '' });
   showForm.value = false;
 }

@@ -331,6 +331,8 @@
     "cohostNew": "New link (replaces the old one)",
     "cohostRevoke": "Revoke",
     "cohostCopied": "Co-host link copied",
+    "cohostCopy": "Copy co-host link",
+    "cohostRotateConfirm": "The current co-host link will stop working. Continue?",
     "cancelEvent": "Cancel event",
     "cancelReason": "Reason (optional)",
     "cancelConfirm": "Everyone will see this event as cancelled. You can restore it later.",

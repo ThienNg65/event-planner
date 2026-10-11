@@ -331,6 +331,8 @@
     "cohostNew": "Link mới (thay link cũ)",
     "cohostRevoke": "Thu hồi",
     "cohostCopied": "Đã sao chép link đồng tổ chức",
+    "cohostCopy": "Sao chép link đồng tổ chức",
+    "cohostRotateConfirm": "Link đồng tổ chức hiện tại sẽ ngừng hoạt động. Tiếp tục?",
     "cancelEvent": "Huỷ sự kiện",
     "cancelReason": "Lý do (không bắt buộc)",
     "cancelConfirm": "Mọi người sẽ thấy sự kiện đã huỷ. Bạn có thể khôi phục sau.",

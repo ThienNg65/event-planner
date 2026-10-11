@@ -15,7 +15,15 @@ if (error.value) {
   const notFound = error.value.statusCode === 404;
   throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'err.notFound' : 'err.generic'), fatal: true });
 }
-watch(key, (k) => k && refresh());
+watch(key, async (k) => {
+  if (!k) return;
+  await refresh();
+  // A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos.
+  if (!error.value && data.value?.role === null) {
+    forgetManageKey(id);
+    key.value = null;
+  }
+});
 
 const ev = computed(() => data.value!.event);
 // The key is browser-only, so the server renders every visitor as a participant until it is known.
