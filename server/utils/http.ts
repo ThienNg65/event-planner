@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { and, eq } from 'drizzle-orm';
 import type { H3Event } from 'h3';
 
 export function fail(statusCode: number, message: string): never {
@@ -24,12 +25,18 @@ export function routeId(event: H3Event) {
 const hashMatches = (key: string, hash: string | null) =>
   !!hash && timingSafeEqual(Buffer.from(sha256(key), 'hex'), Buffer.from(hash, 'hex'));
 
-/** The caller's role, from the x-manage-key header: the manage key is the host, the co-host key a co-host. */
-export function roleOf(event: H3Event, ev: { manageKeyHash: string; coHostKeyHash: string | null }): Role {
+/** The caller's role, from the x-manage-key header: the manage key is the host; the legacy shared key or a named co-host's access key is a co-host. */
+export async function roleOf(event: H3Event, ev: { id: number; manageKeyHash: string; coHostKeyHash: string | null }): Promise<Role> {
   const key = getHeader(event, 'x-manage-key');
   if (!key) return null;
   if (hashMatches(key, ev.manageKeyHash)) return 'host';
-  return hashMatches(key, ev.coHostKeyHash) ? 'cohost' : null;
+  if (hashMatches(key, ev.coHostKeyHash)) return 'cohost';
+  const { cohosts } = schema;
+  const [row] = await useDb()
+    .select({ memberId: cohosts.memberId })
+    .from(cohosts)
+    .where(and(eq(cohosts.eventId, ev.id), eq(cohosts.keyHash, sha256(key)), eq(cohosts.status, 'active')));
+  return row ? 'cohost' : null;
 }
 
 /** The visitor's member id from the unsigned `me` cookie (guards against mistakes, not attackers). */

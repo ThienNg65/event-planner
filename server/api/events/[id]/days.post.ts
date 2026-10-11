@@ -5,7 +5,7 @@ const MAX_DAYS = 20; // same cap as eventFields
 export default defineEventHandler(async (event) => {
   const { events, responses } = schema;
   const ev = await findEvent(routeId(event));
-  const role = roleOf(event, ev);
+  const role = await roleOf(event, ev);
   const b = await readJson(event);
   const member = await requireMember(b.memberId);
   requireSelf(event, member.id, role);

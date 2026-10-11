@@ -35,6 +35,68 @@ const when = computed(() => {
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
 const editing = ref(false);
 const organizing = ref(false);
+
+// A co-host invite arrives as /e/:id#invite=<secret>. The fragment is never sent to a server; it is read here, removed from
+// the address bar, and kept only in sessionStorage until the invitee accepts or declines (never alongside the manage keys).
+const INVITE_STORE = `te:invite:${id}`;
+const invite = ref('');
+const peek = ref<{ memberId: number; name: string; status: 'valid' | 'expired' } | 'invalid' | null>(null);
+const inviteBusy = ref(false);
+const inviteError = ref('');
+async function peekInvite() {
+  if (!invite.value) return;
+  try {
+    peek.value = await $fetch(`/api/events/${id}/cohosts/peek`, { method: 'POST', body: { invite: invite.value } });
+  } catch {
+    peek.value = 'invalid';
+    forgetInvite();
+  }
+}
+function forgetInvite() {
+  invite.value = '';
+  try {
+    sessionStorage.removeItem(INVITE_STORE);
+  } catch {
+    /* storage blocked: nothing kept */
+  }
+}
+onMounted(() => {
+  try {
+    const fromUrl = new URLSearchParams(location.hash.slice(1)).get('invite');
+    if (fromUrl) {
+      sessionStorage.setItem(INVITE_STORE, fromUrl);
+      history.replaceState(history.state, '', location.pathname + location.search);
+    }
+    invite.value = sessionStorage.getItem(INVITE_STORE) ?? '';
+  } catch {
+    /* storage blocked: the invite link has to be opened again */
+  }
+  peekInvite();
+});
+const inviteForMe = computed(() => typeof peek.value === 'object' && peek.value !== null && peek.value.memberId === me.value?.id);
+async function answerInvite(accept: boolean) {
+  inviteBusy.value = true;
+  inviteError.value = '';
+  try {
+    const res = await $fetch<{ key?: string }>(`/api/events/${id}/cohosts/${accept ? 'accept' : 'decline'}`, { method: 'POST', body: { invite: invite.value } });
+    forgetInvite();
+    peek.value = null;
+    if (accept && res.key) {
+      saveManageKey(id, res.key);
+      key.value = res.key;
+      toast.add({ title: t('invite.accepted') });
+    }
+    await refresh();
+  } catch (e) {
+    inviteError.value = errMsg(e);
+    if ((e as { statusCode?: number }).statusCode !== 403) {
+      forgetInvite();
+      peek.value = 'invalid';
+    }
+  } finally {
+    inviteBusy.value = false;
+  }
+}
 // Long notes show three lines and expand on request.
 const noteOpen = ref(false);
 const longNote = computed(() => (ev.value.note?.length ?? 0) > 150 || (ev.value.note?.split('\n').length ?? 0) > 3);
@@ -181,6 +243,31 @@ async function share() {
             <template #title>
               {{ t('event.noticeTitle') }}
               <UBadge v-if="unseen" color="secondary" variant="solid" size="sm" :label="t('event.new')" class="ml-1" />
+            </template>
+          </UAlert>
+
+          <UAlert
+            v-if="peek"
+            role="status"
+            :color="typeof peek === 'object' && peek.status === 'valid' ? 'primary' : 'warning'"
+            variant="subtle"
+            icon="i-lucide-user-plus"
+            :title="typeof peek === 'object' && peek.status === 'valid' ? t('invite.title', { name: peek.name }) : t('invite.invalid')"
+            :description="typeof peek === 'object' && peek.status === 'expired' ? t('invite.expired') : undefined"
+          >
+            <template v-if="typeof peek === 'object' && peek.status === 'valid'" #description>
+              <div class="space-y-2">
+                <p v-if="inviteForMe">{{ t('invite.body') }}</p>
+                <template v-else>
+                  <p>{{ t('invite.notYou', { name: peek.name }) }}</p>
+                  <MemberPicker />
+                </template>
+                <p v-if="inviteError" class="text-error">{{ inviteError }}</p>
+                <div class="flex flex-wrap gap-2">
+                  <UButton :loading="inviteBusy" :disabled="!inviteForMe" @click="answerInvite(true)">{{ t('invite.accept') }}</UButton>
+                  <UButton color="neutral" variant="ghost" :disabled="inviteBusy" @click="answerInvite(false)">{{ t('invite.decline') }}</UButton>
+                </div>
+              </div>
             </template>
           </UAlert>
 

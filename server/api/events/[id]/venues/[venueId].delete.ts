@@ -3,7 +3,7 @@ import { and, eq, sql } from 'drizzle-orm';
 export default defineEventHandler(async (event) => {
   const { venues, responses } = schema;
   const ev = await findEvent(routeId(event));
-  requireCan(roleOf(event, ev), 'removeVenue');
+  requireCan(await roleOf(event, ev), 'removeVenue');
   if (ev.cancelledAt) fail(409, 'cancelled');
   const venueId = Number(getRouterParam(event, 'venueId'));
   if (!Number.isInteger(venueId)) fail(404, 'notFound');

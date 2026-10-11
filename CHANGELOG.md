@@ -5,6 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [0.2.2] - 2026-10-11
 
 ### Added
+- Co-hosts are now invited by name with a single-use link that expires after 7 days. The host sees who is invited, active or expired, can send a new link, cut someone's access or revoke them, and a co-host can leave. The old shared co-host link keeps working until revoked, and active co-hosts are listed on the event.
 - Organizers can close voting at any time and reopen it later (with no deadline or a new one), without losing a single vote. The lock dialog now shows how many people voted, who has not, a vote bar per day, and what locking does.
 - Automated checks of the server rules (who may change what, voting deadlines, removing a place), run with `npm run test:api`.
 

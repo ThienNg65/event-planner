@@ -13,7 +13,7 @@ function dayList(b: Record<string, unknown>, key: string) {
 export default defineEventHandler(async (event) => {
   const { events, responses } = schema;
   const ev = await findEvent(routeId(event));
-  const role = roleOf(event, ev);
+  const role = await roleOf(event, ev);
   requireCan(role, 'edit');
   const b = await readJson(event);
 
@@ -30,10 +30,12 @@ export default defineEventHandler(async (event) => {
   if (b.closeVoting === true) {
     requireCan(role, 'advance');
     if (ev.stage !== 'poll') fail(409, 'stageClosed');
+    // The server's clock, the same one votingOpen reads, so the poll counts as closed from this instant.
+    const now = new Date();
     const closed = await useDb()
       .update(events)
-      .set({ voteDeadline: sql`now()` })
-      .where(and(eq(events.id, ev.id), eq(events.stage, 'poll'), or(isNull(events.voteDeadline), gt(events.voteDeadline, sql`now()`))))
+      .set({ voteDeadline: now })
+      .where(and(eq(events.id, ev.id), eq(events.stage, 'poll'), or(isNull(events.voteDeadline), gt(events.voteDeadline, now))))
       .returning({ id: events.id });
     if (!closed.length && (await findEvent(ev.id)).stage !== 'poll') fail(409, 'stageClosed');
     return { ok: true };

@@ -4,7 +4,7 @@ import { STATUSES } from '../../../db/schema';
 export default defineEventHandler(async (event) => {
   const { events, responses } = schema;
   const ev = await findEvent(routeId(event));
-  const role = roleOf(event, ev);
+  const role = await roleOf(event, ev);
   const b = await readJson(event);
   const member = await requireMember(b.memberId);
   requireSelf(event, member.id, role);

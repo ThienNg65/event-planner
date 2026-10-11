@@ -155,7 +155,11 @@
     "votingClosed": "Đã đóng bình chọn.",
     "daysRequired": "Giữ lại ít nhất một ngày trong bình chọn.",
     "daysChanged": "Các ngày vừa thay đổi",
-    "venuesChanged": "Các địa điểm vừa thay đổi"
+    "venuesChanged": "Các địa điểm vừa thay đổi",
+    "tooManyCohosts": "Mỗi sự kiện có tối đa 5 đồng tổ chức, tính cả lời mời đang chờ.",
+    "alreadyCohost": "Người này đã là đồng tổ chức.",
+    "inviteInvalid": "Lời mời này không còn hiệu lực. Hãy nhờ người tổ chức gửi lời mời mới.",
+    "inviteExpired": "Lời mời này đã hết hạn. Hãy nhờ người tổ chức gửi lời mời mới."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -350,14 +354,6 @@
     "reopen": "Quay lại bước…",
     "deadline": "Hạn bình chọn",
     "deadlineHint": "Tuỳ chọn. Sau hạn này chỉ người tổ chức mới sửa được phiếu.",
-    "cohost": "Link đồng tổ chức",
-    "cohostHint": "Đồng tổ chức được sửa, chốt và hoàn tất, nhưng không mở lại, huỷ hay xoá được sự kiện.",
-    "cohostCreate": "Tạo link đồng tổ chức",
-    "cohostActive": "Link đồng tổ chức đang hoạt động",
-    "cohostNew": "Link mới (thay link cũ)",
-    "cohostRevoke": "Thu hồi",
-    "cohostCopied": "Đã sao chép link đồng tổ chức",
-    "cohostCopy": "Sao chép link đồng tổ chức",
     "cohostRotateConfirm": "Link đồng tổ chức hiện tại sẽ ngừng hoạt động. Tiếp tục?",
     "cancelReason": "Lý do (không bắt buộc)",
     "cancelledNote": "Sự kiện đã huỷ. Hãy khôi phục để chỉnh sửa.",
@@ -451,8 +447,32 @@
       "cohost": "Quản lý link quản lý và link đồng tổ chức"
     },
     "legacyActive": "Đang có link đồng tổ chức",
-    "legacyNone": "Chưa có link đồng tổ chức",
-    "manage": "Quản lý ban tổ chức"
+    "manage": "Quản lý ban tổ chức",
+    "trust": "Tên chỉ là nhãn do người tổ chức chọn, không phải danh tính đã xác minh: ứng dụng không có đăng nhập. Ai mở link mời trước đều có thể nhận lời, nên hãy gửi riêng tư. Đừng dùng quyền đồng tổ chức trên máy dùng chung.",
+    "cohosts": "Đồng tổ chức",
+    "noCohosts": "Chưa có đồng tổ chức",
+    "cohostNames": "Đồng tổ chức: {names}",
+    "status": {
+      "active": "Đang hoạt động",
+      "invited": "Đã mời",
+      "expired": "Hết hạn"
+    },
+    "reissue": "Cấp lại quyền",
+    "reissueConfirm": "Quyền hiện tại của họ dừng ngay, cho đến khi họ nhận link mới.",
+    "newInvite": "Link mời mới",
+    "revoke": "Thu hồi",
+    "revokeConfirm": "Họ mất quyền đồng tổ chức ngay lập tức.",
+    "leave": "Rời vai trò đồng tổ chức",
+    "leaveConfirm": "Bạn sẽ không còn quản lý được sự kiện này.",
+    "invite": "Mời đồng tổ chức",
+    "pick": "Chọn một thành viên",
+    "createInvite": "Tạo lời mời",
+    "inviteFor": "Link mời cho {name}",
+    "copyInvite": "Sao chép link mời",
+    "inviteCopied": "Đã sao chép link mời",
+    "inviteHint": "Chỉ hiện một lần. Hãy gửi riêng tư; ai mở trước có thể nhận lời. Link dùng được một lần và hết hạn sau 7 ngày.",
+    "legacy": "Link đồng tổ chức chung (không có tên)",
+    "legacyHint": "Link cũ ai cũng dùng được. Có thể thu hồi ở đây nhưng không tạo lại được; hãy mời đồng tổ chức theo tên."
   },
   "post": {
     "open": "Đăng thông báo",
@@ -480,5 +500,15 @@
     "collected": "Đã thu {got} / {total}",
     "share": "{amount} mỗi chỗ",
     "settled": "Đã hoàn tất · {n} chỗ"
+  },
+  "invite": {
+    "title": "Bạn được mời làm đồng tổ chức với tên {name}",
+    "body": "Là đồng tổ chức, bạn sửa được sự kiện, chốt ngày, nhập hoá đơn và hoàn tất. Bạn có thể rời bất cứ lúc nào.",
+    "notYou": "Lời mời này dành cho {name}. Nếu là bạn, hãy chọn tên của mình trước.",
+    "accept": "Nhận lời",
+    "decline": "Từ chối",
+    "accepted": "Bạn đã là đồng tổ chức",
+    "invalid": "Lời mời này không còn hiệu lực. Hãy nhờ người tổ chức gửi lời mời mới.",
+    "expired": "Lời mời đã hết hạn. Hãy nhờ người tổ chức gửi lời mời mới."
   }
 }

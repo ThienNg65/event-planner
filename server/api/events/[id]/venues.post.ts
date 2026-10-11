@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const ev = await findEvent(routeId(event));
-  const role = roleOf(event, ev);
+  const role = await roleOf(event, ev);
   const b = await readJson(event);
   const member = await requireMember(b.addedBy);
   requireSelf(event, member.id, role);

@@ -86,3 +86,29 @@ export const responses = pgTable(
     check('responses_paid_amount', sql`${t.paidAmount} >= 0`),
   ]
 );
+
+export const COHOST_STATUSES = ['invited', 'active'] as const;
+
+// Named co-hosts. An invited row holds only the hash of its single-use invite; accepting swaps it for the hash of an access key.
+export const cohosts = pgTable(
+  'cohosts',
+  {
+    eventId: integer()
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    memberId: integer()
+      .notNull()
+      .references(() => members.id),
+    status: text({ enum: COHOST_STATUSES }).notNull(),
+    inviteHash: text().unique(),
+    keyHash: text().unique(),
+    invitedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    acceptedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.eventId, t.memberId] }),
+    check('cohosts_status', sql`${t.status} in ('invited', 'active')`),
+    check('cohosts_invite', sql`(${t.status} = 'invited') = (${t.inviteHash} is not null)`),
+    check('cohosts_key', sql`(${t.status} = 'active') = (${t.keyHash} is not null)`),
+  ]
+);

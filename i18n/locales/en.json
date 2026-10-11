@@ -155,7 +155,11 @@
     "votingClosed": "Voting has closed.",
     "daysRequired": "Keep at least one day in the poll.",
     "daysChanged": "The days just changed",
-    "venuesChanged": "The places just changed"
+    "venuesChanged": "The places just changed",
+    "tooManyCohosts": "An event can have at most 5 co-hosts, including pending invites.",
+    "alreadyCohost": "This person is already a co-host.",
+    "inviteInvalid": "This invite is no longer valid. Ask the host for a new one.",
+    "inviteExpired": "This invite has expired. Ask the host for a new one."
   },
   "days": {
     "edit": "Edit days",
@@ -350,14 +354,6 @@
     "reopen": "Back to stage…",
     "deadline": "Voting deadline",
     "deadlineHint": "Optional. After it, only organizers can change votes.",
-    "cohost": "Co-host link",
-    "cohostHint": "A co-host can edit, lock and settle, but can't reopen, cancel or delete.",
-    "cohostCreate": "Create co-host link",
-    "cohostActive": "Co-host link active",
-    "cohostNew": "New link (replaces the old one)",
-    "cohostRevoke": "Revoke",
-    "cohostCopied": "Co-host link copied",
-    "cohostCopy": "Copy co-host link",
     "cohostRotateConfirm": "The current co-host link will stop working. Continue?",
     "cancelReason": "Reason (optional)",
     "cancelledNote": "This event is cancelled. Restore it to edit.",
@@ -451,8 +447,32 @@
       "cohost": "Manage the manage link and the co-host link"
     },
     "legacyActive": "A co-host link is active",
-    "legacyNone": "No co-host link",
-    "manage": "Manage organizers"
+    "manage": "Manage organizers",
+    "trust": "Names are labels the host chose, not verified identities: there is no login. Anyone who opens an invite link first can accept it, so send it privately. Don't use co-host access on a shared computer.",
+    "cohosts": "Co-hosts",
+    "noCohosts": "No co-hosts yet",
+    "cohostNames": "Co-hosts: {names}",
+    "status": {
+      "active": "Active",
+      "invited": "Invited",
+      "expired": "Expired"
+    },
+    "reissue": "Re-issue access",
+    "reissueConfirm": "Their current access stops now, until they accept the new link.",
+    "newInvite": "New invite link",
+    "revoke": "Revoke",
+    "revokeConfirm": "They lose co-host access right away.",
+    "leave": "Leave co-hosting",
+    "leaveConfirm": "You will no longer be able to manage this event.",
+    "invite": "Invite a co-host",
+    "pick": "Pick a team member",
+    "createInvite": "Create invite",
+    "inviteFor": "Invite link for {name}",
+    "copyInvite": "Copy invite link",
+    "inviteCopied": "Invite link copied",
+    "inviteHint": "Shown once. Send it privately; whoever opens it first can accept. It works once and expires in 7 days.",
+    "legacy": "Shared co-host link (no name)",
+    "legacyHint": "The older link anyone could use. It can be revoked here but not created again; invite co-hosts by name instead."
   },
   "post": {
     "open": "Post an update",
@@ -480,5 +500,15 @@
     "collected": "{got} of {total} collected",
     "share": "{amount} per seat",
     "settled": "All settled · {n} seats"
+  },
+  "invite": {
+    "title": "You are invited to co-host as {name}",
+    "body": "As a co-host you can edit the event, lock the date, enter the bill and settle. You can leave any time.",
+    "notYou": "This invite is for {name}. If that is you, choose your name first.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "accepted": "You are now a co-host",
+    "invalid": "This invite is no longer valid. Ask the host for a new one.",
+    "expired": "It expired. Ask the host for a new one."
   }
 }
