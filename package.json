@@ -12,7 +12,8 @@
     "typecheck": "nuxt typecheck",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "test": "node --test test/*.test.ts"
+    "test": "node --test test/*.test.ts",
+    "test:api": "nuxt build && node --test --test-concurrency=1 test/api/*.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

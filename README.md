@@ -43,6 +43,7 @@ Open http://localhost:3000.
 |---|---|
 | `npm test` | Unit tests for the waitlist, bill split, next step, name matching, VietQR link, covers and the calendar grid (`node --test`) |
 | `npm run typecheck` | Vue and TypeScript type check |
+| `npm run test:api` | Builds the app, migrates the database, starts it on port 3999 and runs the API tests in `test/api` against `DATABASE_URL` (or `TEST_DATABASE_URL`). Test data is named `zz-test-` and events are deleted after each test |
 | `npm run db:generate` | Create a migration after changing `server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
 

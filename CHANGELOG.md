@@ -4,6 +4,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [0.2.2] - 2026-10-11
 
+### Added
+- Automated checks of the server rules (who may change what, voting deadlines, removing a place), run with `npm run test:api`.
+
 ### Changed
 - The edit panel now says changes apply for everyone when you save, shows "Unsaved changes", and keeps Save off until you change something.
 - Saving only sends the fields you edited, so it no longer overwrites what a co-organizer changed meanwhile, or reopens a closed vote by touching the deadline.
