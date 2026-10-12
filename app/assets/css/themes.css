@@ -1,0 +1,604 @@
+/*
+ * Event themes (shared/utils/theme.ts). Each theme restyles the whole chrome, not just colours:
+ * sidebar, top bar, nav, buttons, badges, fields, cards, wallpaper and type.
+ *
+ * Hooks (classes added in app.config.ts / EventCard):
+ *   .themed-surface  cards and panels        .themed-side   sidebar        .themed-bar  top bar     .themed-title  top bar title
+ *   .themed-nav      sidebar links           .themed-btn    buttons (+ .tb-<variant>)  .themed-badge  badges   .themed-field  inputs
+ * <html data-theme> themes a page; a card with its own data-theme themes just itself.
+ * Aurora is the app's own look and the only theme that follows light/dark; the others bring their own palette.
+ */
+
+:root {
+  --theme-card-bg: var(--ui-bg);
+  --theme-card-border: 1px solid var(--ui-border);
+  --theme-card-radius: 0.75rem;
+  --theme-card-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  --theme-blur: 0px;
+  --tb-radius: var(--ui-radius);
+  --tb-weight: 500;
+  --tb-border: 0 solid transparent;
+  --tb-shadow: none;
+  --tb-font: inherit;
+  --tb-transform: none;
+  --tb-spacing: normal;
+  --tf-radius: var(--ui-radius);
+  --tf-border: none;
+}
+
+[data-theme] {
+  font-family: var(--theme-font, 'Inter'), system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+html[data-theme] body {
+  background: var(--theme-wall, var(--ui-bg)) fixed;
+}
+[data-theme] h1,
+[data-theme] h2,
+[data-theme] .page-title {
+  font-family: var(--theme-head, var(--theme-font, 'Inter')), system-ui, sans-serif;
+  font-weight: var(--theme-head-weight, 600);
+  text-transform: var(--theme-head-transform, none);
+  letter-spacing: var(--theme-head-spacing, -0.02em);
+}
+
+/* The theme preview dialog: a scoped theme that paints its own wallpaper. */
+.themed-preview {
+  background: var(--theme-wall, var(--ui-bg));
+  color: var(--ui-text);
+}
+
+/* ---------- shared component hooks (values come from each theme's tokens) ---------- */
+.themed-surface {
+  background: var(--theme-card-bg) !important;
+  border: var(--theme-card-border);
+  border-radius: var(--theme-card-radius);
+  box-shadow: var(--theme-card-shadow) !important;
+  -webkit-backdrop-filter: blur(var(--theme-blur)) saturate(1.6);
+  backdrop-filter: blur(var(--theme-blur)) saturate(1.6);
+  color: var(--ui-text);
+}
+.themed-side {
+  background: var(--side-bg, transparent);
+  border: var(--side-border, 0);
+  border-radius: var(--side-radius, 0);
+  color: var(--side-fg, inherit);
+  -webkit-backdrop-filter: blur(var(--theme-blur));
+  backdrop-filter: blur(var(--theme-blur));
+}
+.themed-bar {
+  background: var(--bar-bg, transparent);
+  border-bottom: var(--bar-border, 1px solid var(--ui-border));
+  color: var(--bar-fg, inherit);
+}
+.themed-title {
+  font-family: var(--theme-head, var(--theme-font, 'Inter')), system-ui, sans-serif;
+  font-weight: var(--theme-head-weight, 600);
+  text-transform: var(--theme-head-transform, none);
+  letter-spacing: var(--theme-head-spacing, -0.02em);
+  font-size: var(--theme-title-size, 1rem);
+}
+.themed-nav {
+  border-radius: var(--nav-radius, 0.5rem);
+  font-family: var(--nav-font, inherit);
+  font-weight: var(--nav-weight, 500);
+  text-transform: var(--nav-transform, none);
+  letter-spacing: var(--nav-spacing, normal);
+}
+.themed-nav[aria-current='page']::before {
+  background: var(--nav-on-bg, var(--ui-bg-elevated)) !important;
+  border: var(--nav-on-border, 0);
+  box-shadow: var(--nav-on-shadow, none);
+  border-radius: var(--nav-radius, 0.5rem);
+  inset: 0;
+}
+.themed-nav[aria-current='page'] {
+  color: var(--nav-on-fg, var(--ui-text-highlighted)) !important;
+}
+.themed-nav[aria-current='page'] * {
+  color: inherit !important;
+}
+.themed-btn {
+  border-radius: var(--tb-radius);
+  font-weight: var(--tb-weight);
+  font-family: var(--tb-font);
+  text-transform: var(--tb-transform);
+  letter-spacing: var(--tb-spacing);
+}
+.tb-solid {
+  border: var(--tb-border);
+  box-shadow: var(--tb-shadow);
+  border-bottom: var(--tb-border-bottom, var(--tb-border));
+}
+.tb-outline,
+.tb-subtle,
+.tb-soft {
+  border: var(--tb-border-soft, var(--tb-border));
+  box-shadow: var(--tb-shadow-soft, none);
+}
+.tb-solid:active,
+.tb-outline:active {
+  transform: var(--tb-press, none);
+}
+.themed-badge {
+  border-radius: var(--badge-radius, 999px);
+  font-family: var(--badge-font, inherit);
+  font-weight: var(--badge-weight, 600);
+  border: var(--badge-border, 0);
+  text-transform: var(--badge-transform, none);
+  letter-spacing: var(--badge-spacing, normal);
+}
+.themed-field {
+  border-radius: var(--tf-radius);
+  border: var(--tf-border);
+}
+.themed-field:focus-visible {
+  box-shadow: var(--tf-focus, none);
+}
+
+/* ======================================================================
+   AURORA (default): translucent glass on blurred colour blobs, pill controls
+   ====================================================================== */
+[data-theme='aurora'] {
+  --theme-font: 'Outfit';
+  --theme-wall: radial-gradient(34rem 28rem at 6% 0%, rgb(167 139 250 / 0.5), transparent 70%), radial-gradient(30rem 26rem at 100% 12%, rgb(34 211 238 / 0.35), transparent 70%),
+    radial-gradient(34rem 26rem at 70% 108%, rgb(244 63 158 / 0.35), transparent 70%), #f4f1ff;
+  --theme-card-bg: rgb(255 255 255 / 0.6);
+  --theme-card-border: 1px solid rgb(255 255 255 / 0.85);
+  --theme-card-radius: 1.5rem;
+  --theme-card-shadow: 0 20px 50px rgb(100 70 200 / 0.14);
+  --theme-blur: 20px;
+  --theme-head-weight: 600;
+  --theme-title-size: 1.5rem;
+  --ui-primary: #7c3aed;
+  --ui-secondary: #db2777;
+  --ui-radius: 1rem;
+  --side-bg: rgb(255 255 255 / 0.5);
+  --side-border: 0;
+  --bar-border: 1px solid rgb(120 90 220 / 0.14);
+  --nav-radius: 1rem;
+  --nav-on-bg: rgb(124 58 237 / 0.14);
+  --nav-on-border: 1px solid rgb(124 58 237 / 0.3);
+  --nav-on-fg: #5b21b6;
+  --tb-radius: 999px;
+  --tb-weight: 600;
+  --tf-radius: 1rem;
+  --tf-border: 1px solid rgb(120 90 220 / 0.2);
+}
+.dark[data-theme='aurora'],
+.dark [data-theme='aurora'] {
+  --theme-wall: radial-gradient(34rem 28rem at 6% 0%, rgb(167 139 250 / 0.45), transparent 70%), radial-gradient(30rem 26rem at 100% 12%, rgb(34 211 238 / 0.3), transparent 70%),
+    radial-gradient(34rem 26rem at 70% 108%, rgb(244 63 158 / 0.32), transparent 70%), #0d0b1f;
+  --theme-card-bg: rgb(255 255 255 / 0.08);
+  --theme-card-border: 1px solid rgb(255 255 255 / 0.2);
+  --theme-card-shadow: 0 20px 50px rgb(0 0 0 / 0.28);
+  --ui-primary: #a78bfa;
+  --ui-text-inverted: #1b1140;
+  --side-bg: rgb(255 255 255 / 0.06);
+  --bar-border: 1px solid rgb(255 255 255 / 0.14);
+  --nav-on-bg: rgb(255 255 255 / 0.14);
+  --nav-on-border: 1px solid rgb(255 255 255 / 0.3);
+  --nav-on-fg: #fff;
+  --tf-border: 1px solid rgb(255 255 255 / 0.2);
+}
+
+/* ======================================================================
+   LIQUID GLASS: bright Apple-style glass, capsules, specular rims
+   ====================================================================== */
+[data-theme='liquid'],
+.dark[data-theme='liquid'],
+.dark [data-theme='liquid'] {
+  --theme-font: -apple-system, 'SF Pro Display', 'Figtree';
+  --theme-wall: radial-gradient(48rem 36rem at 0% 0%, rgb(120 176 255 / 0.75), transparent 70%), radial-gradient(44rem 36rem at 100% 12%, rgb(190 160 255 / 0.6), transparent 70%),
+    radial-gradient(40rem 30rem at 55% 112%, rgb(255 200 170 / 0.6), transparent 70%), linear-gradient(160deg, #eaf2ff, #dde6fa 50%, #fbe6ec);
+  --theme-card-bg: rgb(255 255 255 / 0.55);
+  --theme-card-border: 0 solid transparent;
+  --theme-card-radius: 1.75rem;
+  --theme-card-shadow: inset 1.5px 1.5px 1px rgb(255 255 255 / 0.85), inset -1px -1px 1px rgb(255 255 255 / 0.45), inset 0 0 24px rgb(255 255 255 / 0.25),
+    0 14px 36px rgb(30 40 110 / 0.2);
+  --theme-blur: 18px;
+  --theme-head-weight: 700;
+  --theme-head-spacing: -0.03em;
+  --theme-title-size: 1.5rem;
+  --ui-bg: #f4f7ff;
+  --ui-bg-muted: rgb(255 255 255 / 0.5);
+  --ui-bg-elevated: rgb(255 255 255 / 0.8);
+  --ui-bg-accented: rgb(255 255 255 / 0.9);
+  --ui-border: rgb(255 255 255 / 0.9);
+  --ui-border-accented: rgb(14 20 51 / 0.2);
+  --ui-text-highlighted: #0e1433;
+  --ui-text: #1d2650;
+  --ui-text-toned: #2b3463;
+  --ui-text-muted: #465078;
+  --ui-text-dimmed: #5b6590;
+  --ui-text-inverted: #fff;
+  --ui-primary: #0a84ff;
+  --ui-secondary: #5e5ce6;
+  --ui-radius: 1.25rem;
+  --side-bg: rgb(255 255 255 / 0.5);
+  --side-radius: 2rem;
+  --side-border: 0;
+  --bar-border: 0 solid transparent;
+  --nav-radius: 999px;
+  --nav-on-bg: rgb(255 255 255 / 0.85);
+  --nav-on-shadow: inset 1px 1px 1px #fff, 0 3px 10px rgb(30 40 110 / 0.12);
+  --nav-on-fg: #0e1433;
+  --tb-radius: 999px;
+  --tb-weight: 600;
+  --tb-shadow: inset 1px 1px 1px rgb(255 255 255 / 0.6), 0 4px 14px rgb(10 132 255 / 0.35);
+  --tb-border-soft: 1px solid rgb(255 255 255 / 0.9);
+  --tb-shadow-soft: inset 1px 1px 1px #fff, 0 3px 10px rgb(30 40 110 / 0.1);
+  --tf-radius: 999px;
+  --tf-border: 1px solid rgb(255 255 255 / 0.9);
+  --tf-focus: 0 0 0 3px rgb(10 132 255 / 0.3);
+  color-scheme: light;
+}
+[data-theme='liquid'] .themed-side {
+  margin: 0.75rem 0 0.75rem 0.75rem;
+  min-height: 0;
+  height: calc(100svh - 1.5rem);
+  box-shadow: inset 1.5px 1.5px 1px rgb(255 255 255 / 0.85), inset 0 0 24px rgb(255 255 255 / 0.25), 0 14px 36px rgb(30 40 110 / 0.18);
+}
+[data-theme='liquid'] .themed-bar {
+  margin: 0.75rem 0.75rem 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow: inset 1.5px 1.5px 1px rgb(255 255 255 / 0.85), 0 10px 28px rgb(30 40 110 / 0.14);
+}
+
+/* ======================================================================
+   BENTO: floating dark sidebar, 30px white tiles, tight heavy type
+   ====================================================================== */
+[data-theme='bento'],
+.dark[data-theme='bento'],
+.dark [data-theme='bento'] {
+  --theme-font: 'Manrope';
+  --theme-wall: #f4f4f0;
+  --theme-card-bg: #fff;
+  --theme-card-border: 0 solid transparent;
+  --theme-card-radius: 1.875rem;
+  --theme-card-shadow: none;
+  --theme-head-weight: 800;
+  --theme-head-spacing: -0.04em;
+  --theme-title-size: 2.125rem;
+  --ui-bg: #fff;
+  --ui-bg-muted: #f4f4f0;
+  --ui-bg-elevated: #ededE8;
+  --ui-bg-accented: #e3e3dc;
+  --ui-border: #e3e3dc;
+  --ui-border-accented: #c9c9c0;
+  --ui-text-highlighted: #151515;
+  --ui-text: #262626;
+  --ui-text-toned: #3a3a3a;
+  --ui-text-muted: #555;
+  --ui-text-dimmed: #666;
+  --ui-text-inverted: #fff;
+  --ui-primary: #7c5cff;
+  --ui-secondary: #ff5c93;
+  --ui-radius: 1.25rem;
+  --side-bg: #151515;
+  --side-radius: 1.875rem;
+  --side-border: 0;
+  --bar-border: 0 solid transparent;
+  --nav-radius: 999px;
+  --nav-weight: 700;
+  --nav-on-bg: #c6ff3d;
+  --nav-on-fg: #151515;
+  --tb-radius: 999px;
+  --tb-weight: 800;
+  --tf-radius: 999px;
+  --tf-border: 0 solid transparent;
+  --badge-weight: 800;
+  color-scheme: light;
+}
+[data-theme='bento'] .themed-side {
+  margin: 0.75rem 0 0.75rem 0.75rem;
+  min-height: 0;
+  height: calc(100svh - 1.5rem);
+  --ui-text-highlighted: #fff;
+  --ui-text: #d7d7d2;
+  --ui-text-muted: #c4c4be;
+  --ui-text-dimmed: #a9a9a3;
+  --ui-bg-elevated: #262626;
+  --ui-bg-accented: #333;
+  --ui-border: #333;
+  color: #d7d7d2;
+}
+[data-theme='bento'] .themed-side :is(button, a) {
+  --ui-text: #d7d7d2;
+}
+[data-theme='bento'] .themed-bar {
+  padding-top: 0.5rem;
+}
+[data-theme='bento'] .tb-outline,
+[data-theme='bento'] .tb-soft,
+[data-theme='bento'] .tb-subtle {
+  background: #fff;
+}
+
+/* ======================================================================
+   NEO-BRUTAL: 3px black outlines, hard offset shadows, flat colour
+   ====================================================================== */
+[data-theme='brutal'],
+.dark[data-theme='brutal'],
+.dark [data-theme='brutal'] {
+  --theme-font: 'Bricolage Grotesque';
+  --theme-wall: #fff1cc;
+  --theme-card-bg: #fff;
+  --theme-card-border: 3px solid #111;
+  --theme-card-radius: 1rem;
+  --theme-card-shadow: 5px 5px 0 #111;
+  --theme-head-weight: 800;
+  --theme-head-spacing: -0.03em;
+  --theme-title-size: 1.5rem;
+  --ui-bg: #fff;
+  --ui-bg-muted: #fff1cc;
+  --ui-bg-elevated: #ffe6a8;
+  --ui-bg-accented: #ffd23f;
+  --ui-border: #111;
+  --ui-border-accented: #111;
+  --ui-text-highlighted: #111;
+  --ui-text: #111;
+  --ui-text-toned: #222;
+  --ui-text-muted: #333;
+  --ui-text-dimmed: #444;
+  --ui-text-inverted: #111;
+  --ui-primary: #ff5ca8;
+  --ui-secondary: #6ec1ff;
+  --ui-radius: 0.75rem;
+  --side-bg: #fff;
+  --side-border: 0;
+  --bar-bg: #fff;
+  --bar-border: 3px solid #111;
+  --nav-radius: 0.75rem;
+  --nav-weight: 700;
+  --nav-on-bg: #b8f23c;
+  --nav-on-border: 3px solid #111;
+  --nav-on-shadow: 3px 3px 0 #111;
+  --nav-on-fg: #111;
+  --tb-radius: 0.75rem;
+  --tb-weight: 800;
+  --tb-border: 3px solid #111;
+  --tb-shadow: 3px 3px 0 #111;
+  --tb-shadow-soft: 2px 2px 0 #111;
+  --tb-press: translate(2px, 2px);
+  --tf-radius: 0.75rem;
+  --tf-border: 3px solid #111;
+  --badge-border: 2px solid #111;
+  --badge-font: 'DM Mono', monospace;
+  --badge-weight: 500;
+  color-scheme: light;
+}
+[data-theme='brutal'] .themed-side {
+  border-right: 3px solid #111;
+}
+[data-theme='brutal'] .tb-solid:active,
+[data-theme='brutal'] .tb-outline:active {
+  box-shadow: 1px 1px 0 #111;
+}
+
+/* ======================================================================
+   ACID NIGHT: near-black, square corners, condensed caps, one lime
+   ====================================================================== */
+[data-theme='acid'],
+.dark[data-theme='acid'],
+.dark [data-theme='acid'] {
+  --theme-font: 'Archivo';
+  --theme-head: 'Anton';
+  --theme-head-weight: 400;
+  --theme-head-transform: uppercase;
+  --theme-head-spacing: 0.02em;
+  --theme-title-size: 1.875rem;
+  --theme-wall: #0a0a0a;
+  --theme-card-bg: #141414;
+  --theme-card-border: 1px solid #2e2e2e;
+  --theme-card-radius: 0;
+  --theme-card-shadow: none;
+  --ui-bg: #0a0a0a;
+  --ui-bg-muted: #141414;
+  --ui-bg-elevated: #1c1c1c;
+  --ui-bg-accented: #262626;
+  --ui-border: #2e2e2e;
+  --ui-border-accented: #4a4a4a;
+  --ui-text-highlighted: #fff;
+  --ui-text: #f2f2f2;
+  --ui-text-toned: #d0d0d0;
+  --ui-text-muted: #b5b5b5;
+  --ui-text-dimmed: #a0a0a0;
+  --ui-text-inverted: #0a0a0a;
+  --ui-primary: #c6ff3d;
+  --ui-secondary: #ff3da8;
+  --ui-radius: 0;
+  --side-bg: #0f0f0f;
+  --side-border: 0;
+  --bar-border: 1px solid #2e2e2e;
+  --nav-radius: 0.125rem;
+  --nav-font: 'Archivo';
+  --nav-weight: 700;
+  --nav-transform: uppercase;
+  --nav-spacing: 0.04em;
+  --nav-on-bg: #c6ff3d;
+  --nav-on-fg: #0a0a0a;
+  --tb-radius: 0;
+  --tb-weight: 400;
+  --tb-font: 'Anton', sans-serif;
+  --tb-transform: uppercase;
+  --tb-spacing: 0.06em;
+  --tb-border-soft: 1px solid #2e2e2e;
+  --tf-radius: 0;
+  --tf-border: 1px solid #2e2e2e;
+  --tf-focus: 0 0 0 2px #c6ff3d;
+  --badge-radius: 0;
+  --badge-font: 'JetBrains Mono', monospace;
+  --badge-weight: 500;
+  --badge-transform: uppercase;
+  --badge-spacing: 0.08em;
+  color-scheme: dark;
+}
+[data-theme='acid'] .themed-side {
+  border-right: 1px solid #2e2e2e;
+}
+[data-theme='acid'] .themed-surface {
+  border-left: 4px solid #c6ff3d;
+}
+
+/* ======================================================================
+   SCRAPBOOK: kraft paper, dashed seams, white-edged stickers, handwriting
+   ====================================================================== */
+[data-theme='scrapbook'],
+.dark[data-theme='scrapbook'],
+.dark [data-theme='scrapbook'] {
+  --theme-font: 'Fredoka';
+  --theme-head: 'Caveat';
+  --theme-head-weight: 700;
+  --theme-head-spacing: 0;
+  --theme-title-size: 1.875rem;
+  --theme-wall: radial-gradient(rgb(120 80 40 / 0.14) 1px, transparent 1px) 0 0 / 14px 14px, #f3e3c3;
+  --theme-card-bg: #fffdf6;
+  --theme-card-border: 3px solid #fff;
+  --theme-card-radius: 1.125rem;
+  --theme-card-shadow: 0 5px 0 rgb(42 31 61 / 0.18);
+  --ui-bg: #fffdf6;
+  --ui-bg-muted: #f3e3c3;
+  --ui-bg-elevated: #eed9ae;
+  --ui-bg-accented: #e6cd9a;
+  --ui-border: #d8c08c;
+  --ui-border-accented: #b99a62;
+  --ui-text-highlighted: #2a1f3d;
+  --ui-text: #3a2c4f;
+  --ui-text-toned: #4a3b62;
+  --ui-text-muted: #5a4b72;
+  --ui-text-dimmed: #6a5b82;
+  --ui-text-inverted: #fff;
+  --ui-primary: #c42c65;
+  --ui-secondary: #1f6fd0;
+  --ui-radius: 0.875rem;
+  --side-bg: #ead5ab;
+  --side-border: 0;
+  --bar-border: 3px dashed #d8c08c;
+  --nav-radius: 1rem;
+  --nav-weight: 500;
+  --nav-on-bg: #fff;
+  --nav-on-border: 3px solid #fff;
+  --nav-on-shadow: 0 4px 0 rgb(42 31 61 / 0.18);
+  --nav-on-fg: #2a1f3d;
+  --tb-radius: 999px;
+  --tb-weight: 600;
+  --tb-border: 3px solid #fff;
+  --tb-shadow: 0 4px 0 rgb(42 31 61 / 0.25);
+  --tb-border-soft: 3px solid #fff;
+  --tb-shadow-soft: 0 3px 0 rgb(42 31 61 / 0.15);
+  --tb-press: translateY(2px);
+  --tf-radius: 0.875rem;
+  --tf-border: 2px dashed #b99a62;
+  --badge-weight: 600;
+  --badge-border: 2px solid #fff;
+  color-scheme: light;
+}
+[data-theme='scrapbook'] .themed-side {
+  border-right: 3px dashed #c4a870;
+}
+[data-theme='scrapbook'] h2 {
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+[data-theme='scrapbook'] a.themed-surface:nth-child(3n + 1) {
+  transform: rotate(-0.6deg);
+}
+[data-theme='scrapbook'] a.themed-surface:nth-child(3n + 2) {
+  transform: rotate(0.5deg);
+}
+[data-theme='scrapbook'] a.themed-surface:hover {
+  transform: rotate(0deg) translateY(-2px);
+}
+
+/* ======================================================================
+   GAME CANDY: royal-blue dotted board, chunky buttons with a thick bottom lip
+   ====================================================================== */
+[data-theme='candy'],
+.dark[data-theme='candy'],
+.dark [data-theme='candy'] {
+  --theme-font: 'Nunito';
+  --theme-head: 'Lilita One';
+  --theme-head-weight: 400;
+  --theme-head-spacing: 0;
+  --theme-title-size: 1.5rem;
+  --theme-wall: radial-gradient(rgb(255 255 255 / 0.12) 3px, transparent 3px) 0 0 / 28px 28px, #2f6fe0;
+  --theme-card-bg: #fff;
+  --theme-card-border: 0 solid transparent;
+  --theme-card-radius: 1.375rem;
+  --theme-card-shadow: 0 6px 0 #bfd4ff;
+  --ui-bg: #fff;
+  --ui-bg-muted: #eef3ff;
+  --ui-bg-elevated: #dfe9ff;
+  --ui-bg-accented: #bfd4ff;
+  --ui-border: #bfd4ff;
+  --ui-border-accented: #7ea3f0;
+  --ui-text-highlighted: #1e3a8a;
+  --ui-text: #1e3a8a;
+  --ui-text-toned: #2a4aa0;
+  --ui-text-muted: #4a5fa8;
+  --ui-text-dimmed: #5a6fb8;
+  --ui-text-inverted: #052e16;
+  --ui-primary: #22c55e;
+  --ui-secondary: #f5b700;
+  --ui-radius: 1rem;
+  --side-bg: #1e3a8a;
+  --side-border: 0;
+  --bar-bg: #1e3a8a;
+  --bar-border: 0 solid transparent;
+  --bar-fg: #fff;
+  --nav-radius: 1rem;
+  --nav-font: 'Lilita One';
+  --nav-weight: 400;
+  --nav-on-bg: #fff;
+  --nav-on-shadow: 0 5px 0 #bfd4ff;
+  --nav-on-fg: #1e3a8a;
+  --tb-radius: 1rem;
+  --tb-weight: 400;
+  --tb-font: 'Lilita One', sans-serif;
+  --tb-border-bottom: 5px solid rgb(0 0 0 / 0.28);
+  --tb-press: translateY(3px);
+  --tf-radius: 0.875rem;
+  --tf-border: 2px solid #bfd4ff;
+  --badge-radius: 0.75rem;
+  --badge-font: 'Lilita One', sans-serif;
+  --badge-weight: 400;
+  color-scheme: light;
+}
+/* Text that sits directly on the blue board is white; surfaces, fields and popups reset to navy. */
+[data-theme='candy'] .themed-side,
+[data-theme='candy'] .themed-bar,
+[data-theme='candy'] .themed-preview,
+[data-theme='candy'] .themed-body {
+  --ui-text-highlighted: #fff;
+  --ui-text: #e6efff;
+  --ui-text-toned: #dce8ff;
+  --ui-text-muted: #dce8ff;
+  --ui-text-dimmed: #c4d6ff;
+  --ui-bg-elevated: #2f4fa8;
+  --ui-border: #2f4fa8;
+  color: #fff;
+}
+[data-theme='candy'] .themed-surface,
+[data-theme='candy'] .themed-field {
+  --ui-text-highlighted: #1e3a8a;
+  --ui-text: #1e3a8a;
+  --ui-text-toned: #2a4aa0;
+  --ui-text-muted: #4a5fa8;
+  --ui-text-dimmed: #5a6fb8;
+  --ui-bg-elevated: #dfe9ff;
+  --ui-border: #bfd4ff;
+  color: #1e3a8a;
+}
+[data-theme='candy'] .tb-outline,
+[data-theme='candy'] .tb-soft,
+[data-theme='candy'] .tb-subtle {
+  background: #1e3a8a;
+  color: #fff;
+  border-bottom: 4px solid #172e6e;
+}
+[data-theme='candy'] .themed-side .themed-nav {
+  color: #dce8ff;
+}

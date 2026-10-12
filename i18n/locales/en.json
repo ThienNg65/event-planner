@@ -250,6 +250,28 @@
     "tentative": "Tentative (poll)",
     "empty": "No events this month."
   },
+  "theme": {
+    "label": "Theme",
+    "hint": "How this event looks to everyone",
+    "aurora": "Aurora",
+    "liquid": "Liquid Glass",
+    "bento": "Bento",
+    "brutal": "Neo-Brutal",
+    "acid": "Acid Night",
+    "scrapbook": "Scrapbook",
+    "candy": "Game Candy",
+    "preview": "Preview",
+    "previewHint": "See a sample event in each theme before you choose.",
+    "use": "Use {name}",
+    "close": "Close",
+    "sampleTitle": "Team lunch",
+    "sampleMeta": "Fri 7 Nov · Rooftop Saigon",
+    "sampleVote": "Vote",
+    "sampleMaybe": "Maybe",
+    "sampleNo": "Can't make it",
+    "sampleOverview": "Overview",
+    "sampleQuestion": "Which day works for you?"
+  },
   "cover": {
     "label": "Cover",
     "url": "Or paste an image link (https://…)",

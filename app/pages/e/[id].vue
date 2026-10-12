@@ -46,6 +46,7 @@ const when = computed(() => {
   return ev.value.pollDays.length ? t('card.voting', { n: ev.value.pollDays.length }) : t('event.dateTbd');
 });
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
+useEventTheme(() => ev.value.theme);
 const editing = ref(false);
 const organizing = ref(false);
 

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import "./themes.css";
 
 /* Cover gradients live in shared/utils/cover.ts, outside app/. */
 @source "../../../shared";

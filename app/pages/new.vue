@@ -18,7 +18,10 @@ const form = reactive({
   bankAccount: '',
   bankHolder: '',
   cover: null as string | null,
+  theme: DEFAULT_THEME as string,
 });
+// The whole page previews the picked theme.
+useEventTheme(() => form.theme);
 const busy = ref(false);
 
 // Quick starts: one tap fills a title (unless you typed your own) and a matching cover.
@@ -62,6 +65,7 @@ async function create() {
         venueLink: fixedVenue ? form.venueLink : null,
         capacity: form.capacity || null,
         cover: form.cover,
+        theme: form.theme,
         ...bank,
       },
     });
@@ -122,6 +126,9 @@ async function create() {
               </UFormField>
               <UFormField :label="t('cover.label')">
                 <CoverPicker v-model="form.cover" />
+              </UFormField>
+              <UFormField :label="t('theme.label')" :hint="t('theme.hint')">
+                <ThemePicker v-model="form.theme" :title="form.title" :cover="form.cover" />
               </UFormField>
             </UCard>
           </div>

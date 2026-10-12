@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
+import { DEFAULT_THEME, THEMES, themeOf } from '../shared/utils/theme.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
 
 const at = (min: number) => new Date(Date.UTC(2026, 9, 1, 0, min));
@@ -356,4 +357,11 @@ test('nextStep: a debt is still payable after Completed', () => {
   const s = (mine: ReturnType<typeof mineOf>) => nextStep({ stage: 'settled', mine, manager: false, allPaid: false, started: true }).step;
   assert.equal(s(m({ owes: 1000 })), 'pay');
   assert.equal(s(m({ owes: 1000, paid: true })), 'settled');
+});
+
+test('themeOf: known keys pass through, anything else falls back to the default theme', () => {
+  for (const k of THEMES) assert.equal(themeOf(k), k);
+  assert.equal(themeOf('nope'), DEFAULT_THEME);
+  assert.equal(themeOf(null), DEFAULT_THEME);
+  assert.equal(DEFAULT_THEME, 'aurora');
 });

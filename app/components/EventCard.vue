@@ -37,7 +37,8 @@ const status = computed(() => {
 <template>
   <NuxtLink
     :to="`/e/${event.id}`"
-    class="group flex flex-col overflow-hidden rounded-xl bg-default shadow-xs ring ring-default transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary"
+    :data-theme="themeOf(event.theme)"
+    class="themed-surface group flex flex-col overflow-hidden transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
   >
     <div class="relative h-28" :class="'gradient' in cover && cover.gradient">
       <img v-if="'image' in cover" :src="cover.image" alt="" loading="lazy" class="size-full object-cover" />
