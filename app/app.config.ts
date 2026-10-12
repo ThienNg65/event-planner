@@ -1,4 +1,4 @@
-// Colors from the app icon: indigo calendar, amber "celebrate" accent, on neutral zinc.
+// Colors from the logo (two circles, violet and ink, pink where they overlap): indigo brand, amber "celebrate" accent, on neutral zinc.
 export default defineAppConfig({
   ui: {
     colors: { primary: 'indigo', secondary: 'amber', neutral: 'zinc' },
