@@ -35,10 +35,13 @@ export default defineEventHandler(async (event) => {
     if (!intIn(guests, 0, 10)) fail(400, 'invalidGuests');
     set.status = b.status as (typeof STATUSES)[number] | null;
     set.guests = guests;
+    // An answer given by the member is explicit: it is no longer counted from their votes or held.
+    set.derived = null;
   }
   if ('paidAmount' in b || 'addPaid' in b || b.paid === true) {
-    // Participants stop editing once the event is Completed; organizers may still correct the ledger.
-    if (!(role !== null ? ['bill', 'settled'] : ['bill']).includes(ev.stage)) fail(409, 'stageClosed');
+    // After Completed, participants may still report a payment (addPaid); setting or clearing amounts stays with the organizers.
+    const stages = role !== null || 'addPaid' in b ? ['bill', 'settled'] : ['bill'];
+    if (!stages.includes(ev.stage)) fail(409, 'stageClosed');
     if (b.paid === true) {
       // Paid in full: no amount, so it stays full if the bill or guests change later.
       set.paidAmount = null;
@@ -56,18 +59,24 @@ export default defineEventHandler(async (event) => {
   if (!Object.keys(set).length && !Object.keys(picks).length) fail(400, 'invalid');
 
   // Queue position: a fresh "going" or more guests goes to the back; otherwise keep the old spot.
+  // A held seat keeps its spot only while the confirm-by deadline (read with the database clock) hasn't passed.
   const goingAt = sql`CASE
+    WHEN excluded.status = 'going' AND ${responses.derived} = 'reconfirm' AND excluded.guests <= ${responses.guests} AND (SELECT reconfirm_by FROM events WHERE id = ${ev.id}) > now() THEN ${responses.goingAt}
+    WHEN excluded.status = 'going' AND ${responses.derived} = 'reconfirm' THEN now()
     WHEN excluded.status = 'going' AND (${responses.status} IS DISTINCT FROM 'going' OR excluded.guests > ${responses.guests}) THEN now()
     WHEN excluded.status = 'going' THEN ${responses.goingAt}
     ELSE NULL END`;
+  // Set once, on the first vote write; later edits (even emptying the votes) never move it.
+  const firstVote: { firstVotedAt?: SQL } = Object.keys(picks).length ? { firstVotedAt: sql`now()` } : {};
   const upsert = useDb()
     .insert(responses)
-    .values({ ...set, ...picks, eventId: ev.id, memberId: member.id, goingAt: set.status === 'going' ? sql`now()` : null })
+    .values({ ...set, ...picks, ...firstVote, eventId: ev.id, memberId: member.id, goingAt: set.status === 'going' ? sql`now()` : null })
     .onConflictDoUpdate({
       target: [responses.eventId, responses.memberId],
       set: {
         ...set,
         ...picks,
+        ...(firstVote.firstVotedAt && { firstVotedAt: sql`COALESCE(${responses.firstVotedAt}, now())` }),
         ...('status' in set && { goingAt }),
         // An increment, so a payment never overwrites a correction made since the page loaded.
         ...('addPaid' in b && { paidAmount: sql`COALESCE(${responses.paidAmount}, 0) + ${set.paidAmount}` }),

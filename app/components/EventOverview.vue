@@ -10,7 +10,8 @@ const roster = computed(() => Math.max(members.value.length, voted.value));
 // Names of who is missing are for organizers; everyone else sees the count.
 const pending = computed(() => (can(props.role, 'edit') ? pendingVoters(members.value, rs.value) : []));
 const open = computed(() => votingOpen(ev.value));
-const count = (status: string) => rs.value.filter((r) => r.status === status).length;
+// "Going" counts seats and queue spots only: a held seat past its deadline is not an answer.
+const count = (status: string) => (status === 'going' ? props.data.confirmed.length + props.data.waitlist.length : rs.value.filter((r) => r.status === status).length);
 
 const payers = computed(() =>
   props.data.confirmed.map((id) => {
@@ -20,6 +21,7 @@ const payers = computed(() =>
   })
 );
 const paidCount = computed(() => payers.value.filter((p) => p.done).length);
+const owing = computed(() => payers.value.length - paidCount.value);
 const collected = computed(() => payers.value.reduce((s, p) => s + Math.min(p.paid, p.owes), 0));
 const total = computed(() => payers.value.reduce((s, p) => s + p.owes, 0));
 
@@ -78,6 +80,11 @@ const relative = computed(() => {
       <p v-if="data.share !== null" class="text-sm text-muted tabular-nums">{{ t('overview.share', { amount: fmtVnd(data.share) }) }}</p>
     </template>
 
-    <p v-else class="text-sm text-muted">{{ t('overview.settled', { n: data.seats }) }}</p>
+    <template v-else>
+      <p class="text-sm text-muted">{{ t('overview.settled', { n: data.seats }) }}</p>
+      <p v-if="payers.length" class="text-sm tabular-nums" :class="owing ? 'text-warning' : 'text-success'">
+        {{ owing ? t('overview.completedOwed', { n: owing }) : t('overview.completedPaid') }}
+      </p>
+    </template>
   </section>
 </template>

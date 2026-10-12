@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0] - 2026-10-12
+
+### Added
+- Your votes now count as attendance: when the organizer locks the date, everyone whose votes fit is marked Going and queued by when they first voted, so nobody has to answer twice. The lock dialog shows who will be marked, who waits and who is asked to confirm.
+- If the date or place changes before the event, people who were counted from their votes and no longer fit keep their seat (or place in line) until a confirm-by deadline. Confirming in time keeps their priority; declining or missing the deadline releases it.
+- Organizers can complete an event that had no bill once it has started, or complete it while some people still owe. Members who still owe can keep reporting payments after it is completed, and the overview shows who still owes.
+- Hosts and co-hosts can correct the date or place of a started event with "Correct date or place", which needs a public notice and leaves attendance and payments untouched.
+
+### Changed
+- The date and place can no longer be edited once the event has started or the bill is entered; use the correction instead.
+- Reopening an event to voting clears answers that were counted from votes (explicit answers and votes stay), and the host must confirm when payments are already recorded.
+- Events already past voting are unchanged; events still in voting will mark matching voters as Going the next time they are locked.
+
 ## [0.3.0] - 2026-10-11
 
 ### Added

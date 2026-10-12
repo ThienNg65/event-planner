@@ -22,6 +22,7 @@ onMounted(() => (mounted.value = true));
 const TODO_ICON = {
   vote: 'i-lucide-vote',
   rsvp: 'i-lucide-hand',
+  confirm: 'i-lucide-calendar-clock',
   pay: 'i-lucide-wallet',
   lock: 'i-lucide-lock',
   bill: 'i-lucide-receipt',
@@ -40,7 +41,7 @@ const todos = computed(() =>
     });
     const out: { key: string; event: typeof e; kind: keyof typeof TODO_ICON }[] = [];
     if (action) out.push({ key: `${e.id}-${action}`, event: e, kind: action });
-    if (step === 'vote' || step === 'rsvp' || step === 'pay') out.push({ key: `${e.id}-${step}`, event: e, kind: step });
+    if (step === 'vote' || step === 'rsvp' || step === 'confirm' || step === 'pay') out.push({ key: `${e.id}-${step}`, event: e, kind: step });
     return out;
   })
 );

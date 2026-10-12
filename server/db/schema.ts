@@ -3,6 +3,8 @@ import { check, date, integer, pgTable, primaryKey, serial, text, timestamp } fr
 
 export const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 export const STATUSES = ['going', 'maybe', 'no'] as const;
+// How a "going" answer came about when the member didn't give it: counted from their votes, or held after a plan change.
+export const DERIVED = ['going', 'reconfirm'] as const;
 
 export const members = pgTable('members', {
   id: serial().primaryKey(),
@@ -40,6 +42,8 @@ export const events = pgTable(
     cancelReason: text(),
     notice: text(),
     noticeAt: timestamp({ withTimezone: true }),
+    // Seats held after a plan change are released at this time.
+    reconfirmBy: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [check('events_stage', sql`${t.stage} in ('poll', 'rsvp', 'bill', 'settled')`)]
@@ -78,12 +82,18 @@ export const responses = pgTable(
     paidAt: timestamp({ withTimezone: true }),
     // Null with paidAt set (legacy rows) means paid in full.
     paidAmount: integer(),
+    // Set once, on the member's first vote; derived attendance queues by it.
+    firstVotedAt: timestamp({ withTimezone: true }),
+    // Null for an explicit answer; 'going' = counted from votes; 'reconfirm' = seat held after a plan change.
+    derived: text({ enum: DERIVED }),
   },
   (t) => [
     primaryKey({ columns: [t.eventId, t.memberId] }),
     check('responses_status', sql`${t.status} in ('going', 'maybe', 'no')`),
     check('responses_guests', sql`${t.guests} between 0 and 10`),
     check('responses_paid_amount', sql`${t.paidAmount} >= 0`),
+    check('responses_derived', sql`${t.derived} in ('going', 'reconfirm')`),
+    check('responses_derived_going', sql`${t.derived} is null or ${t.status} = 'going'`),
   ]
 );
 

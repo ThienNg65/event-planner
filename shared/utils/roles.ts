@@ -15,6 +15,8 @@ const MIN_ROLE = {
 
 /** How long a pending co-host invite can still be accepted (an active co-host never expires). */
 export const INVITE_TTL_MS = 7 * 24 * 3600_000;
+/** How long a seat held after a plan change waits for its owner to confirm, unless the organizer sets another deadline. */
+export const RECONFIRM_MS = 48 * 3600_000;
 /** Active + pending named co-hosts allowed per event. */
 export const MAX_COHOSTS = 5;
 

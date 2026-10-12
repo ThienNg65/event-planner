@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { busy, call } = useEventApi(
   () => props.data.event.id,
   () => props.manageKey
@@ -22,7 +22,9 @@ const rows = computed(() =>
     .map((r) => {
       const waitPlace = props.data.waitlist.indexOf(r.memberId) + 1;
       const answered = ev.value.stage !== 'poll';
-      const kind = !answered ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : (r.status ?? 'voted');
+      // A held seat past its deadline is released: that person is back to "voted, no answer".
+      const lost = r.derived === 'reconfirm' && !props.data.held.includes(r.memberId);
+      const kind = !answered || lost ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : (r.status ?? 'voted');
       // No share yet (bill not entered): nothing is owed, so no payment state to show.
       const owes = kind === 'going' && props.data.share !== null ? props.data.share * (1 + r.guests) : null;
       return { r, kind: kind as (typeof ORDER)[number], waitPlace, owes, pay: owes === null ? null : paymentOf(r, owes) };
@@ -32,6 +34,7 @@ const rows = computed(() =>
 const shown = computed(() => (showAll.value ? rows.value : rows.value.slice(0, COLLAPSED)));
 
 const KIND_COLOR = { going: 'success', waitlist: 'warning', maybe: 'neutral', no: 'neutral', voted: 'neutral' } as const;
+const heldUntil = computed(() => (ev.value.reconfirmBy ? fmtDateTime(ev.value.reconfirmBy, locale.value) : ''));
 const label = (kind: (typeof ORDER)[number], place: number) => (kind === 'waitlist' ? t('people.waitlist', { n: place }) : t(`people.${kind}`));
 
 async function put(memberId: number, body: object) {
@@ -78,6 +81,8 @@ async function saveAmount() {
         <span class="min-w-0 flex-1 truncate">
           {{ row.r.name }}<span v-if="row.r.guests && (row.kind === 'going' || row.kind === 'waitlist')" class="text-muted"> +{{ row.r.guests }}</span>
         </span>
+        <UBadge v-if="row.r.derived === 'going'" color="neutral" variant="outline" size="sm" :label="t('people.fromVote')" />
+        <UBadge v-else-if="row.r.derived === 'reconfirm' && row.kind !== 'voted'" color="warning" variant="outline" size="sm" :label="t('people.heldUntil', { time: heldUntil })" />
         <UBadge :color="KIND_COLOR[row.kind]" variant="subtle" :label="label(row.kind, row.waitPlace)" />
         <UBadge
           v-if="paying && row.pay"

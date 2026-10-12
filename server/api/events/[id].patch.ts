@@ -1,4 +1,5 @@
-import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import type { BatchItem } from 'drizzle-orm/batch';
 import { STAGES } from '../../db/schema';
 
 const MAX_DAYS = 20; // same cap as eventFields
@@ -11,7 +12,7 @@ function dayList(b: Record<string, unknown>, key: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  const { events, responses } = schema;
+  const { events, responses, venues } = schema;
   const ev = await findEvent(routeId(event));
   const role = await roleOf(event, ev);
   requireCan(role, 'edit');
@@ -25,13 +26,27 @@ export default defineEventHandler(async (event) => {
     return { ok: true };
   }
   if (ev.cancelledAt) fail(409, 'cancelled');
+  const now = new Date();
+  // The server's clock decides "started", the same way votingOpen does.
+  const frozen = planFrozen(ev, now.getTime());
+
+  // A correction of the date or place once the plan is fixed: only those fields plus a public notice, and no response writes,
+  // so attendance, held seats and payments can't change through it.
+  if (b.correct === true) {
+    if (!frozen) fail(409, 'stageClosed');
+    if (Object.keys(b).some((k) => !['correct', 'startsAt', 'venue', 'venueLink', 'notice'].includes(k))) fail(400, 'invalid');
+    const c = eventFields(b);
+    if (!c.notice || !('startsAt' in c || 'venue' in c || 'venueLink' in c)) fail(400, 'invalid');
+    if ('startsAt' in c && !c.startsAt) fail(400, 'invalidDate');
+    await useDb().update(events).set({ ...c, noticeAt: now }).where(eq(events.id, ev.id));
+    return { ok: true };
+  }
 
   // Closing voting stops it now. One conditional UPDATE, so a repeat (or a race) never moves an earlier close time.
   if (b.closeVoting === true) {
     requireCan(role, 'advance');
     if (ev.stage !== 'poll') fail(409, 'stageClosed');
     // The server's clock, the same one votingOpen reads, so the poll counts as closed from this instant.
-    const now = new Date();
     const closed = await useDb()
       .update(events)
       .set({ voteDeadline: now })
@@ -49,13 +64,18 @@ export default defineEventHandler(async (event) => {
   if (ops && ev.stage !== 'poll') fail(409, 'stageClosed');
   if (addDays.some((d) => d < teamToday())) fail(400, 'invalidDays');
 
-  const f = eventFields(b);
+  const { reconfirmBy: wantedBy, ...f } = eventFields(b);
   if (!Object.keys(f).length && !ops) fail(400, 'invalid');
+  if (frozen && ('startsAt' in f || 'venue' in f || 'venueLink' in f)) fail(409, 'planFrozen');
   if (f.pollDays && !f.pollDays.length && ev.stage === 'poll') fail(400, 'daysRequired');
   if (f.stage && f.stage !== ev.stage) {
     const jump = STAGES.indexOf(f.stage) - STAGES.indexOf(ev.stage);
     requireCan(role, jump > 0 ? 'advance' : 'reopen');
-    if (jump > 1) fail(409, 'stageClosed');
+    if (jump > 1) {
+      // The one skip: a started event that never got a bill is completed straight from the RSVP stage.
+      if (ev.stage !== 'rsvp' || f.stage !== 'settled' || ev.billTotal !== null || 'billTotal' in b) fail(409, 'stageClosed');
+      if (!ev.startsAt || ev.startsAt > now) fail(409, 'notStarted');
+    }
   }
   // Reopening voting always names the new deadline (a future time, or null for none) and needs the poll stage.
   const reopen = b.reopenVoting === true;
@@ -73,17 +93,75 @@ export default defineEventHandler(async (event) => {
   const next = { ...ev, ...f, ...(repoll && { startsAt: null }) };
   if (next.stage !== 'poll' && !next.startsAt) fail(400, 'invalidDate');
 
+  // Writes to other members' rows that must land in the same batch as the event UPDATE (batch is the only transaction on Neon HTTP).
+  const extras: BatchItem<'pg'>[] = [];
+  let reconfirmBy: Date | null | undefined;
+  const toPoll = f.stage === 'poll' && ev.stage !== 'poll';
+  const lock = f.stage === 'rsvp' && ev.stage === 'poll';
+  const leavesRsvp = ev.stage === 'rsvp' && (f.stage === 'bill' || f.stage === 'settled');
+  const planMoved =
+    ev.stage === 'rsvp' && !f.stage && (('startsAt' in f && f.startsAt?.getTime() !== ev.startsAt?.getTime()) || ('venue' in f && f.venue !== ev.venue));
+  const polled = lock || planMoved ? await useDb().select({ id: venues.id, name: venues.name }).from(venues).where(eq(venues.eventId, ev.id)) : [];
+  // A fixed-date event with no poll has no votes to derive from.
+  const derive = lock || (planMoved && (ev.pollDays.length > 0 || polled.length > 0));
+  if (toPoll) {
+    // Unpaid derived answers go; payments are never touched, so the host has to acknowledge them.
+    const [paid] = await useDb()
+      .select({ n: sql<number>`count(*)::int` })
+      .from(responses)
+      .where(and(eq(responses.eventId, ev.id), or(isNotNull(responses.paidAt), gt(responses.paidAmount, 0))));
+    if (paid!.n > 0 && b.acknowledgePayments !== true) fail(409, 'hasPayments');
+    extras.push(clearDerived(ev.id));
+    reconfirmBy = null;
+  } else if (leavesRsvp) {
+    extras.push(releaseHolds(ev.id));
+    reconfirmBy = null;
+  } else if (derive) {
+    const plan = planOf(next, polled);
+    const { writes, holds } = await attendanceWrites(ev, plan, lock ? 'lock' : 'edit', next);
+    if (!lock) {
+      // releaseExpired reads the old deadline, so it goes before the event UPDATE writes the new one.
+      extras.unshift(releaseExpired(ev.id));
+      reconfirmBy = null;
+      if (holds > 0) {
+        if (next.startsAt! <= now) fail(409, 'reconfirmTooLate');
+        reconfirmBy = wantedBy ?? new Date(Math.min(now.getTime() + RECONFIRM_MS, next.startsAt!.getTime()));
+        if (reconfirmBy <= now || reconfirmBy > next.startsAt!) fail(400, 'invalidDate');
+      }
+    }
+    extras.push(...writes);
+  }
+
   const nextDays = ops
     ? sql`ARRAY(SELECT DISTINCT d FROM unnest(${events.pollDays} || ${sqlArray(addDays, 'date')}) AS d WHERE d <> ALL(${sqlArray(removeDays, 'date')}) ORDER BY d)`
     : f.pollDays && sqlArray(f.pollDays, 'date');
-  const set = { ...f, ...(repoll && { startsAt: null }), ...('notice' in f && f.notice !== ev.notice && { noticeAt: f.notice ? new Date() : null }), ...(nextDays && { pollDays: nextDays }) };
+  const set = {
+    ...f,
+    ...(repoll && { startsAt: null }),
+    ...(reconfirmBy !== undefined && { reconfirmBy }),
+    ...('notice' in f && f.notice !== ev.notice && { noticeAt: f.notice ? new Date() : null }),
+    ...(nextDays && { pollDays: nextDays }),
+  };
   // The UPDATE locks the event row and computes the list from the locked current value; the guard rejects an empty or oversized result.
+  // With writes to member rows attached, it also requires the stage the decision was made in.
   const update = useDb()
     .update(events)
     .set(set)
-    .where(ops ? and(eq(events.id, ev.id), eq(events.stage, 'poll'), sql`cardinality(${nextDays}) BETWEEN 1 AND ${MAX_DAYS}`) : eq(events.id, ev.id));
+    .where(
+      ops
+        ? and(eq(events.id, ev.id), eq(events.stage, 'poll'), sql`cardinality(${nextDays}) BETWEEN 1 AND ${MAX_DAYS}`)
+        : extras.length
+          ? and(eq(events.id, ev.id), eq(events.stage, ev.stage))
+          : eq(events.id, ev.id)
+    );
   if (!nextDays) {
-    await update;
+    if (!extras.length) {
+      await update;
+      return { ok: true };
+    }
+    const batch = [update.returning({ id: events.id }), ...extras] as [BatchItem<'pg'>, ...BatchItem<'pg'>[]];
+    const [changed] = (await useDb().batch(batch)) as { id: number }[][];
+    if (!changed!.length) fail(409, 'stageClosed');
     return { ok: true };
   }
   // Drop votes for days that are no longer candidates in the same batch, or a member's next vote would be rejected as invalidDays.

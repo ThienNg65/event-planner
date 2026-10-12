@@ -22,10 +22,13 @@ export default defineEventHandler(async (event) => {
   const current = currentDays(ev.id);
   const vote = useDb()
     .insert(responses)
-    .values({ eventId: ev.id, memberId: member.id, days: sql`ARRAY(SELECT d FROM unnest(ARRAY[${day}::date]) AS d WHERE d = ANY(${current}))` })
+    .values({ eventId: ev.id, memberId: member.id, firstVotedAt: sql`now()`, days: sql`ARRAY(SELECT d FROM unnest(ARRAY[${day}::date]) AS d WHERE d = ANY(${current}))` })
     .onConflictDoUpdate({
       target: [responses.eventId, responses.memberId],
-      set: { days: sql`ARRAY(SELECT DISTINCT d FROM unnest(${responses.days} || ${day}::date) AS d WHERE d = ANY(${current}) ORDER BY d)` },
+      set: {
+        firstVotedAt: sql`COALESCE(${responses.firstVotedAt}, now())`,
+        days: sql`ARRAY(SELECT DISTINCT d FROM unnest(${responses.days} || ${day}::date) AS d WHERE d = ANY(${current}) ORDER BY d)`,
+      },
     })
     .returning({ days: responses.days });
   const lock = exists

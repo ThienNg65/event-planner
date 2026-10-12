@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 
 export default defineEventHandler(async (event) => {
   const b = await readJson(event);
-  const { stage: _ignored, ...f } = eventFields({ title: '', ...b });
+  const { stage: _ignored, reconfirmBy: _held, ...f } = eventFields({ title: '', ...b });
   const creator = await requireMember(b.createdBy);
   const pollDays = f.pollDays ?? [];
   if (!pollDays.length && !f.startsAt) fail(400, 'invalidDate');

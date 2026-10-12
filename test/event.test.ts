@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, coverOf } from '../shared/utils/cover.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
@@ -80,9 +80,9 @@ test('monthGrid: 42 days, Monday-first, covering the whole month', () => {
 
 test('mineOf: votes, and only confirmed attendees owe share × (1 + guests)', () => {
   const row = { days: ['2026-10-23'], venueIds: [], status: 'going', guests: 2, paidAt: null };
-  assert.deepEqual(mineOf(row, true, false, 100_000), { voted: true, status: 'going', waitlisted: false, owes: 300_000, paid: false, paidAmount: 0, left: 300_000 });
+  assert.deepEqual(mineOf(row, true, false, 100_000), { voted: true, status: 'going', derived: null, held: false, waitlisted: false, owes: 300_000, paid: false, paidAmount: 0, left: 300_000 });
   assert.equal(mineOf(row, false, true, 100_000).owes, null);
-  assert.deepEqual(mineOf(undefined, false, false, null), { voted: false, status: null, waitlisted: false, owes: null, paid: false, paidAmount: 0, left: 0 });
+  assert.deepEqual(mineOf(undefined, false, false, null), { voted: false, status: null, derived: null, held: false, waitlisted: false, owes: null, paid: false, paidAmount: 0, left: 0 });
 });
 
 test('nextStep: one step per stage and answer, organizer moves only when due', () => {
@@ -243,4 +243,117 @@ test('rankDays: most votes first, ties and unvoted days in date order', () => {
     { day: '2026-10-04', n: 0 },
   ]);
   assert.deepEqual(rankDays(['2026-10-02', '2026-10-01'], []), [{ day: '2026-10-01', n: 0 }, { day: '2026-10-02', n: 0 }]);
+});
+
+const plan = (day: string | null, venueIds: number[] = [], venuePolled = venueIds.length > 0) => ({ day, venuePolled, venueIds });
+const vote = (days: string[], venueIds: number[] = []) => ({ days, venueIds });
+
+test('matchesPlan: the locked day must be among the votes', () => {
+  assert.equal(matchesPlan(vote(['2026-10-23']), plan('2026-10-23')), true);
+  assert.equal(matchesPlan(vote(['2026-10-24']), plan('2026-10-23')), false);
+});
+
+test('matchesPlan: with places polled, upvoted places must include the locked one; no place upvotes = the day alone', () => {
+  assert.equal(matchesPlan(vote(['2026-10-23'], [2]), plan('2026-10-23', [1])), false);
+  assert.equal(matchesPlan(vote(['2026-10-23'], [1, 2]), plan('2026-10-23', [1])), true);
+  assert.equal(matchesPlan(vote(['2026-10-23']), plan('2026-10-23', [1])), true);
+});
+
+test('matchesPlan: a places-only voter never matches a day poll; a place-only poll needs the chosen place', () => {
+  assert.equal(matchesPlan(vote([], [1]), plan('2026-10-23', [1])), false);
+  assert.equal(matchesPlan(vote([], [1]), plan(null, [1])), true);
+  assert.equal(matchesPlan(vote([], [2]), plan(null, [1])), false);
+  assert.equal(matchesPlan(vote([], [1]), planFor([], new Date(), [{ id: 1, name: 'A' }], 'typed elsewhere')), false);
+});
+
+test('teamDay: an instant late in the UTC day is already tomorrow in Vietnam', () => {
+  assert.equal(teamDay('2026-10-23T17:30:00Z'), '2026-10-24');
+});
+
+test('heldOk and seated: a held seat counts only before its deadline', () => {
+  const now = Date.UTC(2026, 9, 1, 12);
+  const rows = [{ status: 'going', derived: 'reconfirm' }, { status: 'going', derived: null }, { status: 'no', derived: null }];
+  assert.equal(heldOk({ reconfirmBy: new Date(now + 1) }, now), true);
+  assert.equal(heldOk({ reconfirmBy: new Date(now - 1) }, now), false);
+  assert.equal(heldOk({ reconfirmBy: null }, now), false);
+  assert.equal(seated(rows, { reconfirmBy: new Date(now + 1) }, now).length, 2);
+  assert.equal(seated(rows, { reconfirmBy: new Date(now - 1) }, now).length, 1);
+  assert.equal(seated(rows, {}, now).length, 1);
+});
+
+test('planFrozen: fixed once the event has started or the bill is entered', () => {
+  const now = Date.UTC(2026, 9, 1, 12);
+  const f = (stage: string, startsAt: number) => planFrozen({ stage, startsAt: new Date(startsAt) }, now);
+  assert.deepEqual([f('rsvp', now + 1), f('rsvp', now), f('bill', now + 1), f('settled', now + 1), f('poll', now - 1)], [false, true, true, true, false]);
+});
+
+const row = (memberId: number, o: Record<string, unknown> = {}) => ({
+  memberId, status: null as string | null, guests: 0, goingAt: null as Date | null, days: ['2026-10-23'], venueIds: [] as number[],
+  derived: null as string | null, paidAt: null as unknown, firstVotedAt: at(memberId) as Date | null, ...o,
+});
+const NO_HOLDS = {};
+
+test('deriveAttendance lock: unanswered fitting voters go, others are untouched', () => {
+  const rows = [row(1), row(2, { days: ['2026-10-24'] }), row(3, { status: 'maybe' })];
+  const d = deriveAttendance(rows, plan('2026-10-23'), 'lock', NO_HOLDS);
+  assert.deepEqual([ids(d.going), ids(d.untouched), d.hold.length], [[1], [2, 3], 0]);
+});
+
+test('deriveAttendance edit: only derived rows are re-checked; edits never auto-mark anyone else', () => {
+  const now = Date.now();
+  const ev = { reconfirmBy: new Date(now + 3600_000) };
+  const rows = [
+    row(1, { status: 'maybe' }),
+    row(2, { status: 'going', derived: 'going', paidAt: new Date() }),
+    row(3, { status: 'going', derived: 'going', days: ['2026-10-24'] }),
+    row(4, { status: 'going', derived: 'reconfirm' }),
+    row(5),
+  ];
+  const d = deriveAttendance(rows, plan('2026-10-23'), 'edit', ev, now);
+  assert.deepEqual([ids(d.untouched), ids(d.hold), ids(d.going), ids(d.release)], [[1, 2, 5], [3], [4], []]);
+});
+
+test('deriveAttendance edit: an expired hold is released even if it matches the new plan (no revival)', () => {
+  const now = Date.now();
+  const d = deriveAttendance([row(1, { status: 'going', derived: 'reconfirm' })], plan('2026-10-23'), 'edit', { reconfirmBy: new Date(now - 1) }, now);
+  assert.deepEqual([ids(d.release), d.going.length], [[1], 0]);
+});
+
+test('lockImpact: capacity and first-vote order decide who goes and who waits', () => {
+  const rows = [row(1, { firstVotedAt: at(3) }), row(2, { firstVotedAt: at(1) }), row(3, { firstVotedAt: at(2) })];
+  const r = lockImpact(rows, plan('2026-10-23'), 2, at(99), NO_HOLDS, 'lock');
+  assert.deepEqual([ids(r.going), ids(r.waiting)], [[2, 3], [1]]);
+});
+
+test('lockImpact: equal first votes tie-break on member id; a vote without a timestamp uses the lock time', () => {
+  const rows = [row(7, { firstVotedAt: at(1) }), row(4, { firstVotedAt: at(1) }), row(9, { firstVotedAt: null })];
+  const r = lockImpact(rows, plan('2026-10-23'), 2, at(99), NO_HOLDS, 'lock');
+  assert.deepEqual([ids(r.going), ids(r.waiting)], [[4, 7], [9]]);
+});
+
+test('lockImpact edit: held members keep their priority, seated or waitlisted', () => {
+  const now = Date.now();
+  const ev = { reconfirmBy: new Date(now + 3600_000) };
+  const d = (m: number, min: number) => row(m, { status: 'going', derived: 'going', goingAt: at(min), days: ['2026-10-30'] });
+  const rows = [d(1, 1), d(2, 2), row(3, { status: 'going', derived: null, goingAt: at(3) })];
+  const r = lockImpact(rows, plan('2026-10-23'), 1, at(99), ev, 'edit', now);
+  assert.deepEqual(ids(r.hold), [1, 2]);
+  assert.deepEqual([ids(r.going), ids(r.waiting)], [[1], [2]]);
+});
+
+test('nextStep: held, expired and unmatched voters are asked to confirm', () => {
+  const m = (o: Partial<ReturnType<typeof mineOf>>) => ({ ...mineOf(undefined, false, false, null), ...o });
+  const s = (mine: ReturnType<typeof mineOf>, started = false) => nextStep({ stage: 'rsvp', mine, manager: false, allPaid: false, started }).step;
+  assert.equal(s(m({ status: 'going', derived: 'reconfirm', held: true })), 'confirm');
+  assert.equal(s(m({ status: 'going', derived: 'reconfirm' })), 'confirm');
+  assert.equal(s(m({ voted: true })), 'confirm');
+  assert.equal(s(m({})), 'rsvp');
+  assert.equal(s(m({ voted: true }), true), 'done');
+});
+
+test('nextStep: a debt is still payable after Completed', () => {
+  const m = (o: Partial<ReturnType<typeof mineOf>>) => ({ ...mineOf(undefined, false, false, null), ...o });
+  const s = (mine: ReturnType<typeof mineOf>) => nextStep({ stage: 'settled', mine, manager: false, allPaid: false, started: true }).step;
+  assert.equal(s(m({ owes: 1000 })), 'pay');
+  assert.equal(s(m({ owes: 1000, paid: true })), 'settled');
 });

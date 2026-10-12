@@ -116,6 +116,7 @@ async function remove() {
           </UPopover>
         </div>
       </div>
+      <p class="text-sm text-muted">{{ t('poll.daysHint') }}</p>
       <div class="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
         <UTooltip v-for="d in days" :key="d.day" :text="d.names.join(', ')" :disabled="!d.names.length">
           <button

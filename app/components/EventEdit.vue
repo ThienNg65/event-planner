@@ -50,7 +50,8 @@ watch(open, (o) => {
 watch(form, () => (errors.value = {}), { deep: true });
 
 // What this save would do to people, shown before it happens.
-const queue = computed(() => props.data.responses.map((r) => ({ ...r, goingAt: r.goingAt ? new Date(r.goingAt) : null })));
+const rows = computed(() => props.data.responses.map((r) => ({ ...r, goingAt: r.goingAt ? new Date(r.goingAt) : null, firstVotedAt: r.firstVotedAt ? new Date(r.firstVotedAt) : null })));
+const queue = computed(() => seated(rows.value, ev.value));
 const seatMoves = computed(() => ('capacity' in changes.value ? capacityImpact(queue.value, ev.value.capacity, changes.value.capacity ?? null) : null));
 const names = (rs: { name: string }[]) => rs.map((r) => r.name).join(', ');
 // Setting a place during the poll ends the place vote.
@@ -63,6 +64,19 @@ const shareChange = computed(() => {
   return { from: shareOf(ev.value.billTotal, props.data.seats), to: shareOf(changes.value.billTotal ?? null, props.data.seats) };
 });
 const fmtShare = (n: number | null) => (n === null ? t('edit.noShare') : fmtVnd(n));
+// Once the event has started or the bill is in, date and place only change through a correction.
+const frozen = computed(() => planFrozen(ev.value));
+const correcting = ref(false);
+// A moved date or place in the RSVP stage re-checks everyone counted from their votes: who stays, who is held, whose hold already ran out.
+const rederive = computed(() => {
+  const c = changes.value;
+  if (ev.value.stage !== 'rsvp' || frozen.value || !('startsAt' in c || 'venue' in c) || !(ev.value.pollDays.length || props.data.venues.length)) return null;
+  const startsAt = c.startsAt ? teamTime(...(c.startsAt.split('T') as [string, string])) : ev.value.startsAt;
+  const plan = planFor(ev.value.pollDays, startsAt, props.data.venues, 'venue' in c ? (c.venue ?? null) : ev.value.venue);
+  return deriveAttendance(rows.value, plan, 'edit', ev.value);
+});
+const reconfirmBy = ref('');
+const reconfirmIso = computed(() => (reconfirmBy.value ? teamTime(...(reconfirmBy.value.split('T') as [string, string])) : ''));
 // Once people have answered, a changed date or place can be announced with the save.
 const startsAtIso = computed(() => {
   const v = changes.value.startsAt;
@@ -75,11 +89,20 @@ const prefill = computed(() => {
   return [
     dateMoved && t('notice.moved', { when: fmtDateTime(startsAtIso.value, locale.value) }),
     !!changes.value.venue && t('notice.venue', { venue: changes.value.venue }),
+    !!rederive.value?.hold.length && !!reconfirmIso.value && t('notice.reconfirm', { deadline: fmtDateTime(reconfirmIso.value, locale.value) }),
   ]
     .filter(Boolean)
     .join(' ');
 });
 watch(prefill, (v) => (updateText.value = v), { immediate: true });
+// Default confirm-by: two days from now, never after the new start.
+watch(
+  () => [rederive.value?.hold.length, startsAtIso.value],
+  () => {
+    const start = startsAtIso.value ? new Date(startsAtIso.value).getTime() : Infinity;
+    reconfirmBy.value = rederive.value?.hold.length ? toTeamInput(new Date(Math.min(Date.now() + RECONFIRM_MS, start)).toISOString()) : '';
+  }
+);
 
 // Which form field a server error code belongs under.
 const FIELD_OF: Record<string, string> = {
@@ -88,6 +111,7 @@ const FIELD_OF: Record<string, string> = {
   invalidCapacity: 'capacity',
   invalidBank: 'bank',
   invalidCover: 'cover',
+  reconfirmTooLate: 'startsAt',
 };
 
 async function save() {
@@ -100,6 +124,7 @@ async function save() {
     ...('voteDeadline' in changes.value && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
     ...('billTotal' in changes.value && { billTotal: billTotal ?? null }),
     ...(notice && { notice }),
+    ...(rederive.value?.hold.length && reconfirmIso.value && { reconfirmBy: reconfirmIso.value }),
   };
   if (!Object.keys(body).length) return;
   saving.value = true;
@@ -180,16 +205,34 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
           </UFormField>
           <UFormField :label="t('create.where')" :error="errors.venueLink">
             <div class="space-y-2">
-              <UInput v-model="form.venue" :maxlength="100" :placeholder="t('create.venue')" class="w-full" />
-              <UInput v-model="form.venueLink" type="url" :placeholder="t('create.venueLink')" class="w-full" />
+              <UInput v-model="form.venue" :maxlength="100" :placeholder="t('create.venue')" :disabled="frozen" class="w-full" />
+              <UInput v-model="form.venueLink" type="url" :placeholder="t('create.venueLink')" :disabled="frozen" class="w-full" />
             </div>
           </UFormField>
           <UAlert v-if="endsPlaceVote" color="warning" variant="subtle" icon="i-lucide-map-pin-check" :title="t('edit.endsPlaceVote', { n: data.venues.length })" />
         </section>
 
         <UFormField v-if="!editingDays" :label="t('manage.schedule')" :error="errors.startsAt">
-          <UInput v-model="form.startsAt" type="datetime-local" class="w-full" />
+          <UInput v-model="form.startsAt" type="datetime-local" :disabled="frozen" class="w-full" />
         </UFormField>
+        <div v-if="frozen" class="space-y-2">
+          <p class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-lock" class="size-4" />{{ t('edit.planFrozen') }}</p>
+          <UButton color="neutral" variant="outline" size="sm" icon="i-lucide-calendar-cog" @click="correcting = true">{{ t('correct.open') }}</UButton>
+        </div>
+        <template v-if="rederive && (rederive.going.length || rederive.hold.length || rederive.release.length)">
+          <UAlert
+            v-if="rederive.going.length || rederive.hold.length"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-calendar-clock"
+            :title="t('edit.rederive', { n: rederive.going.length, m: rederive.hold.length })"
+            :description="names(rederive.hold)"
+          />
+          <UFormField v-if="rederive.hold.length" :label="t('edit.reconfirmBy')">
+            <UInput v-model="reconfirmBy" type="datetime-local" class="w-full" />
+          </UFormField>
+          <UAlert v-if="rederive.release.length" color="neutral" variant="subtle" icon="i-lucide-clock" :title="t('edit.released', { n: rederive.release.length }, rederive.release.length)" :description="names(rederive.release)" />
+        </template>
 
         <UFormField v-if="ev.stage === 'poll' && voteOpen" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')" :error="errors.voteDeadline">
           <UInput v-model="form.voteDeadline" type="datetime-local" class="w-full" />
@@ -257,6 +300,8 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
       </div>
     </template>
   </USlideover>
+
+  <EventCorrectDialog v-model:open="correcting" :data="data" :manage-key="manageKey" @changed="emit('changed')" />
 
   <UModal v-model:open="discarding" :title="t('edit.discardTitle')" :description="t('edit.discardBody')" :close="false" :content="{ onOpenAutoFocus: focusKeep }">
     <template #footer>

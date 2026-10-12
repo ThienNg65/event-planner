@@ -68,7 +68,17 @@ export async function assertInvariants(id: number, dayPoll = true) {
     [id]
   );
   const [i3] = await query(`SELECT count(*)::int AS n FROM events WHERE id = $1 AND stage = 'poll' AND cardinality(poll_days) NOT BETWEEN 1 AND 20`, [id]);
-  const broken = [i1.n && `I1: ${i1.n} response(s) hold a day that is not a candidate`, i2.n && `I2: ${i2.n} response(s) hold a removed place`, dayPoll && i3.n && 'I3: the day poll has no days or more than 20'].filter(Boolean);
+  const [i4] = await query(`SELECT count(*)::int AS n FROM responses WHERE event_id = $1 AND derived IS NOT NULL AND status IS DISTINCT FROM 'going'`, [id]);
+  const [i5] = await query(`SELECT count(*)::int AS n FROM responses r JOIN events e ON e.id = r.event_id WHERE r.event_id = $1 AND r.derived = 'reconfirm' AND e.stage IN ('bill', 'settled')`, [id]);
+  const [i6] = await query(`SELECT count(*)::int AS n FROM responses r JOIN events e ON e.id = r.event_id WHERE r.event_id = $1 AND r.derived = 'reconfirm' AND e.reconfirm_by IS NULL`, [id]);
+  const broken = [
+    i1.n && `I1: ${i1.n} response(s) hold a day that is not a candidate`,
+    i2.n && `I2: ${i2.n} response(s) hold a removed place`,
+    dayPoll && i3.n && 'I3: the day poll has no days or more than 20',
+    i4.n && `I4: ${i4.n} derived response(s) are not going`,
+    i5.n && `I5: ${i5.n} held seat(s) survive past the RSVP stage`,
+    i6.n && `I6: ${i6.n} held seat(s) have no confirm-by deadline`,
+  ].filter(Boolean);
   if (broken.length) throw new Error(`event ${id}: ${broken.join('; ')}`);
 }
 

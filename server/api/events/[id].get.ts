@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       .where(eq(cohosts.eventId, ev.id))
       .orderBy(asc(cohosts.invitedAt)),
   ]);
-  const { confirmed, waitlist, seats } = rollCall(rs, ev.capacity);
+  const { confirmed, waitlist, seats } = rollCall(seated(rs, ev), ev.capacity);
   const venueList = vs
     .map((v) => ({ ...v, upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId) }))
     .sort((a, b) => b.upvotes.length - a.upvotes.length);
@@ -48,6 +48,8 @@ export default defineEventHandler(async (event) => {
     responses: rs,
     confirmed: confirmed.map((r) => r.memberId),
     waitlist: waitlist.map((r) => r.memberId),
+    // Seats held after a plan change that are still waiting for their owner to confirm.
+    held: rs.filter((r) => r.derived === 'reconfirm' && heldOk(ev)).map((r) => r.memberId),
     seats,
     share: shareOf(ev.billTotal, seats),
     venues: venueList,

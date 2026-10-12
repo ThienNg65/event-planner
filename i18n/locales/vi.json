@@ -26,7 +26,8 @@
       "pay": "Bạn cần trả {amount}",
       "lock": "Chốt ngày",
       "bill": "Nhập hoá đơn",
-      "settle": "Đánh dấu đã xong"
+      "settle": "Đánh dấu đã xong",
+      "confirm": "Xác nhận bạn có đi"
     }
   },
   "stage": {
@@ -117,7 +118,11 @@
       "maybe": "Có thể",
       "no": "Bận"
     },
-    "update": "Cập nhật"
+    "update": "Cập nhật",
+    "fromVote": "Bạn được tính là đi theo phiếu bầu. Đổi câu trả lời nếu bạn không đi được.",
+    "held": "Kế hoạch đã đổi. Chỗ của bạn được giữ đến {deadline}. Hãy xác nhận để giữ chỗ.",
+    "released": "Chỗ giữ của bạn đã được nhả. Bạn vẫn có thể tham gia.",
+    "guestsQueue": "Thêm khách sẽ đưa bạn xuống cuối hàng chờ."
   },
   "manage": {
     "copyLink": "Link quản lý",
@@ -159,7 +164,11 @@
     "tooManyCohosts": "Mỗi sự kiện có tối đa 5 đồng tổ chức, tính cả lời mời đang chờ.",
     "alreadyCohost": "Người này đã là đồng tổ chức.",
     "inviteInvalid": "Lời mời này không còn hiệu lực. Hãy nhờ người tổ chức gửi lời mời mới.",
-    "inviteExpired": "Lời mời này đã hết hạn. Hãy nhờ người tổ chức gửi lời mời mới."
+    "inviteExpired": "Lời mời này đã hết hạn. Hãy nhờ người tổ chức gửi lời mời mới.",
+    "hasPayments": "Đã có khoản thanh toán được ghi nhận. Hãy xác nhận giữ lại.",
+    "notStarted": "Sự kiện chưa diễn ra.",
+    "planFrozen": "Ngày và địa điểm đã cố định khi sự kiện bắt đầu. Hãy dùng \"Sửa ngày hoặc địa điểm\".",
+    "reconfirmTooLate": "Mọi người cần xác nhận lại nhưng thời điểm mới đã qua. Hãy chọn thời điểm trong tương lai."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -198,7 +207,8 @@
     "selected": "đã chọn",
     "notSelected": "chưa chọn",
     "closedDeadline": "Đã đóng bình chọn: quá hạn",
-    "closedCancelled": "Đã đóng bình chọn: sự kiện bị huỷ"
+    "closedCancelled": "Đã đóng bình chọn: sự kiện bị huỷ",
+    "daysHint": "Chọn mọi ngày bạn đi được. Nếu một trong các ngày đó được chốt, bạn được tính là đi."
   },
   "bill": {
     "title": "Chia tiền",
@@ -224,7 +234,8 @@
     "paidFull": "Đã trả đủ",
     "bankFallback": "Chuyển khoản tới {bank}",
     "ledger": "Đã thu {paid}/{total} · {n} người còn nợ",
-    "locked": "Sự kiện đã hoàn tất nên không sửa được khoản thanh toán."
+    "locked": "Sự kiện đã hoàn tất nên không sửa được khoản thanh toán.",
+    "none": "Sự kiện này không có hoá đơn."
   },
   "nav": {
     "events": "Sự kiện",
@@ -253,7 +264,8 @@
     "pay": "Cần trả {amount}",
     "paid": "Đã trả",
     "cancelled": "Đã huỷ",
-    "closes": "Bình chọn đóng lúc {when}"
+    "closes": "Bình chọn đóng lúc {when}",
+    "confirm": "Xác nhận"
   },
   "next": {
     "who": {
@@ -267,7 +279,7 @@
     },
     "voted": {
       "title": "Cảm ơn bạn đã bình chọn!",
-      "body": "Đã có {n} người bình chọn. Người tổ chức sẽ chốt kết quả.",
+      "body": "Đã có {n} người bình chọn. Nếu ngày bạn chọn trúng, bạn được tính là đi. Người tổ chức sẽ chốt kết quả.",
       "cta": "Sửa lựa chọn"
     },
     "rsvp": {
@@ -311,7 +323,9 @@
       "settle": "Đánh dấu đã xong",
       "pick": "Chọn kết quả",
       "close": "Đóng bình chọn",
-      "reopen": "Mở lại bình chọn"
+      "reopen": "Mở lại bình chọn",
+      "completeFree": "Hoàn tất, không có hoá đơn",
+      "completeAnyway": "Vẫn hoàn tất"
     },
     "lockDay": "Ngày và giờ",
     "lockHint": "Sau đó mọi người có thể trả lời Đi, Có thể hoặc Không.",
@@ -342,9 +356,39 @@
     "reopenDate": "Hạn mới",
     "consequences": {
       "end": "Bình chọn kết thúc",
-      "rsvp": "Mọi người trả lời Đi, Có thể hoặc Không",
+      "rsvp": "Những người còn lại có thể trả lời Đi, Có thể hoặc Không đi",
       "kept": "Phiếu vẫn được giữ nếu người tổ chức mở lại bình chọn"
-    }
+    },
+    "lockGoing": "Tự động tính là Đi theo phiếu bầu: {names}",
+    "lockWaiting": "{n} người chờ chỗ | {n} người chờ chỗ",
+    "lockConfirm": "{n} người đã bầu được hỏi xác nhận | {n} người đã bầu được hỏi xác nhận",
+    "confirm": {
+      "title": "Bạn đi được không?",
+      "body": "Kế hoạch đã chốt: {when}. Cho mọi người biết bạn có đi không nhé.",
+      "cta": "Trả lời"
+    },
+    "reconfirmHeld": {
+      "title": "Kế hoạch đã thay đổi",
+      "body": "Kế hoạch đổi sang {when}. Chỗ của bạn được giữ đến {deadline}.",
+      "cta": "Xác nhận"
+    },
+    "reconfirmLost": {
+      "title": "Chỗ giữ của bạn đã được nhả",
+      "body": "Bạn vẫn có thể tham gia.",
+      "cta": "Trả lời"
+    },
+    "goingAuto": {
+      "title": "Bạn đã có tên theo phiếu bầu 🎉",
+      "body": "Hẹn gặp bạn {when}. Đổi câu trả lời bên dưới nếu bạn không đi được."
+    },
+    "completedOpen": {
+      "title": "Đã hoàn tất, còn vài khoản chưa trả",
+      "body": "Cảm ơn mọi người. Vẫn có thể báo đã thanh toán."
+    },
+    "completeFreeTitle": "Sự kiện đã kết thúc chưa?",
+    "completeFreeBody": "Sẽ không ai phải thanh toán.",
+    "completeAnywayTitle": "Hoàn tất khi còn khoản chưa trả?",
+    "completeAnywayBody": "Những người này vẫn còn nợ. Họ có thể tiếp tục thanh toán sau khi sự kiện hoàn tất."
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -374,7 +418,11 @@
     "shareChange": "Mỗi chỗ: {from} → {to}",
     "shareChangeHint": "Số tiền còn lại của mỗi người được tính lại theo những gì họ đã trả.",
     "endsPlaceVote": "Chọn địa điểm sẽ kết thúc bình chọn địa điểm ({n} gợi ý) | Chọn địa điểm sẽ kết thúc bình chọn địa điểm ({n} gợi ý)",
-    "postUpdateHint": "Báo cho mọi người biết điều gì đã đổi. Thông báo hiện ở đầu sự kiện khi bạn lưu."
+    "postUpdateHint": "Báo cho mọi người biết điều gì đã đổi. Thông báo hiện ở đầu sự kiện khi bạn lưu.",
+    "rederive": "{n} người vẫn đi · {m} chỗ được giữ chờ xác nhận",
+    "reconfirmBy": "Xác nhận trước",
+    "released": "{n} chỗ giữ đã hết hạn và vẫn bị nhả | {n} chỗ giữ đã hết hạn và vẫn bị nhả",
+    "planFrozen": "Sự kiện đã bắt đầu nên ngày và địa điểm đã cố định."
   },
   "share": {
     "poll": "Bình chọn ngày cho: {title}",
@@ -388,7 +436,8 @@
   },
   "notice": {
     "moved": "Đã dời sang {when}.",
-    "venue": "Đổi địa điểm sang {venue}."
+    "venue": "Đổi địa điểm sang {venue}.",
+    "reconfirm": "Nếu bạn được tính đi theo phiếu bầu, hãy xác nhận trước {deadline} nếu không chỗ sẽ được nhả."
   },
   "people": {
     "title": "Mọi người",
@@ -408,7 +457,9 @@
     "markUnpaid": "Chưa trả",
     "setAmount": "Nhập số đã trả…",
     "amount": "Số tiền đã trả (₫)",
-    "save": "Lưu"
+    "save": "Lưu",
+    "fromVote": "Theo phiếu bầu",
+    "heldUntil": "Giữ đến {time}"
   },
   "host": {
     "menu": "Thao tác khác",
@@ -424,7 +475,10 @@
     "deleteTitle": "Xoá sự kiện này?",
     "deleteBody": "Xoá vĩnh viễn? Toàn bộ phiếu và khoản thanh toán sẽ mất, không thể hoàn tác.",
     "deleteButton": "Xoá sự kiện",
-    "votingChoice": "Bình chọn sau khi mở lại"
+    "votingChoice": "Bình chọn sau khi mở lại",
+    "reopenDerived": "Đã xoá {n} câu trả lời tính từ phiếu bầu. | Đã xoá {n} câu trả lời tính từ phiếu bầu.",
+    "reopenPayments": "Các khoản thanh toán được giữ nguyên, không bị xoá:",
+    "reopenAck": "Tôi biết các khoản thanh toán này vẫn được ghi nhận"
   },
   "org": {
     "title": "Ban tổ chức",
@@ -499,7 +553,9 @@
     "paid": "{n}/{total} người đã trả",
     "collected": "Đã thu {got} / {total}",
     "share": "{amount} mỗi chỗ",
-    "settled": "Đã hoàn tất · {n} chỗ"
+    "settled": "Đã hoàn tất · {n} chỗ",
+    "completedPaid": "Mọi người đã thanh toán",
+    "completedOwed": "Còn {n} người chưa trả"
   },
   "invite": {
     "title": "Bạn được mời làm đồng tổ chức với tên {name}",
@@ -510,5 +566,12 @@
     "accepted": "Bạn đã là đồng tổ chức",
     "invalid": "Lời mời này không còn hiệu lực. Hãy nhờ người tổ chức gửi lời mời mới.",
     "expired": "Lời mời đã hết hạn. Hãy nhờ người tổ chức gửi lời mời mới."
+  },
+  "correct": {
+    "open": "Sửa ngày hoặc địa điểm",
+    "title": "Sửa ngày hoặc địa điểm",
+    "body": "Danh sách tham dự và thanh toán không thay đổi.",
+    "notice": "Đã đổi gì và vì sao",
+    "button": "Lưu chỉnh sửa"
   }
 }

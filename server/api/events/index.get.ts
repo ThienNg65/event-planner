@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
         billTotal: events.billTotal,
         voteDeadline: events.voteDeadline,
         cancelledAt: events.cancelledAt,
+        reconfirmBy: events.reconfirmBy,
       })
       .from(events)
       .orderBy(desc(events.createdAt)),
@@ -26,6 +27,7 @@ export default defineEventHandler(async (event) => {
         eventId: responses.eventId,
         memberId: responses.memberId,
         status: responses.status,
+        derived: responses.derived,
         guests: responses.guests,
         goingAt: responses.goingAt,
         paidAt: responses.paidAt,
@@ -38,7 +40,10 @@ export default defineEventHandler(async (event) => {
   // ponytail: loads every "going" row to count seats; fine for a team, add a per-event SQL sum if it grows.
   return evs.map((e) => {
     const { confirmed, waitlist, seats } = rollCall(
-      going.filter((r) => r.eventId === e.id),
+      seated(
+        going.filter((r) => r.eventId === e.id),
+        e
+      ),
       e.capacity
     );
     const share = shareOf(e.billTotal, seats);
@@ -52,7 +57,8 @@ export default defineEventHandler(async (event) => {
             row,
             confirmed.some((r) => r.memberId === meId),
             waitlist.some((r) => r.memberId === meId),
-            share
+            share,
+            row?.derived === 'reconfirm' && heldOk(e)
           )
         : null,
     };

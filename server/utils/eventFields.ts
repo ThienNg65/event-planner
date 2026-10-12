@@ -34,6 +34,11 @@ export function eventFields(b: Record<string, unknown>) {
     if (b.voteDeadline !== null && (typeof b.voteDeadline !== 'string' || Number.isNaN(d.getTime()))) fail(400, 'invalidDate');
     out.voteDeadline = b.voteDeadline === null ? null : d;
   }
+  if ('reconfirmBy' in b) {
+    const d = new Date(String(b.reconfirmBy));
+    if (b.reconfirmBy !== null && (typeof b.reconfirmBy !== 'string' || Number.isNaN(d.getTime()))) fail(400, 'invalidDate');
+    out.reconfirmBy = b.reconfirmBy === null ? null : d;
+  }
   if ('notice' in b) out.notice = clean(b.notice, 280) || null;
   if ('venue' in b) out.venue = clean(b.venue, 100) || null;
   if ('venueLink' in b) {

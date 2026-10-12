@@ -17,7 +17,8 @@ const mine = computed(() => {
     props.data.responses.find((r) => r.memberId === id),
     props.data.confirmed.includes(id),
     props.data.waitlist.includes(id),
-    props.data.share
+    props.data.share,
+    props.data.held.includes(id)
   );
 });
 const canAdvance = computed(() => can(props.role, 'advance'));
@@ -39,6 +40,7 @@ const STEP_UI = {
   voted: { icon: 'i-lucide-circle-check', tone: 'bg-success/15 text-success', jump: 'poll' },
   voteClosed: { icon: 'i-lucide-lock', tone: 'bg-warning/15 text-warning', jump: null },
   rsvp: { icon: 'i-lucide-hand', tone: 'bg-secondary/15 text-secondary', jump: 'rsvp' },
+  confirm: { icon: 'i-lucide-calendar-clock', tone: 'bg-warning/15 text-warning', jump: 'rsvp' },
   going: { icon: 'i-lucide-party-popper', tone: 'bg-success/15 text-success', jump: null },
   waitlist: { icon: 'i-lucide-hourglass', tone: 'bg-warning/15 text-warning', jump: null },
   replied: { icon: 'i-lucide-circle-check', tone: 'bg-elevated text-muted', jump: 'rsvp' },
@@ -49,13 +51,21 @@ const STEP_UI = {
   cancelled: { icon: 'i-lucide-ban', tone: 'bg-elevated text-muted', jump: null },
 } as const;
 const ui = computed(() => STEP_UI[next.value.step]);
-// A poll with no candidate days is a place-only vote, so it gets its own wording.
-const copy = computed(() => (next.value.step === 'vote' && !ev.value.pollDays.length ? 'voteVenue' : next.value.step));
+// The wording variant: a place-only poll, a held or released seat, attendance counted from votes, a Completed event with debts.
+const copy = computed(() => {
+  const step = next.value.step;
+  if (step === 'vote' && !ev.value.pollDays.length) return 'voteVenue';
+  if (step === 'confirm' && mine.value?.derived === 'reconfirm') return mine.value.held ? 'reconfirmHeld' : 'reconfirmLost';
+  if (step === 'going' && mine.value?.derived === 'going') return 'goingAuto';
+  if (step === 'settled' && !allPaid(payers.value, props.data.share)) return 'completedOpen';
+  return step;
+});
 const bodyKey = computed(() => (copy.value === 'voteClosed' && canAdvance.value ? 'bodyHost' : 'body'));
 const when = computed(() => (ev.value.startsAt ? fmtDateTime(ev.value.startsAt, locale.value) : ''));
 const params = computed(() => ({
   n: props.data.responses.filter((r) => r.days.length || r.venueIds.length).length,
   when: when.value,
+  deadline: ev.value.reconfirmBy ? fmtDateTime(ev.value.reconfirmBy, locale.value) : '',
   place: props.data.waitlist.indexOf(props.me?.id ?? -1) + 1,
   amount: fmtVnd(mine.value?.left ?? 0),
   reason: ev.value.cancelReason ?? '',
@@ -94,6 +104,16 @@ watch(lockOpen, (o) => {
   lock.day = dayRank.value[0]?.value ?? '';
   lock.venueId = venueRank.value[0]?.value;
 });
+// What locking does to attendance, shown before it happens: the same shared rules the server applies.
+const lockRows = computed(() =>
+  props.data.responses.map((r) => ({ ...r, goingAt: r.goingAt ? new Date(r.goingAt) : null, firstVotedAt: r.firstVotedAt ? new Date(r.firstVotedAt) : null }))
+);
+const lockSeen = computed(() => {
+  const venue = props.data.venues.find((v) => v.id === lock.venueId);
+  const startsAt = ev.value.pollDays.length ? teamTime(lock.day, lock.time) : ev.value.startsAt;
+  return lockImpact(lockRows.value, planFor(ev.value.pollDays, startsAt, props.data.venues, ev.value.venue ?? venue?.name ?? null), ev.value.capacity, new Date(), ev.value, 'lock');
+});
+const nameList = (rs: { name: string }[]) => rs.map((r) => r.name).join(', ');
 async function lockEvent() {
   const venue = props.data.venues.find((v) => v.id === lock.venueId);
   const ok = await patch({
@@ -151,6 +171,20 @@ async function saveBill() {
 async function settle() {
   if (await patch({ stage: 'settled' })) confetti();
 }
+
+// Complete without a bill, or with debts still open: both ask first, then it's the same one move.
+const completeOpen = ref<'free' | 'anyway' | null>(null);
+const owing = computed(() =>
+  payers.value
+    .map((r) => ({ name: r.name, left: paymentOf(r, (props.data.share ?? 0) * (1 + r.guests)).left }))
+    .filter((r) => r.left > 0)
+);
+async function complete() {
+  if (await patch({ stage: 'settled' })) {
+    completeOpen.value = null;
+    confetti();
+  }
+}
 </script>
 
 <template>
@@ -165,7 +199,7 @@ async function settle() {
     <MemberPicker />
   </UCard>
 
-  <UCard v-else-if="next.step !== 'cancelled'" :ui="{ body: 'flex flex-col gap-4 sm:flex-row sm:items-center' }">
+  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'flex flex-col gap-4 sm:flex-row sm:items-center' }">
     <div class="flex min-w-0 flex-1 items-start gap-3">
       <span class="grid size-10 shrink-0 place-items-center rounded-full" :class="ui.tone"><UIcon :name="ui.icon" class="size-5" /></span>
       <div class="min-w-0">
@@ -197,7 +231,11 @@ async function settle() {
         {{ t(next.step === 'voteClosed' ? 'next.action.pick' : 'next.action.lock') }}
       </UButton>
       <UButton v-if="next.action === 'bill'" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
+      <UButton v-if="next.action === 'bill'" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
       <UButton v-if="next.action === 'settle'" icon="i-lucide-sparkles" color="secondary" :loading="busy" @click="settle">{{ t('next.action.settle') }}</UButton>
+      <UButton v-if="ev.stage === 'bill' && canAdvance && next.action !== 'settle'" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'anyway'">
+        {{ t('next.action.completeAnyway') }}
+      </UButton>
     </div>
   </UCard>
 
@@ -233,7 +271,12 @@ async function settle() {
         <div class="space-y-1 text-sm text-muted">
           <p class="font-medium text-default">{{ t('next.lockHint') }}</p>
           <ul class="list-disc space-y-0.5 pl-5">
-            <li v-for="k in ['end', 'rsvp', 'kept']" :key="k">{{ t(`next.consequences.${k}`) }}</li>
+            <li>{{ t('next.consequences.end') }}</li>
+            <li v-if="lockSeen.going.length">{{ t('next.lockGoing', { names: nameList(lockSeen.going) }) }}</li>
+            <li v-if="lockSeen.waiting.length">{{ t('next.lockWaiting', { n: lockSeen.waiting.length }, lockSeen.waiting.length) }}</li>
+            <li v-if="lockSeen.confirm.length">{{ t('next.lockConfirm', { n: lockSeen.confirm.length }, lockSeen.confirm.length) }}</li>
+            <li>{{ t('next.consequences.rsvp') }}</li>
+            <li>{{ t('next.consequences.kept') }}</li>
           </ul>
         </div>
       </div>
@@ -266,6 +309,29 @@ async function settle() {
       <div class="flex w-full justify-end gap-2">
         <UButton color="neutral" variant="ghost" @click="reopenOpen = false">{{ t('cancel') }}</UButton>
         <UButton icon="i-lucide-lock-open" :loading="busy" :disabled="reopenInvalid" @click="reopenVoting">{{ t('next.action.reopen') }}</UButton>
+      </div>
+    </template>
+  </UModal>
+
+  <UModal
+    :open="completeOpen !== null"
+    :title="t(completeOpen === 'free' ? 'next.completeFreeTitle' : 'next.completeAnywayTitle')"
+    :description="t(completeOpen === 'free' ? 'next.completeFreeBody' : 'next.completeAnywayBody')"
+    :content="{ onOpenAutoFocus: focusCancel }"
+    @update:open="completeOpen = null"
+  >
+    <template v-if="completeOpen === 'anyway'" #body>
+      <ul class="space-y-1 text-sm">
+        <li v-for="o in owing" :key="o.name" class="flex justify-between gap-3">
+          <span>{{ o.name }}</span>
+          <span class="tabular-nums text-muted">{{ fmtVnd(o.left) }}</span>
+        </li>
+      </ul>
+    </template>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2">
+        <UButton ref="cancelBtn" color="neutral" variant="ghost" @click="completeOpen = null">{{ t('cancel') }}</UButton>
+        <UButton icon="i-lucide-check" :loading="busy" @click="complete">{{ t(completeOpen === 'free' ? 'next.action.completeFree' : 'next.action.completeAnyway') }}</UButton>
       </div>
     </template>
   </UModal>

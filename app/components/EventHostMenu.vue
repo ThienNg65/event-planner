@@ -24,12 +24,22 @@ const reason = ref('');
 const voting = reactive({ mode: 'none' as 'none' | 'date', when: '' });
 const votingDeadline = computed(() => (voting.mode === 'date' && voting.when ? teamTime(...(voting.when.split('T') as [string, string])) : null));
 const votingInvalid = computed(() => reopenTo.value === 'poll' && voting.mode === 'date' && (!votingDeadline.value || new Date(votingDeadline.value).getTime() <= Date.now()));
+// Going back to the poll clears unpaid derived answers; payments are never touched, so the host has to acknowledge them.
+const derivedCount = computed(() => props.data.responses.filter((r) => r.derived && !r.paidAt).length);
+const payers = computed(() =>
+  props.data.responses
+    .filter((r) => r.paidAt || (r.paidAmount ?? 0) > 0)
+    .map((r) => ({ name: r.name, paid: paymentOf(r, (props.data.share ?? 0) * (1 + r.guests)).paid }))
+);
+const ack = ref(false);
+const needsAck = computed(() => reopenTo.value === 'poll' && payers.value.length > 0);
 const error = ref('');
 const busy = ref(false);
 
 function show(v: 'reopen' | 'cancel' | 'delete') {
   reopenTo.value = undefined;
   reason.value = '';
+  ack.value = false;
   Object.assign(voting, { mode: 'none', when: '' });
   error.value = '';
   view.value = v;
@@ -66,7 +76,7 @@ async function confirm() {
     if (await run('DELETE')) await navigateTo('/');
     return;
   }
-  const reopening = reopenTo.value === 'poll' ? { reopenVoting: true, voteDeadline: votingDeadline.value } : {};
+  const reopening = reopenTo.value === 'poll' ? { reopenVoting: true, voteDeadline: votingDeadline.value, ...(needsAck.value && { acknowledgePayments: true }) } : {};
   const body = v === 'reopen' ? { stage: reopenTo.value, ...reopening } : { cancel: reason.value };
   if (!(await run('PATCH', body))) return;
   view.value = null;
@@ -105,6 +115,13 @@ function focusCancel(e: Event) {
             <UInput v-if="voting.mode === 'date'" v-model="voting.when" type="datetime-local" class="w-full" :aria-label="t('next.reopenDate')" />
           </div>
         </UFormField>
+        <div v-if="view === 'reopen' && reopenTo === 'poll'" class="space-y-2 text-sm">
+          <p v-if="derivedCount" class="text-muted">{{ t('host.reopenDerived', { n: derivedCount }, derivedCount) }}</p>
+          <template v-if="payers.length">
+            <UAlert color="warning" variant="subtle" icon="i-lucide-wallet" :title="t('host.reopenPayments')" :description="payers.map((p) => `${p.name} ${fmtVnd(p.paid)}`).join(', ')" />
+            <UCheckbox v-model="ack" :label="t('host.reopenAck')" />
+          </template>
+        </div>
         <UInput v-else-if="view === 'cancel'" v-model="reason" :maxlength="200" :placeholder="t('edit.cancelReason')" class="w-full" />
         <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-circle-alert" :title="error" />
       </div>
@@ -112,7 +129,7 @@ function focusCancel(e: Event) {
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton ref="cancelBtn" color="neutral" variant="ghost" @click="open = false">{{ t('cancel') }}</UButton>
-        <UButton :color="view === 'delete' ? 'error' : 'warning'" :loading="busy" :disabled="(view === 'reopen' && !reopenTo) || votingInvalid" @click="confirm">
+        <UButton :color="view === 'delete' ? 'error' : 'warning'" :loading="busy" :disabled="(view === 'reopen' && !reopenTo) || votingInvalid || (needsAck && !ack)" @click="confirm">
           {{ view ? t(`host.${view}Button`) : '' }}
         </UButton>
       </div>

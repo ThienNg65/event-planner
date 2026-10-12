@@ -26,7 +26,8 @@
       "pay": "You owe {amount}",
       "lock": "Lock the date",
       "bill": "Enter the bill",
-      "settle": "Mark as settled"
+      "settle": "Mark as settled",
+      "confirm": "Confirm you're coming"
     }
   },
   "stage": {
@@ -117,7 +118,11 @@
       "maybe": "Maybe",
       "no": "Can't make it"
     },
-    "update": "Update"
+    "update": "Update",
+    "fromVote": "Counted as going from your votes. Change your answer if you can't make it.",
+    "held": "The plan changed. Your seat is held until {deadline}. Confirm to keep it.",
+    "released": "Your held seat was released. You can still join.",
+    "guestsQueue": "Adding guests puts you at the back of the queue."
   },
   "manage": {
     "copyLink": "Manage link",
@@ -159,7 +164,11 @@
     "tooManyCohosts": "An event can have at most 5 co-hosts, including pending invites.",
     "alreadyCohost": "This person is already a co-host.",
     "inviteInvalid": "This invite is no longer valid. Ask the host for a new one.",
-    "inviteExpired": "This invite has expired. Ask the host for a new one."
+    "inviteExpired": "This invite has expired. Ask the host for a new one.",
+    "hasPayments": "Payments were already recorded. Confirm that you want to keep them.",
+    "notStarted": "The event has not started yet.",
+    "planFrozen": "The date and place are fixed once the event has started. Use \"Correct date or place\".",
+    "reconfirmTooLate": "People would need to confirm again, but the new time has passed. Pick a future time."
   },
   "days": {
     "edit": "Edit days",
@@ -198,7 +207,8 @@
     "selected": "selected",
     "notSelected": "not selected",
     "closedDeadline": "Voting closed: the deadline passed",
-    "closedCancelled": "Voting closed: the event was cancelled"
+    "closedCancelled": "Voting closed: the event was cancelled",
+    "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going."
   },
   "bill": {
     "title": "Bill",
@@ -224,7 +234,8 @@
     "paidFull": "Paid in full",
     "bankFallback": "Transfer to {bank}",
     "ledger": "Collected {paid} of {total} · {n} still owe",
-    "locked": "This event is completed, so payments are locked."
+    "locked": "This event is completed, so payments are locked.",
+    "none": "No bill for this event."
   },
   "nav": {
     "events": "Events",
@@ -253,7 +264,8 @@
     "pay": "You owe {amount}",
     "paid": "Paid",
     "cancelled": "Cancelled",
-    "closes": "Voting closes {when}"
+    "closes": "Voting closes {when}",
+    "confirm": "Confirm"
   },
   "next": {
     "who": {
@@ -267,7 +279,7 @@
     },
     "voted": {
       "title": "Thanks for voting!",
-      "body": "{n} people have voted so far. The organizer will lock the result.",
+      "body": "{n} people have voted so far. If your days win, you're counted as going. The organizer will lock the result.",
       "cta": "Change my votes"
     },
     "rsvp": {
@@ -311,7 +323,9 @@
       "settle": "Mark as settled",
       "pick": "Pick the winner",
       "close": "Close voting",
-      "reopen": "Reopen voting"
+      "reopen": "Reopen voting",
+      "completeFree": "Complete, no bill",
+      "completeAnyway": "Complete anyway"
     },
     "lockDay": "Day and time",
     "lockHint": "Everyone can then reply Going, Maybe or Can't.",
@@ -342,9 +356,39 @@
     "reopenDate": "New deadline",
     "consequences": {
       "end": "Voting ends",
-      "rsvp": "Everyone can answer Going, Maybe or Can't",
+      "rsvp": "Everyone else can answer Going, Maybe or Can't",
       "kept": "Votes are kept if the host reopens voting"
-    }
+    },
+    "lockGoing": "Marked Going from their votes: {names}",
+    "lockWaiting": "{n} person waits for a seat | {n} people wait for a seat",
+    "lockConfirm": "{n} voter is asked to confirm | {n} voters are asked to confirm",
+    "confirm": {
+      "title": "Can you make it?",
+      "body": "The plan is set: {when}. Let us know if you're coming.",
+      "cta": "Reply"
+    },
+    "reconfirmHeld": {
+      "title": "The plan changed",
+      "body": "The plan changed to {when}. Your seat is held until {deadline}.",
+      "cta": "Confirm"
+    },
+    "reconfirmLost": {
+      "title": "Your held seat was released",
+      "body": "You can still join.",
+      "cta": "Reply"
+    },
+    "goingAuto": {
+      "title": "You're in, from your vote 🎉",
+      "body": "See you {when}. Change your answer below if you can't make it."
+    },
+    "completedOpen": {
+      "title": "Completed, a few payments are still open",
+      "body": "Thanks everyone. Payments can still be reported."
+    },
+    "completeFreeTitle": "Has the event finished?",
+    "completeFreeBody": "Nobody will be asked to pay.",
+    "completeAnywayTitle": "Complete with open payments?",
+    "completeAnywayBody": "These people still owe. They can keep paying after the event is completed."
   },
   "edit": {
     "open": "Edit",
@@ -374,7 +418,11 @@
     "shareChange": "Share per seat: {from} → {to}",
     "shareChangeHint": "Everyone's remaining amount is recalculated from what they have already paid.",
     "endsPlaceVote": "Setting a place ends the place vote ({n} suggestion) | Setting a place ends the place vote ({n} suggestions)",
-    "postUpdateHint": "Tell everyone what changed. It shows at the top of the event when you save."
+    "postUpdateHint": "Tell everyone what changed. It shows at the top of the event when you save.",
+    "rederive": "{n} stay going · {m} seats held until they confirm",
+    "reconfirmBy": "Confirm by",
+    "released": "{n} hold already expired and stays released | {n} holds already expired and stay released",
+    "planFrozen": "The event has started, so the date and place are fixed."
   },
   "share": {
     "poll": "Vote for a day: {title}",
@@ -388,7 +436,8 @@
   },
   "notice": {
     "moved": "Date moved to {when}.",
-    "venue": "Venue changed to {venue}."
+    "venue": "Venue changed to {venue}.",
+    "reconfirm": "If you were counted from your vote, please confirm by {deadline} or your seat is released."
   },
   "people": {
     "title": "People",
@@ -408,7 +457,9 @@
     "markUnpaid": "Mark unpaid",
     "setAmount": "Set paid amount…",
     "amount": "Amount paid (₫)",
-    "save": "Save"
+    "save": "Save",
+    "fromVote": "From vote",
+    "heldUntil": "Held until {time}"
   },
   "host": {
     "menu": "More actions",
@@ -424,7 +475,10 @@
     "deleteTitle": "Delete this event?",
     "deleteBody": "Delete for good? This removes all votes and payments and cannot be undone.",
     "deleteButton": "Delete event",
-    "votingChoice": "Voting after reopening"
+    "votingChoice": "Voting after reopening",
+    "reopenDerived": "{n} answer counted from votes is cleared. | {n} answers counted from votes are cleared.",
+    "reopenPayments": "Payments are kept, they are not cleared:",
+    "reopenAck": "I know these payments stay recorded"
   },
   "org": {
     "title": "Organizers",
@@ -499,7 +553,9 @@
     "paid": "{n} of {total} paid",
     "collected": "{got} of {total} collected",
     "share": "{amount} per seat",
-    "settled": "All settled · {n} seats"
+    "settled": "All settled · {n} seats",
+    "completedPaid": "Everyone paid",
+    "completedOwed": "{n} still owe"
   },
   "invite": {
     "title": "You are invited to co-host as {name}",
@@ -510,5 +566,12 @@
     "accepted": "You are now a co-host",
     "invalid": "This invite is no longer valid. Ask the host for a new one.",
     "expired": "It expired. Ask the host for a new one."
+  },
+  "correct": {
+    "open": "Correct date or place",
+    "title": "Correct date or place",
+    "body": "Attendance and payments are not changed.",
+    "notice": "What changed and why",
+    "button": "Save correction"
   }
 }

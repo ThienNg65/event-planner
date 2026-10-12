@@ -12,6 +12,7 @@ const block = computed(() => props.event.startsAt && dateBlock(props.event.start
 const STATUS = {
   vote: { color: 'secondary', icon: 'i-lucide-vote' },
   rsvp: { color: 'secondary', icon: 'i-lucide-hand' },
+  confirm: { color: 'warning', icon: 'i-lucide-calendar-clock' },
   going: { color: 'success', icon: 'i-lucide-circle-check' },
   waitlist: { color: 'warning', icon: 'i-lucide-hourglass' },
   pay: { color: 'secondary', icon: 'i-lucide-wallet' },

@@ -20,7 +20,8 @@ const mine = computed(() => payers.value.find((p) => p.memberId === props.me?.id
 const collected = computed(() => payers.value.reduce((s, p) => s + Math.min(p.paid, p.owes), 0));
 const total = computed(() => payers.value.reduce((s, p) => s + p.owes, 0));
 const stillOwe = computed(() => payers.value.filter((p) => !p.done).length);
-const locked = computed(() => ev.value.stage === 'settled' || !!ev.value.cancelledAt);
+// After Completed, someone who still owes can report a payment; everyone else is done.
+const locked = computed(() => !!ev.value.cancelledAt || (ev.value.stage === 'settled' && (!mine.value || mine.value.done)));
 
 const qrFailed = ref(false);
 const qr = computed(() =>
@@ -45,7 +46,7 @@ async function setPaid(body: { paidAmount: null } | { addPaid: number }) {
   <section id="bill" class="scroll-mt-4 space-y-4">
     <h2 class="text-lg font-semibold text-highlighted">{{ t('bill.title') }}</h2>
 
-    <p v-if="data.share === null" class="text-sm text-muted">{{ t('bill.pending') }}</p>
+    <p v-if="data.share === null" class="text-sm text-muted">{{ t(ev.stage === 'settled' ? 'bill.none' : 'bill.pending') }}</p>
     <div v-else class="space-y-4">
       <div class="grid grid-cols-2 gap-3 text-center">
         <div class="rounded-xl bg-elevated p-3">
@@ -71,7 +72,7 @@ async function setPaid(body: { paidAmount: null } | { addPaid: number }) {
 
         <template v-if="mine.done">
           <p class="flex items-center justify-center gap-1.5 font-semibold text-success"><UIcon name="i-lucide-badge-check" class="size-5" />{{ t('bill.paidFull') }}</p>
-          <UButton v-if="!locked" size="sm" color="neutral" variant="ghost" :loading="busy" @click="setPaid({ paidAmount: null })">{{ t('bill.clear') }}</UButton>
+          <UButton v-if="!locked && ev.stage === 'bill'" size="sm" color="neutral" variant="ghost" :loading="busy" @click="setPaid({ paidAmount: null })">{{ t('bill.clear') }}</UButton>
         </template>
         <template v-else-if="!locked">
           <img v-if="qr && !qrFailed" :src="qr" :alt="t('bill.qrAlt')" class="mx-auto w-64 max-w-full rounded-xl bg-white shadow-sm" @error="qrFailed = true" />
