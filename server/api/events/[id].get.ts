@@ -1,30 +1,32 @@
 import { asc, eq, getTableColumns } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
-  const { responses, members, venues, cohosts } = schema;
-  const { manageKeyHash, coHostKeyHash, ...ev } = await findEvent(routeId(event));
-  const role = await roleOf(event, { id: ev.id, manageKeyHash, coHostKeyHash });
-  const [rs, vs, [host], co] = await Promise.all([
+  const { events, responses, members, venues, cohosts } = schema;
+  const id = routeId(event);
+  // One round trip to the database: every list is keyed by the route id, so none waits for the event row.
+  const [{ manageKeyHash, coHostKeyHash, ...ev }, rs, vs, [host], co] = await Promise.all([
+    findEvent(id),
     useDb()
       .select({ ...getTableColumns(responses), name: members.name })
       .from(responses)
       .innerJoin(members, eq(members.id, responses.memberId))
-      .where(eq(responses.eventId, ev.id))
+      .where(eq(responses.eventId, id))
       .orderBy(asc(members.name)),
     useDb()
       .select({ ...getTableColumns(venues), addedByName: members.name })
       .from(venues)
       .innerJoin(members, eq(members.id, venues.addedBy))
-      .where(eq(venues.eventId, ev.id))
+      .where(eq(venues.eventId, id))
       .orderBy(asc(venues.createdAt)),
-    useDb().select({ name: members.name }).from(members).where(eq(members.id, ev.createdBy)),
+    useDb().select({ name: members.name }).from(members).innerJoin(events, eq(events.createdBy, members.id)).where(eq(events.id, id)),
     useDb()
       .select({ memberId: cohosts.memberId, name: members.name, status: cohosts.status, invitedAt: cohosts.invitedAt })
       .from(cohosts)
       .innerJoin(members, eq(members.id, cohosts.memberId))
-      .where(eq(cohosts.eventId, ev.id))
+      .where(eq(cohosts.eventId, id))
       .orderBy(asc(cohosts.invitedAt)),
   ]);
+  const role = await roleOf(event, { id, manageKeyHash, coHostKeyHash });
   const { confirmed, waitlist, seats } = rollCall(seated(rs, ev), ev.capacity);
   const venueList = vs
     .map((v) => ({ ...v, upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId) }))
