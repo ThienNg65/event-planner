@@ -22,7 +22,8 @@ export const releaseExpired = (eventId: number, deadline: Date | null) => {
         eq(responses.derived, 'reconfirm'),
         isNull(responses.paidAt),
         sql`COALESCE(${deadline}::timestamptz, '-infinity') <= now()`,
-        sql`EXISTS (SELECT 1 FROM events WHERE id = ${eventId} AND reconfirm_by IS NOT DISTINCT FROM ${deadline}::timestamptz)`
+        // Compared at millisecond precision: the deadline read into JS has lost the microseconds Postgres may store.
+        sql`EXISTS (SELECT 1 FROM events WHERE id = ${eventId} AND date_trunc('milliseconds', reconfirm_by) IS NOT DISTINCT FROM ${deadline}::timestamptz)`
       )
     );
 };

@@ -79,11 +79,13 @@ describe('date moved in the RSVP stage', () => {
   });
 
   it('a member who never answered is not auto-marked by an edit', async () => {
-    const { id, key } = await setup();
+    // c votes before the lock, only for +11, so the lock on +10 leaves them unanswered.
+    const { id, key } = await event();
     const c = await member();
-    await vote(id, c, [day(10), day(11)]);
-    await patch(id, key, { startsAt: at(11) });
-    assert.equal((await rowOf(id, c)).status, null);
+    assert.equal((await vote(id, c, [day(11)])).status, 200);
+    assert.equal((await patch(id, key, { stage: 'rsvp', startsAt: at(10) })).status, 200);
+    assert.equal((await patch(id, key, { startsAt: at(11) })).status, 200);
+    assert.deepEqual([(await rowOf(id, c)).status, (await rowOf(id, c)).derived], [null, null]);
   });
 
   it('moving back to a day the held member picked restores them', async () => {
