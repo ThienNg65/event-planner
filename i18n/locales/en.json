@@ -200,6 +200,7 @@
     "suggestPlace": "Suggest a place",
     "dup": "Already on the list. We added your vote.",
     "remove": "Remove",
+    "openLink": "Open link",
     "removeTitle": "Remove “{name}”?",
     "removeBody": "{n} vote for it will be removed too. | {n} votes for it will be removed too.",
     "voteFor": "Vote for {name}",

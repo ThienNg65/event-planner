@@ -200,6 +200,7 @@
     "suggestPlace": "Gợi ý địa điểm",
     "dup": "Đã có trong danh sách. Mình đã thêm phiếu của bạn.",
     "remove": "Gỡ",
+    "openLink": "Mở liên kết",
     "removeTitle": "Gỡ “{name}”?",
     "removeBody": "{n} phiếu cho chỗ này cũng sẽ bị xoá. | {n} phiếu cho chỗ này cũng sẽ bị xoá.",
     "voteFor": "Chọn {name}",

@@ -310,9 +310,11 @@ const share = () => (sharing.value = true);
               <UIcon name="i-lucide-users-round" class="size-5" />{{ t('members.title') }}
               <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
             </h2>
-            <UAvatarGroup :max="6" size="lg">
-              <UAvatar v-for="m in members" :key="m.id" :alt="m.name" :title="m.name" />
-            </UAvatarGroup>
+            <div class="flex flex-wrap gap-1.5">
+              <UTooltip v-for="m in members" :key="m.id" :delay-duration="0" :text="m.name">
+                <UAvatar :alt="m.name" size="lg" tabindex="0" />
+              </UTooltip>
+            </div>
           </section>
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
         </aside>

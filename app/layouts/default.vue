@@ -38,7 +38,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
       <template #footer="{ collapsed }">
         <div class="flex w-full flex-col gap-2">
           <UPopover v-model:open="whoOpen" :content="{ side: 'top', align: 'start' }">
-            <UButton color="neutral" variant="ghost" block class="justify-start gap-2 px-1.5" :aria-label="t('me.label')">
+            <UButton color="neutral" variant="ghost" block class="gap-2 px-1.5" :class="collapsed ? 'justify-center' : 'justify-start'" :aria-label="t('me.label')">
               <UAvatar :alt="me?.name" :icon="me ? undefined : 'i-lucide-user-round'" size="sm" />
               <span v-if="!collapsed" class="min-w-0 text-left">
                 <span class="block truncate font-medium text-highlighted">{{ me?.name ?? t('me.label') }}</span>

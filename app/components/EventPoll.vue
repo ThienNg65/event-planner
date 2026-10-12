@@ -152,7 +152,7 @@ async function remove() {
         </div>
       </div>
       <div class="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-        <UTooltip v-for="d in days" :key="d.day" :text="d.names.join(', ')" :disabled="!d.names.length">
+        <UTooltip v-for="d in days" :key="d.day" :delay-duration="0" :text="d.names.join(', ')" :disabled="!d.names.length">
           <button
             type="button"
             :aria-pressed="myDays.includes(d.day)"
@@ -217,6 +217,17 @@ async function remove() {
           <p v-if="v.note" class="text-sm text-muted">{{ v.note }}</p>
           <p class="text-xs text-dimmed">{{ t('poll.suggestedBy', { name: v.addedByName }) }}</p>
         </div>
+        <UButton
+          v-if="v.link"
+          :to="v.link"
+          target="_blank"
+          rel="noopener noreferrer"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-external-link"
+          :aria-label="t('poll.openLink')"
+        />
         <UButton
           v-if="can(role, 'removeVenue')"
           color="neutral"
