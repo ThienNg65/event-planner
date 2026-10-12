@@ -206,8 +206,8 @@ async function complete() {
     <MemberPicker />
   </UCard>
 
-  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'flex flex-col gap-4 sm:flex-row sm:items-center' }">
-    <div class="flex min-w-0 flex-1 items-start gap-3">
+  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'flex flex-wrap items-center gap-4' }">
+    <div class="flex min-w-64 flex-1 items-start gap-3">
       <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon v-if="ui.icon" :name="ui.icon" class="size-5" /><span v-else aria-hidden="true">😭</span></span>
       <div class="min-w-0">
         <UBadge
@@ -227,7 +227,7 @@ async function complete() {
         </UAvatarGroup>
       </div>
     </div>
-    <div class="flex shrink-0 flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
       <UButton v-if="ui.jump" :variant="next.action ? 'outline' : 'solid'" :color="next.action ? 'neutral' : 'primary'" trailing-icon="i-lucide-arrow-down" @click="jump(ui.jump)">
         {{ t(`next.${copy}.cta`) }}
       </UButton>
