@@ -96,11 +96,17 @@ const prefill = computed(() => {
 });
 watch(prefill, (v) => (updateText.value = v), { immediate: true });
 // Default confirm-by: two days from now, never after the new start.
+// Only when holds first appear (or the field is empty), so a deadline the organizer typed is kept.
 watch(
-  () => [rederive.value?.hold.length, startsAtIso.value],
-  () => {
+  () => [rederive.value?.hold.length ?? 0, startsAtIso.value] as const,
+  ([holds], [before]) => {
+    if (!holds) {
+      reconfirmBy.value = '';
+      return;
+    }
+    if (before && reconfirmBy.value) return;
     const start = startsAtIso.value ? new Date(startsAtIso.value).getTime() : Infinity;
-    reconfirmBy.value = rederive.value?.hold.length ? toTeamInput(new Date(Math.min(Date.now() + RECONFIRM_MS, start)).toISOString()) : '';
+    reconfirmBy.value = toTeamInput(new Date(Math.min(Date.now() + RECONFIRM_MS, start)).toISOString());
   }
 );
 

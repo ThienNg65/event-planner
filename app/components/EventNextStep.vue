@@ -57,7 +57,7 @@ const copy = computed(() => {
   if (step === 'vote' && !ev.value.pollDays.length) return 'voteVenue';
   if (step === 'confirm' && mine.value?.derived === 'reconfirm') return mine.value.held ? 'reconfirmHeld' : 'reconfirmLost';
   if (step === 'going' && mine.value?.derived === 'going') return 'goingAuto';
-  if (step === 'settled' && !allPaid(payers.value, props.data.share)) return 'completedOpen';
+  if (step === 'settled' && props.data.share !== null && !allPaid(payers.value, props.data.share)) return 'completedOpen';
   return step;
 });
 const bodyKey = computed(() => (copy.value === 'voteClosed' && canAdvance.value ? 'bodyHost' : 'body'));
@@ -231,7 +231,7 @@ async function complete() {
         {{ t(next.step === 'voteClosed' ? 'next.action.pick' : 'next.action.lock') }}
       </UButton>
       <UButton v-if="next.action === 'bill'" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
-      <UButton v-if="next.action === 'bill'" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
+      <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
       <UButton v-if="next.action === 'settle'" icon="i-lucide-sparkles" color="secondary" :loading="busy" @click="settle">{{ t('next.action.settle') }}</UButton>
       <UButton v-if="ev.stage === 'bill' && canAdvance && next.action !== 'settle'" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'anyway'">
         {{ t('next.action.completeAnyway') }}

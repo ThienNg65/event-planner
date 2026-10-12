@@ -9,6 +9,8 @@ const blank = () => ({ startsAt: ev.value.startsAt ? toTeamInput(ev.value.starts
 const form = ref(blank());
 const snapshot = ref(blank());
 const notice = ref('');
+// Once the organizer writes their own notice, the prefill stops overwriting it.
+const noticeTouched = ref(false);
 const error = ref('');
 const busy = ref(false);
 const changes = computed(() => changedFields(snapshot.value, form.value));
@@ -19,12 +21,14 @@ watch(open, (o) => {
   form.value = blank();
   snapshot.value = blank();
   notice.value = '';
+  noticeTouched.value = false;
   error.value = '';
 });
 // Same wording as the Edit panel's update, so the correction reads like any other change.
 watch(
   () => [startsAtIso.value, changes.value.venue],
   () => {
+    if (noticeTouched.value) return;
     notice.value = [
       startsAtIso.value && t('notice.moved', { when: fmtDateTime(startsAtIso.value, locale.value) }),
       changes.value.venue && t('notice.venue', { venue: changes.value.venue }),
@@ -69,7 +73,7 @@ async function save() {
           </div>
         </UFormField>
         <UFormField :label="t('correct.notice')" required>
-          <UTextarea v-model="notice" :maxlength="280" :rows="2" class="w-full" />
+          <UTextarea v-model="notice" :maxlength="280" :rows="2" class="w-full" @input="noticeTouched = true" />
         </UFormField>
         <UAlert v-if="error" color="error" variant="subtle" icon="i-lucide-circle-alert" :title="error" />
       </form>

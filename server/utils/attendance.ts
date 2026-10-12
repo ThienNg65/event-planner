@@ -7,10 +7,11 @@ export const planOf = (next: { pollDays: string[]; startsAt: Date | null; venue:
 const clear = { status: null, goingAt: null, derived: null } as const;
 
 /**
- * Releases held seats whose confirm-by deadline has passed. It must run before `reconfirm_by` is rewritten in the same
- * batch: it reads the old deadline, so a new one can never bring an expired hold back.
+ * Releases held seats whose confirm-by deadline has passed. It compares against the deadline the caller read (`deadline`),
+ * not the stored one, so a new deadline written in the same batch can never bring an expired hold back, and clearing it
+ * can never release a hold that was still in time.
  */
-export const releaseExpired = (eventId: number) => {
+export const releaseExpired = (eventId: number, deadline: Date | null) => {
   const { responses } = schema;
   return useDb()
     .update(responses)
@@ -20,7 +21,7 @@ export const releaseExpired = (eventId: number) => {
         eq(responses.eventId, eventId),
         eq(responses.derived, 'reconfirm'),
         isNull(responses.paidAt),
-        sql`COALESCE((SELECT reconfirm_by FROM events WHERE id = ${eventId}), '-infinity') <= now()`
+        sql`COALESCE(${deadline}::timestamptz, '-infinity') <= now()`
       )
     );
 };

@@ -38,6 +38,8 @@ export default defineEventHandler(async (event) => {
     const c = eventFields(b);
     if (!c.notice || !('startsAt' in c || 'venue' in c || 'venueLink' in c)) fail(400, 'invalid');
     if ('startsAt' in c && !c.startsAt) fail(400, 'invalidDate');
+    // In the RSVP stage the plan is frozen only because the start has passed: a corrected start must stay in the past.
+    if (ev.stage === 'rsvp' && c.startsAt && c.startsAt > now) fail(400, 'invalidDate');
     await useDb().update(events).set({ ...c, noticeAt: now }).where(eq(events.id, ev.id));
     return { ok: true };
   }
@@ -120,8 +122,8 @@ export default defineEventHandler(async (event) => {
     const plan = planOf(next, polled);
     const { writes, holds } = await attendanceWrites(ev, plan, lock ? 'lock' : 'edit', next);
     if (!lock) {
-      // releaseExpired reads the old deadline, so it goes before the event UPDATE writes the new one.
-      extras.unshift(releaseExpired(ev.id));
+      // releaseExpired is bound to the deadline read here, so the new one the event UPDATE writes can't affect it.
+      extras.unshift(releaseExpired(ev.id, ev.reconfirmBy));
       reconfirmBy = null;
       if (holds > 0) {
         if (next.startsAt! <= now) fail(409, 'reconfirmTooLate');
@@ -135,6 +137,8 @@ export default defineEventHandler(async (event) => {
   const nextDays = ops
     ? sql`ARRAY(SELECT DISTINCT d FROM unnest(${events.pollDays} || ${sqlArray(addDays, 'date')}) AS d WHERE d <> ALL(${sqlArray(removeDays, 'date')}) ORDER BY d)`
     : f.pollDays && sqlArray(f.pollDays, 'date');
+  // The day-edit batch below has no room for member-row writes, so a day edit can't be combined with a stage move or plan change.
+  if (nextDays && extras.length) fail(400, 'invalid');
   const set = {
     ...f,
     ...(repoll && { startsAt: null }),

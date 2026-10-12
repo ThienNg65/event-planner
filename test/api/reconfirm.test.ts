@@ -123,6 +123,31 @@ describe('deadline rules', () => {
     assert.deepEqual([row.status, row.derived], [null, null]);
   });
 
+  it('an expired hold is released even when the same edit holds someone else under a new deadline', async () => {
+    const { id, key, a, b } = await setup();
+    await patch(id, key, { startsAt: at(11) });
+    await expire(id);
+    // +12 is no poll day: a no longer fits and is held, which writes a fresh deadline in the same batch.
+    assert.equal((await patch(id, key, { startsAt: at(12) })).status, 200);
+    assert.deepEqual([(await rowOf(id, b)).status, (await rowOf(id, b)).derived], [null, null]);
+    assert.equal((await rowOf(id, a)).derived, 'reconfirm');
+    const data = await get(id);
+    assert.deepEqual(data.held, [a]);
+    assert.ok(!data.confirmed.includes(b));
+  });
+
+  it('a hold still in time is restored with its original spot when the date moves back to its day', async () => {
+    const { id, key, b } = await setup();
+    const before = (await rowOf(id, b)).going_at;
+    await patch(id, key, { startsAt: at(11) });
+    assert.equal((await patch(id, key, { startsAt: at(10) })).status, 200);
+    const row = await rowOf(id, b);
+    assert.deepEqual([row.status, row.derived, row.going_at], ['going', 'going', before]);
+    const data = await get(id);
+    assert.ok(data.confirmed.includes(b));
+    assert.equal(data.event.reconfirmBy, null);
+  });
+
   it('a hold still in time survives a second edit that does not match it', async () => {
     const { id, key, b } = await setup();
     const before = (await rowOf(id, b)).going_at;

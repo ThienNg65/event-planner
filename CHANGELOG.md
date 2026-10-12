@@ -13,7 +13,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ### Changed
 - The date and place can no longer be edited once the event has started or the bill is entered; use the correction instead.
 - Reopening an event to voting clears answers that were counted from votes (explicit answers and votes stay), and the host must confirm when payments are already recorded.
-- Events already past voting are unchanged; events still in voting will mark matching voters as Going the next time they are locked.
+- Events already past voting keep everyone's answers; events still in voting will mark matching voters as Going the next time they are locked. On events locked before this version, people who voted but haven't replied now see "Can you make it?" instead of "Are you coming?".
 
 ## [0.3.0] - 2026-10-11
 
