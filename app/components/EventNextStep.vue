@@ -313,7 +313,7 @@ async function complete() {
     <template #body>
       <div class="space-y-3">
         <URadioGroup v-model="reopen.mode" :items="[{ value: 'none', label: t('next.reopenNone') }, { value: 'date', label: t('next.reopenDate') }]" />
-        <UInput v-if="reopen.mode === 'date'" v-model="reopen.when" type="datetime-local" class="w-full" :aria-label="t('next.reopenDate')" />
+        <DateTimeInput v-if="reopen.mode === 'date'" v-model="reopen.when" class="w-full" :aria-label="t('next.reopenDate')" />
       </div>
     </template>
     <template #footer>

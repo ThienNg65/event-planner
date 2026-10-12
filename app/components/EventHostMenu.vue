@@ -112,7 +112,7 @@ function focusCancel(e: Event) {
         <UFormField v-if="view === 'reopen' && reopenTo === 'poll'" :label="t('host.votingChoice')">
           <div class="space-y-2">
             <URadioGroup v-model="voting.mode" :items="[{ value: 'none', label: t('next.reopenNone') }, { value: 'date', label: t('next.reopenDate') }]" />
-            <UInput v-if="voting.mode === 'date'" v-model="voting.when" type="datetime-local" class="w-full" :aria-label="t('next.reopenDate')" />
+            <DateTimeInput v-if="voting.mode === 'date'" v-model="voting.when" class="w-full" :aria-label="t('next.reopenDate')" />
           </div>
         </UFormField>
         <div v-if="view === 'reopen' && reopenTo === 'poll'" class="space-y-2 text-sm">

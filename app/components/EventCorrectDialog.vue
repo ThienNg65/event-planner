@@ -64,7 +64,7 @@ async function save() {
     <template #body>
       <form id="correct-event" class="space-y-4" @submit.prevent="save">
         <UFormField :label="t('manage.schedule')">
-          <UInput v-model="form.startsAt" type="datetime-local" class="w-full" />
+          <DateTimeInput v-model="form.startsAt" class="w-full" />
         </UFormField>
         <UFormField :label="t('create.where')">
           <div class="space-y-2">

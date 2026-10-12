@@ -220,7 +220,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
         </section>
 
         <UFormField v-if="!editingDays" :label="t('manage.schedule')" :error="errors.startsAt">
-          <UInput v-model="form.startsAt" type="datetime-local" :disabled="frozen" class="w-full" />
+          <DateTimeInput v-model="form.startsAt" :disabled="frozen" class="w-full" />
         </UFormField>
         <div v-if="frozen" class="space-y-2">
           <p class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-lock" class="size-4" />{{ t('edit.planFrozen') }}</p>
@@ -236,13 +236,13 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
             :description="names(rederive.hold)"
           />
           <UFormField v-if="rederive.hold.length" :label="t('edit.reconfirmBy')">
-            <UInput v-model="reconfirmBy" type="datetime-local" class="w-full" />
+            <DateTimeInput v-model="reconfirmBy" class="w-full" />
           </UFormField>
           <UAlert v-if="rederive.release.length" color="neutral" variant="subtle" icon="i-lucide-clock" :title="t('edit.released', { n: rederive.release.length }, rederive.release.length)" :description="names(rederive.release)" />
         </template>
 
         <UFormField v-if="ev.stage === 'poll' && voteOpen" :label="t('edit.deadline')" :hint="t('edit.deadlineHint')" :error="errors.voteDeadline">
-          <UInput v-model="form.voteDeadline" type="datetime-local" class="w-full" />
+          <DateTimeInput v-model="form.voteDeadline" class="w-full" />
         </UFormField>
         <p v-else-if="ev.stage === 'poll'" class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-lock" class="size-4" />{{ t('edit.votingClosed') }}</p>
 

@@ -146,7 +146,7 @@ async function create() {
                   ]"
                   class="mb-3"
                 />
-                <UInput v-if="form.dateMode === 'fixed'" v-model="form.startsAt" type="datetime-local" class="w-full" />
+                <DateTimeInput v-if="form.dateMode === 'fixed'" v-model="form.startsAt" class="w-full" />
                 <PollDaysInput v-else v-model="form.pollDays" />
               </UFormField>
 
