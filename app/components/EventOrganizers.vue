@@ -7,8 +7,8 @@ const roleLabel = computed(() => t(props.role === 'host' ? 'org.host' : props.ro
 </script>
 
 <template>
-  <section class="space-y-2 rounded-xl p-5 shadow-xs ring ring-default" :aria-label="t('org.title')">
-    <h2 class="text-sm font-semibold text-highlighted">{{ t('org.title') }}</h2>
+  <section class="space-y-2 rounded-2xl p-5 shadow-xs ring ring-default" :aria-label="t('org.title')">
+    <h2 class="flex items-center gap-2 font-semibold text-highlighted"><UIcon name="i-lucide-shield-check" class="size-5" />{{ t('org.title') }}</h2>
     <p class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-user-round" class="size-4" />{{ t('event.hostedBy', { name: data.hostName }) }}</p>
     <p v-if="active.length" class="flex items-start gap-1.5 text-sm text-muted">
       <UIcon name="i-lucide-users-round" class="mt-0.5 size-4 shrink-0" />{{ t('org.cohostNames', { names: active.map((c) => c.name).join(', ') }) }}

@@ -12,15 +12,25 @@ const { busy, call, error } = useEventApi(
 
 const ev = computed(() => props.data.event);
 const mine = computed(() => props.data.responses.find((r) => r.memberId === props.me?.id));
+// Day picks not yet confirmed by a reload: shown at once while the saves run in the background.
+const draftDays = ref<string[] | null>(null);
 // Ticks on days the organizer has since removed from the poll are dropped on the next save.
-const myDays = computed(() => (mine.value?.days ?? []).filter((d) => ev.value.pollDays.includes(d)));
-const voters = (pick: (r: EventDetail['responses'][number]) => boolean) =>
-  props.data.responses.filter(pick).map((r) => r.name);
+const myDays = computed(() => draftDays.value ?? (mine.value?.days ?? []).filter((d) => ev.value.pollDays.includes(d)));
+type Row = EventDetail['responses'][number];
+// The responses with my unsaved day picks in place, so names, counts and bars move with the tap.
+const rows = computed<Row[]>(() => {
+  const days = draftDays.value;
+  const me = props.me;
+  if (!days || !me) return props.data.responses;
+  if (!mine.value) return [...props.data.responses, { memberId: me.id, name: me.name, days, venueIds: [] } as unknown as Row];
+  return props.data.responses.map((r) => (r.memberId === me.id ? { ...r, days } : r));
+});
+const voters = (pick: (r: Row) => boolean) => rows.value.filter(pick).map((r) => r.name);
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 
 // Closed (deadline passed or cancelled): participants see the results, organizers can still fix votes.
 const readOnly = computed(() => !props.role && (!!ev.value.cancelledAt || !votingOpen(ev.value)));
-const voted = computed(() => props.data.responses.filter((r) => r.days.length || r.venueIds.length).length);
+const voted = computed(() => rows.value.filter((r) => r.days.length || r.venueIds.length).length);
 
 const days = computed(() => {
   const rows = ev.value.pollDays.map((d) => ({ day: d, ...dayParts(d, locale.value), label: fmtDay(d, locale.value), names: voters((r) => r.days.includes(d)) }));
@@ -34,14 +44,32 @@ function act(fn: () => unknown) {
   if (!readOnly.value) return fn();
 }
 
-// Only the tapped card shows a spinner; other taps wait so two quick taps cannot overwrite each other.
-const pendingDay = ref<string | null>(null);
+// One save at a time, so quick taps never land out of order; a tap during a save is sent right after it.
+let savingDays = false;
 async function tapDay(day: string) {
-  if (busy.value) return;
-  pendingDay.value = day;
-  await save({ days: toggle(myDays.value, day) });
-  pendingDay.value = null;
+  draftDays.value = toggle(myDays.value, day);
+  if (savingDays) return;
+  savingDays = true;
+  const first = !mine.value?.days.length && !mine.value?.venueIds.length;
+  let sent: string[] | null = null;
+  let ok = true;
+  while (ok && draftDays.value && draftDays.value !== sent) {
+    sent = draftDays.value;
+    ok = await call('/response', 'PUT', { memberId: props.me!.id, days: sent });
+  }
+  savingDays = false;
+  if (ok && first && sent?.length) confetti();
+  // On failure the server's answer replaces the draft: the deadline may have passed or the list changed under us.
+  if (!ok) draftDays.value = null;
+  emit('changed');
 }
+// A reload that lands after the saves holds the truth.
+watch(
+  () => props.data,
+  () => {
+    if (!savingDays) draftDays.value = null;
+  }
+);
 
 async function save(body: object) {
   const first = !mine.value?.days.length && !mine.value?.venueIds.length;
@@ -104,9 +132,16 @@ async function remove() {
     </div>
 
     <div v-if="ev.pollDays.length" class="space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <h2 class="text-lg font-semibold text-highlighted">{{ t('poll.days') }}</h2>
-        <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-start justify-between gap-2 sm:flex-nowrap">
+        <div class="flex min-w-0 gap-3 sm:flex-1">
+          <UIcon name="i-lucide-calendar-days" class="mt-1 size-5 shrink-0 text-highlighted" />
+          <div class="min-w-0">
+            <h2 class="text-lg font-semibold text-highlighted">{{ t('poll.days') }}</h2>
+            <p class="text-sm text-muted">{{ t('poll.daysHint') }}</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <UBadge v-if="me" color="primary" variant="soft" class="rounded-full px-2.5 tabular-nums" :label="t('poll.picked', { n: myDays.length, total: ev.pollDays.length })" />
           <UButton v-if="can(role, 'edit')" size="sm" variant="outline" color="neutral" icon="i-lucide-calendar-cog" @click="daysOpen = true">{{ t('days.edit') }}</UButton>
           <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
             <UButton size="sm" variant="soft" icon="i-lucide-plus" :loading="busy">{{ t('poll.suggestDay') }}</UButton>
@@ -116,33 +151,31 @@ async function remove() {
           </UPopover>
         </div>
       </div>
-      <p class="text-sm text-muted">{{ t('poll.daysHint') }}</p>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
         <UTooltip v-for="d in days" :key="d.day" :text="d.names.join(', ')" :disabled="!d.names.length">
           <button
             type="button"
             :aria-pressed="myDays.includes(d.day)"
-            :aria-disabled="busy || readOnly"
+            :aria-disabled="readOnly"
             :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : 'poll.notSelected') })"
-            class="relative flex w-full flex-col items-center gap-0.5 rounded-xl p-3 text-center ring transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
-            :class="[myDays.includes(d.day) ? 'bg-primary/10 ring-2 ring-primary' : 'ring-default hover:bg-elevated', d.top && !myDays.includes(d.day) && 'ring-secondary']"
+            class="relative flex w-full flex-col items-start gap-1 rounded-xl p-4 text-left shadow-xs ring transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
+            :class="myDays.includes(d.day) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-default ring-default hover:ring-accented'"
             @click="act(() => tapDay(d.day))"
           >
-            <template v-if="!readOnly">
-              <UIcon v-if="pendingDay === d.day" name="i-lucide-loader-circle" class="absolute top-2 left-2 size-4 animate-spin text-primary" />
-              <UIcon v-else :name="myDays.includes(d.day) ? 'i-lucide-circle-check' : 'i-lucide-circle'" class="absolute top-2 left-2 size-4" :class="myDays.includes(d.day) ? 'text-primary' : 'text-dimmed'" />
-            </template>
-            <UBadge v-if="d.top" color="secondary" variant="subtle" size="sm" :label="t('poll.top')" class="absolute top-1.5 right-1.5" />
-            <span class="mt-3 text-xs font-medium text-muted uppercase">{{ d.weekday }}</span>
-            <span class="font-semibold text-highlighted">{{ d.date }}</span>
-            <span class="mt-1 flex h-5 items-center gap-1">
-              <UAvatarGroup v-if="d.names.length" :max="3" size="3xs">
-                <UAvatar v-for="n in d.names" :key="n" :alt="n" />
-              </UAvatarGroup>
-              <span class="text-xs text-muted tabular-nums">{{ t('poll.people', d.names.length) }}</span>
+            <span class="absolute top-3 right-3 flex items-center gap-1.5">
+              <UIcon v-if="d.top" name="i-lucide-crown" class="size-5 text-secondary" :title="t('poll.top')" />
+              <span v-if="myDays.includes(d.day)" class="grid size-5 place-items-center rounded-full bg-primary text-inverted"><UIcon name="i-lucide-check" class="size-3.5" /></span>
             </span>
-            <span class="mt-1 h-1 w-full overflow-hidden rounded-full bg-elevated" aria-hidden="true">
-              <span class="block h-full rounded-full bg-primary" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
+            <span class="text-xs text-muted">{{ d.weekday }}</span>
+            <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
+            <span class="mt-1 flex items-center gap-1.5 text-xs text-muted tabular-nums">
+              <UIcon name="i-lucide-users-round" class="size-3.5" :class="d.names.length ? 'text-primary' : 'text-dimmed'" />{{ t('poll.chosen', { n: d.names.length }) }}
+            </span>
+            <span class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
+              <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated">
+                <span class="block h-full rounded-full bg-primary" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
+              </span>
+              <span class="w-8 text-right text-xs text-muted tabular-nums">{{ voted ? Math.round((d.names.length / voted) * 100) : 0 }}%</span>
             </span>
           </button>
         </UTooltip>
@@ -150,20 +183,30 @@ async function remove() {
     </div>
 
     <div v-if="!ev.venue" class="space-y-3">
-      <div class="flex items-center justify-between gap-2">
-        <h2 class="text-lg font-semibold text-highlighted">{{ ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}</h2>
+      <div class="flex flex-wrap items-start justify-between gap-2 sm:flex-nowrap">
+        <div class="flex min-w-0 gap-3 sm:flex-1">
+          <UIcon name="i-lucide-map-pin" class="mt-1 size-5 shrink-0 text-highlighted" />
+          <div class="min-w-0">
+            <h2 class="text-lg font-semibold text-highlighted">{{ ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}</h2>
+            <p class="text-sm text-muted">{{ t('poll.venuesHint') }}</p>
+          </div>
+        </div>
         <UButton v-if="!readOnly && me && data.venues.length" size="sm" variant="soft" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
       </div>
 
-      <div v-if="!data.venues.length" class="flex flex-col items-start gap-2 rounded-xl p-4 ring ring-default">
-        <p class="text-sm text-muted">{{ t('poll.noVenues') }}</p>
-        <UButton v-if="!readOnly && me" size="sm" variant="soft" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
+      <div v-if="!data.venues.length" class="flex flex-col gap-3 rounded-xl bg-elevated/40 p-4 ring ring-default sm:flex-row sm:items-center">
+        <span class="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><UIcon name="i-lucide-map-pin" class="size-5" /></span>
+        <div class="min-w-0 flex-1">
+          <p class="font-medium text-highlighted">{{ t('poll.noVenuesTitle') }}</p>
+          <p class="text-sm text-muted">{{ t('poll.noVenues') }}</p>
+        </div>
+        <UButton v-if="!readOnly && me" size="sm" color="primary" variant="outline" icon="i-lucide-plus" class="self-start sm:self-center" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
       </div>
       <div
         v-for="v in data.venues"
         :key="v.id"
-        class="flex items-center gap-3 rounded-xl p-3 ring transition"
-        :class="me && v.upvotes.includes(me.id) ? 'bg-primary/10 ring-2 ring-primary' : 'ring-default'"
+        class="flex items-center gap-3 rounded-xl p-4 shadow-xs ring transition"
+        :class="me && v.upvotes.includes(me.id) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-default ring-default'"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate font-medium">

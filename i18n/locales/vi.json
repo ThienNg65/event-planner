@@ -64,7 +64,8 @@
     "noticeTitle": "Thông báo từ người tổ chức",
     "new": "Mới",
     "more": "Xem thêm",
-    "less": "Thu gọn"
+    "less": "Thu gọn",
+    "changeCover": "Thay đổi ảnh bìa"
   },
   "create": {
     "title": "Tạo sự kiện",
@@ -208,7 +209,11 @@
     "notSelected": "chưa chọn",
     "closedDeadline": "Đã đóng bình chọn: quá hạn",
     "closedCancelled": "Đã đóng bình chọn: sự kiện bị huỷ",
-    "daysHint": "Chọn mọi ngày bạn đi được. Nếu một trong các ngày đó được chốt, bạn được tính là đi."
+    "daysHint": "Chọn mọi ngày bạn đi được. Nếu một trong các ngày đó được chốt, bạn được tính là đi.",
+    "picked": "{n}/{total} ngày đã chọn",
+    "chosen": "{n} người chọn",
+    "venuesHint": "Bình chọn chỗ bạn thích, hoặc gợi ý thêm một chỗ.",
+    "noVenuesTitle": "Chưa có địa điểm nào"
   },
   "bill": {
     "title": "Chia tiền",
@@ -240,7 +245,8 @@
   "nav": {
     "events": "Sự kiện",
     "calendar": "Lịch",
-    "new": "Tạo sự kiện"
+    "new": "Tạo sự kiện",
+    "back": "Quay lại"
   },
   "calendar": {
     "title": "Lịch",
@@ -555,7 +561,11 @@
     "share": "{amount} mỗi chỗ",
     "settled": "Đã hoàn tất · {n} chỗ",
     "completedPaid": "Mọi người đã thanh toán",
-    "completedOwed": "Còn {n} người chưa trả"
+    "completedOwed": "Còn {n} người chưa trả",
+    "votedN": "{n} đã bình chọn",
+    "pendingN": "{n} chưa phản hồi",
+    "deadline": "Thời hạn bình chọn",
+    "invite": "Mời thêm người"
   },
   "invite": {
     "title": "Bạn được mời làm đồng tổ chức với tên {name}",
@@ -573,5 +583,9 @@
     "body": "Danh sách tham dự và thanh toán không thay đổi.",
     "notice": "Đã đổi gì và vì sao",
     "button": "Lưu chỉnh sửa"
+  },
+  "members": {
+    "title": "Thành viên",
+    "count": "{n} người"
   }
 }

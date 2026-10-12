@@ -64,7 +64,8 @@
     "noticeTitle": "Update from the host",
     "new": "New",
     "more": "More",
-    "less": "Less"
+    "less": "Less",
+    "changeCover": "Change cover"
   },
   "create": {
     "title": "New event",
@@ -208,7 +209,11 @@
     "notSelected": "not selected",
     "closedDeadline": "Voting closed: the deadline passed",
     "closedCancelled": "Voting closed: the event was cancelled",
-    "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going."
+    "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going.",
+    "picked": "{n}/{total} days picked",
+    "chosen": "{n} picked",
+    "venuesHint": "Vote for the places you like, or suggest another.",
+    "noVenuesTitle": "No places yet"
   },
   "bill": {
     "title": "Bill",
@@ -240,7 +245,8 @@
   "nav": {
     "events": "Events",
     "calendar": "Calendar",
-    "new": "New event"
+    "new": "New event",
+    "back": "Back"
   },
   "calendar": {
     "title": "Calendar",
@@ -555,7 +561,11 @@
     "share": "{amount} per seat",
     "settled": "All settled · {n} seats",
     "completedPaid": "Everyone paid",
-    "completedOwed": "{n} still owe"
+    "completedOwed": "{n} still owe",
+    "votedN": "{n} voted",
+    "pendingN": "{n} not answered",
+    "deadline": "Voting deadline",
+    "invite": "Invite people"
   },
   "invite": {
     "title": "You are invited to co-host as {name}",
@@ -573,5 +583,9 @@
     "body": "Attendance and payments are not changed.",
     "notice": "What changed and why",
     "button": "Save correction"
+  },
+  "members": {
+    "title": "Members",
+    "count": "{n} people"
   }
 }

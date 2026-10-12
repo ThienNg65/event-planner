@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{ data: EventDetail; role: Role }>();
+const emit = defineEmits<{ invite: [] }>();
 const { t, locale } = useI18n();
 const { members } = useMe();
 
@@ -38,25 +39,40 @@ const relative = computed(() => {
 </script>
 
 <template>
-  <section class="space-y-3 rounded-xl p-5 shadow-xs ring ring-default" :aria-label="t('overview.title')">
-    <h2 class="text-sm font-semibold text-highlighted">{{ t('overview.title') }}</h2>
+  <section class="space-y-4 rounded-2xl p-5 shadow-xs ring ring-default" :aria-label="t('overview.title')">
+    <h2 class="flex items-center gap-2 font-semibold text-highlighted"><UIcon name="i-lucide-chart-pie" class="size-5" />{{ t('overview.title') }}</h2>
 
     <template v-if="ev.cancelledAt">
       <p class="text-sm text-muted">{{ t('event.cancelledTitle') }}</p>
     </template>
 
     <template v-else-if="ev.stage === 'poll'">
-      <UBadge :color="open ? 'success' : 'warning'" variant="subtle" :icon="open ? 'i-lucide-vote' : 'i-lucide-lock'" :label="t(open ? 'overview.open' : 'overview.closed')" />
-      <div class="space-y-1.5">
+      <UBadge v-if="!open" color="warning" variant="subtle" icon="i-lucide-lock" :label="t('overview.closed')" />
+      <div class="space-y-2">
         <p class="text-sm tabular-nums">{{ t('overview.voted', { n: voted, total: roster }) }}</p>
-        <UProgress :model-value="voted" :max="Math.max(roster, 1)" size="sm" :aria-label="t('overview.voted', { n: voted, total: roster })" />
+        <div class="flex items-center gap-3">
+          <UProgress :model-value="voted" :max="Math.max(roster, 1)" size="sm" class="flex-1" :aria-label="t('overview.voted', { n: voted, total: roster })" />
+          <span class="text-xs text-muted tabular-nums">{{ Math.round((voted / Math.max(roster, 1)) * 100) }}%</span>
+        </div>
       </div>
-      <p v-if="ev.voteDeadline" class="text-sm text-muted">
-        {{ t('overview.closes', { when: fmtDateTime(ev.voteDeadline, locale) }) }}<template v-if="relative"> · {{ relative }}</template>
-      </p>
+      <div class="grid grid-cols-2 gap-2 text-sm text-muted tabular-nums">
+        <span class="flex items-center gap-2"><UIcon name="i-lucide-user-check" class="size-4 text-primary" />{{ t('overview.votedN', { n: voted }) }}</span>
+        <span class="flex items-center gap-2"><UIcon name="i-lucide-user-round" class="size-4" />{{ t('overview.pendingN', { n: Math.max(roster - voted, 0) }) }}</span>
+      </div>
       <p v-if="pending.length" class="text-sm text-muted">
         {{ t('overview.notVoted', { names: pending.slice(0, 5).map((m) => m.name).join(', ') }) }}<template v-if="pending.length > 5">{{ ' ' + t('overview.more', { n: pending.length - 5 }) }}</template>
       </p>
+      <div v-if="ev.voteDeadline" class="flex items-start gap-3 border-t border-default pt-4">
+        <UIcon name="i-lucide-calendar" class="mt-0.5 size-5 shrink-0 text-muted" />
+        <div class="min-w-0 space-y-0.5">
+          <p class="text-sm text-muted">{{ t('overview.deadline') }}</p>
+          <p class="flex flex-wrap items-center gap-2 text-sm font-medium text-highlighted">
+            {{ fmtDateTime(ev.voteDeadline, locale) }}
+            <UBadge v-if="relative" :color="open ? 'error' : 'neutral'" variant="subtle" size="sm" :label="relative" class="rounded-full" />
+          </p>
+        </div>
+      </div>
+      <UButton v-if="open" block color="primary" variant="soft" icon="i-lucide-user-plus" class="ring ring-primary/25" @click="emit('invite')">{{ t('overview.invite') }}</UButton>
     </template>
 
     <template v-else-if="ev.stage === 'rsvp'">

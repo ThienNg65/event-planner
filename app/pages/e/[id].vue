@@ -3,7 +3,7 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const id = Number(useRoute().params.id);
 const key = useManageKey(id);
-const { me } = useMe();
+const { me, members } = useMe();
 
 const { data, refresh, error } = await useFetch(`/api/events/${id}`, {
   key: `event-${id}`,
@@ -194,13 +194,15 @@ async function share() {
   <UDashboardPanel :id="`event-${id}`">
     <template #header>
       <UDashboardNavbar :title="ev.title">
-        <template #leading><UDashboardSidebarCollapse /></template>
+        <template #leading>
+          <UButton to="/" icon="i-lucide-chevron-left" color="neutral" variant="outline" :aria-label="t('nav.back')" />
+        </template>
         <template #right>
-          <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
-            <span class="hidden sm:inline">{{ t('edit.open') }}</span>
-          </UButton>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
             <span class="hidden sm:inline">{{ t('event.share') }}</span>
+          </UButton>
+          <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
+            <span class="hidden sm:inline">{{ t('edit.open') }}</span>
           </UButton>
           <EventHostMenu v-if="can(role, 'cancel') && key" :data="data!" :manage-key="key" @changed="refresh" />
         </template>
@@ -208,19 +210,28 @@ async function share() {
     </template>
 
     <template #body>
-      <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div class="min-w-0 space-y-6 lg:col-start-1">
           <header class="space-y-3">
-            <div class="relative overflow-hidden rounded-2xl" :class="['image' in cover ? 'h-40' : 'h-24', 'gradient' in cover && cover.gradient]">
+            <div class="relative overflow-hidden rounded-2xl shadow-sm" :class="['image' in cover ? 'h-44 sm:h-52' : 'h-28', 'gradient' in cover && cover.gradient]">
               <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
+              <UButton
+                v-if="can(role, 'edit')"
+                icon="i-lucide-camera"
+                size="sm"
+                class="absolute right-3 bottom-3 bg-black/50 text-white backdrop-blur hover:bg-black/70"
+                @click="editing = true"
+              >
+                {{ t('event.changeCover') }}
+              </UButton>
             </div>
             <div class="space-y-1.5">
               <div class="flex min-h-7 items-center justify-between gap-2">
-                <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" />
-                <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${ev.stage}`)" />
+                <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" class="rounded-full px-2.5" />
+                <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${ev.stage}`)" class="rounded-full px-2.5" />
                 <UButton v-if="canPost && !ev.notice" icon="i-lucide-megaphone" color="neutral" variant="ghost" size="xs" @click="openNotice">{{ t('post.open') }}</UButton>
               </div>
-              <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-3xl">{{ ev.title }}</h1>
+              <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-4xl">{{ ev.title }}</h1>
               <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                 <span class="flex items-center gap-1.5"><UIcon name="i-lucide-calendar" />{{ when }}</span>
                 <span v-if="ev.venue" class="flex items-center gap-1.5">
@@ -288,7 +299,16 @@ async function share() {
         </div>
 
         <aside class="grid content-start gap-4 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
-          <EventOverview :data="data" :role="role" />
+          <EventOverview :data="data" :role="role" @invite="share" />
+          <section v-if="members.length" class="space-y-3 rounded-2xl p-5 shadow-xs ring ring-default" :aria-label="t('members.title')">
+            <h2 class="flex items-center gap-2 font-semibold text-highlighted">
+              <UIcon name="i-lucide-users-round" class="size-5" />{{ t('members.title') }}
+              <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
+            </h2>
+            <UAvatarGroup :max="6" size="lg">
+              <UAvatar v-for="m in members" :key="m.id" :alt="m.name" :title="m.name" />
+            </UAvatarGroup>
+          </section>
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
         </aside>
 
