@@ -7,7 +7,7 @@ const roleLabel = computed(() => t(props.role === 'host' ? 'org.host' : props.ro
 </script>
 
 <template>
-  <section class="space-y-2 rounded-xl p-4 shadow-xs ring ring-default" :aria-label="t('org.title')">
+  <section class="space-y-2 rounded-xl p-5 shadow-xs ring ring-default" :aria-label="t('org.title')">
     <h2 class="text-sm font-semibold text-highlighted">{{ t('org.title') }}</h2>
     <p class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-user-round" class="size-4" />{{ t('event.hostedBy', { name: data.hostName }) }}</p>
     <p v-if="active.length" class="flex items-start gap-1.5 text-sm text-muted">

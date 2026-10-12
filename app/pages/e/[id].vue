@@ -287,7 +287,7 @@ async function share() {
           <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>
 
-        <aside class="grid content-start gap-4 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-4">
+        <aside class="grid content-start gap-4 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
           <EventOverview :data="data" :role="role" />
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
         </aside>

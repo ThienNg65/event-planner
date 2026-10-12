@@ -38,7 +38,7 @@ const relative = computed(() => {
 </script>
 
 <template>
-  <section class="space-y-3 rounded-xl p-4 shadow-xs ring ring-default" :aria-label="t('overview.title')">
+  <section class="space-y-3 rounded-xl p-5 shadow-xs ring ring-default" :aria-label="t('overview.title')">
     <h2 class="text-sm font-semibold text-highlighted">{{ t('overview.title') }}</h2>
 
     <template v-if="ev.cancelledAt">
