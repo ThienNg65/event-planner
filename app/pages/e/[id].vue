@@ -15,19 +15,32 @@ if (error.value) {
   const notFound = error.value.statusCode === 404;
   throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'err.notFound' : 'err.generic'), fatal: true });
 }
-watch(key, async (k) => {
-  if (!k) return;
-  await refresh();
-  // A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos.
+// A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos.
+function dropRejectedKey() {
   if (!error.value && data.value?.role === null) {
     forgetManageKey(id);
     key.value = null;
   }
+}
+// On in-app navigation the key is already set (the watch below never fires), so check the first response too.
+if (key.value) dropRejectedKey();
+watch(key, async (k) => {
+  if (!k) return;
+  await refresh();
+  dropRejectedKey();
 });
 
 const ev = computed(() => data.value!.event);
 // The key is browser-only, so the server renders every visitor as a participant until it is known.
-const role = computed<Role>(() => (key.value ? data.value!.role : null));
+// Browser-only too: with a member picked, organizer rights show only for the creator or an active co-host, so switching to
+// another member shows the participant view (UI only: the key in this browser is still accepted by the server).
+const role = computed<Role>(() => {
+  if (!key.value) return null;
+  const d = data.value!;
+  const id = me.value?.id;
+  if (id === undefined || id === d.event.createdBy || d.cohosts.some((c) => c.memberId === id && c.status === 'active')) return d.role;
+  return null;
+});
 const when = computed(() => {
   if (ev.value.startsAt) return fmtDateTime(ev.value.startsAt, locale.value);
   return ev.value.pollDays.length ? t('card.voting', { n: ev.value.pollDays.length }) : t('event.dateTbd');

@@ -40,7 +40,8 @@ export const hasManageKey = (id: number) => id in readKeys();
 export function useManageKey(id: number) {
   const route = useRoute();
   const router = useRouter();
-  const key = ref<string | null>(null);
+  // On in-app navigation there is no SSR HTML to match, so read the stored key now: the first fetch then already carries it.
+  const key = ref<string | null>(import.meta.client && !useNuxtApp().isHydrating ? (readKeys()[id] ?? null) : null);
   // After hydration: a refresh() triggered during hydration would just reuse the SSR payload.
   onNuxtReady(async () => {
     const fromUrl = route.query.key;
