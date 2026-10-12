@@ -216,7 +216,7 @@ const share = () => (sharing.value = true);
 
     <template #body>
       <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div class="min-w-0 space-y-6 lg:col-start-1">
+        <div class="rise min-w-0 space-y-6 lg:col-start-1">
           <header class="space-y-3">
             <div class="relative overflow-hidden rounded-xl" :class="['image' in cover ? 'h-44 sm:h-52' : 'h-28', 'gradient' in cover && cover.gradient]">
               <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
@@ -303,7 +303,7 @@ const share = () => (sharing.value = true);
           <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>
 
-        <aside class="grid content-start gap-4 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
+        <aside class="rise grid content-start gap-4 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
           <EventOverview :data="data" :role="role" @invite="share" />
           <section v-if="members.length" class="space-y-3 rounded-2xl p-5 shadow-xs ring ring-default" :aria-label="t('members.title')">
             <h2 class="flex items-center gap-2 font-semibold text-highlighted">
@@ -319,14 +319,16 @@ const share = () => (sharing.value = true);
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
         </aside>
 
-        <div class="min-w-0 space-y-6 lg:col-start-1">
+        <div class="rise min-w-0 space-y-6 lg:col-start-1">
           <p v-for="line in done" :key="line" class="flex items-center gap-2 text-sm text-muted">
             <UIcon name="i-lucide-circle-check" class="size-4 text-success" />{{ line }}
           </p>
 
-          <EventPoll v-if="ev.stage === 'poll'" :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
-          <EventRsvp v-else-if="ev.stage === 'rsvp'" :data="data" :me="me" :manage-key="key" @changed="refresh" />
-          <EventBill v-else :data="data" :me="me" :manage-key="key" @changed="refresh" />
+          <Transition name="stage" mode="out-in">
+            <EventPoll v-if="ev.stage === 'poll'" :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
+            <EventRsvp v-else-if="ev.stage === 'rsvp'" :data="data" :me="me" :manage-key="key" @changed="refresh" />
+            <EventBill v-else :data="data" :me="me" :manage-key="key" @changed="refresh" />
+          </Transition>
 
           <EventPeople :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>
