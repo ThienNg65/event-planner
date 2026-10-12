@@ -65,6 +65,9 @@ export default defineEventHandler(async (event) => {
   if (ops && 'pollDays' in b) fail(400, 'invalid');
   if (ops && ev.stage !== 'poll') fail(409, 'stageClosed');
   if (addDays.some((d) => d < teamToday())) fail(400, 'invalidDays');
+  // The day-edit batch has no room for member-row writes, so a day edit can't be combined with a stage move or a plan change.
+  // Checked before any query, so a refused request costs nothing.
+  if ((ops || 'pollDays' in b) && (('stage' in b && b.stage !== ev.stage) || (ev.stage === 'rsvp' && ('startsAt' in b || 'venue' in b)))) fail(400, 'invalid');
 
   const { reconfirmBy: wantedBy, ...f } = eventFields(b);
   if (!Object.keys(f).length && !ops) fail(400, 'invalid');
@@ -97,6 +100,8 @@ export default defineEventHandler(async (event) => {
 
   // Writes to other members' rows that must land in the same batch as the event UPDATE (batch is the only transaction on Neon HTTP).
   const extras: BatchItem<'pg'>[] = [];
+  // Statements that must run before the event UPDATE (they read the event row as it was).
+  const before: BatchItem<'pg'>[] = [];
   let reconfirmBy: Date | null | undefined;
   const toPoll = f.stage === 'poll' && ev.stage !== 'poll';
   const lock = f.stage === 'rsvp' && ev.stage === 'poll';
@@ -122,8 +127,8 @@ export default defineEventHandler(async (event) => {
     const plan = planOf(next, polled);
     const { writes, holds } = await attendanceWrites(ev, plan, lock ? 'lock' : 'edit', next);
     if (!lock) {
-      // releaseExpired is bound to the deadline read here, so the new one the event UPDATE writes can't affect it.
-      extras.unshift(releaseExpired(ev.id, ev.reconfirmBy));
+      // Runs before the event UPDATE, against the deadline read here; it does nothing if another edit changed it meanwhile.
+      before.push(releaseExpired(ev.id, ev.reconfirmBy));
       reconfirmBy = null;
       if (holds > 0) {
         if (next.startsAt! <= now) fail(409, 'reconfirmTooLate');
@@ -137,8 +142,6 @@ export default defineEventHandler(async (event) => {
   const nextDays = ops
     ? sql`ARRAY(SELECT DISTINCT d FROM unnest(${events.pollDays} || ${sqlArray(addDays, 'date')}) AS d WHERE d <> ALL(${sqlArray(removeDays, 'date')}) ORDER BY d)`
     : f.pollDays && sqlArray(f.pollDays, 'date');
-  // The day-edit batch below has no room for member-row writes, so a day edit can't be combined with a stage move or plan change.
-  if (nextDays && extras.length) fail(400, 'invalid');
   const set = {
     ...f,
     ...(repoll && { startsAt: null }),
@@ -154,17 +157,17 @@ export default defineEventHandler(async (event) => {
     .where(
       ops
         ? and(eq(events.id, ev.id), eq(events.stage, 'poll'), sql`cardinality(${nextDays}) BETWEEN 1 AND ${MAX_DAYS}`)
-        : extras.length
+        : extras.length || before.length
           ? and(eq(events.id, ev.id), eq(events.stage, ev.stage))
           : eq(events.id, ev.id)
     );
   if (!nextDays) {
-    if (!extras.length) {
+    if (!extras.length && !before.length) {
       await update;
       return { ok: true };
     }
-    const batch = [update.returning({ id: events.id }), ...extras] as [BatchItem<'pg'>, ...BatchItem<'pg'>[]];
-    const [changed] = (await useDb().batch(batch)) as { id: number }[][];
+    const batch = [...before, update.returning({ id: events.id }), ...extras] as [BatchItem<'pg'>, ...BatchItem<'pg'>[]];
+    const changed = ((await useDb().batch(batch)) as { id: number }[][])[before.length];
     if (!changed!.length) fail(409, 'stageClosed');
     return { ok: true };
   }

@@ -7,9 +7,9 @@ export const planOf = (next: { pollDays: string[]; startsAt: Date | null; venue:
 const clear = { status: null, goingAt: null, derived: null } as const;
 
 /**
- * Releases held seats whose confirm-by deadline has passed. It compares against the deadline the caller read (`deadline`),
- * not the stored one, so a new deadline written in the same batch can never bring an expired hold back, and clearing it
- * can never release a hold that was still in time.
+ * Releases held seats whose confirm-by deadline (`deadline`, as the caller read it) has passed. It runs before the batch's
+ * event UPDATE and only while the stored deadline is still `deadline`: a new deadline can never revive an expired hold, and
+ * a plan edit that committed meanwhile (with fresh holds under its own deadline) cancels the release.
  */
 export const releaseExpired = (eventId: number, deadline: Date | null) => {
   const { responses } = schema;
@@ -21,7 +21,8 @@ export const releaseExpired = (eventId: number, deadline: Date | null) => {
         eq(responses.eventId, eventId),
         eq(responses.derived, 'reconfirm'),
         isNull(responses.paidAt),
-        sql`COALESCE(${deadline}::timestamptz, '-infinity') <= now()`
+        sql`COALESCE(${deadline}::timestamptz, '-infinity') <= now()`,
+        sql`EXISTS (SELECT 1 FROM events WHERE id = ${eventId} AND reconfirm_by IS NOT DISTINCT FROM ${deadline}::timestamptz)`
       )
     );
 };
