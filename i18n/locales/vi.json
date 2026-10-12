@@ -462,7 +462,14 @@
     "poll": "Bình chọn ngày cho: {title}",
     "rsvp": "Bạn có đi không? {title}",
     "bill": "Đến lúc chia tiền: {title}",
-    "settled": "{title}"
+    "settled": "{title}",
+    "dialogTitle": "Chia sẻ sự kiện",
+    "dialogHint": "Quét mã hoặc gửi đường dẫn.",
+    "qrAlt": "Mã QR của đường dẫn sự kiện",
+    "link": "Đường dẫn sự kiện",
+    "copy": "Sao chép",
+    "copyFailed": "Không sao chép được đường dẫn",
+    "native": "Chia sẻ…"
   },
   "sum": {
     "poll": "Đã đóng bình chọn · {n} người chọn",

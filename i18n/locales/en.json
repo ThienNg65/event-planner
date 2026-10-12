@@ -462,7 +462,14 @@
     "poll": "Vote for a day: {title}",
     "rsvp": "Are you coming? {title}",
     "bill": "Time to settle up: {title}",
-    "settled": "{title}"
+    "settled": "{title}",
+    "dialogTitle": "Share this event",
+    "dialogHint": "Scan the code or send the link.",
+    "qrAlt": "QR code for the event link",
+    "link": "Event link",
+    "copy": "Copy",
+    "copyFailed": "Couldn't copy the link",
+    "native": "Share…"
   },
   "sum": {
     "poll": "Voting closed · {n} voted",

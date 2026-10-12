@@ -9,7 +9,6 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/favicon.png' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       ],
-      meta: [{ property: 'og:image', content: '/icon-512.png' }],
     },
   },
   i18n: {

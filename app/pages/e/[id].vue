@@ -169,26 +169,29 @@ const noticeActions = computed(() =>
   canPost.value ? [{ label: t('post.edit'), color: 'neutral' as const, variant: 'outline' as const, onClick: openNotice }] : []
 );
 
+// Link previews (chat apps, social): crawlers read these from the server-rendered HTML and need absolute URLs.
+const origin = useRequestURL().origin;
+const blurb = computed(() => [when.value, ev.value.venue].filter(Boolean).join(' · '));
+// A cover that is a picture becomes the card image; otherwise the app icon stands in.
+const cardImage = computed(() => ('image' in cover.value ? cover.value.image : `${origin}/icon-512.png`));
 useSeoMeta({
   title: () => ev.value.title,
+  description: () => blurb.value,
+  ogType: 'website',
+  ogSiteName: () => t('app.name'),
+  ogUrl: `${origin}/e/${id}`,
   ogTitle: () => ev.value.title,
-  description: () => [when.value, ev.value.venue].filter(Boolean).join(' · '),
-  ogDescription: () => [when.value, ev.value.venue].filter(Boolean).join(' · '),
+  ogDescription: () => blurb.value,
+  ogImage: () => cardImage.value,
+  ogImageAlt: () => ev.value.title,
+  twitterCard: () => ('image' in cover.value ? 'summary_large_image' : 'summary'),
+  twitterTitle: () => ev.value.title,
+  twitterDescription: () => blurb.value,
+  twitterImage: () => cardImage.value,
 });
 
-async function share() {
-  const url = `${location.origin}/e/${id}`;
-  try {
-    const text = t(`share.${ev.value.stage}`, { title: ev.value.title });
-    if (navigator.share) await navigator.share({ title: ev.value.title, text, url });
-    else {
-      await navigator.clipboard.writeText(url);
-      toast.add({ title: t('event.linkCopied') });
-    }
-  } catch {
-    /* share sheet dismissed */
-  }
-}
+const sharing = ref(false);
+const share = () => (sharing.value = true);
 </script>
 
 <template>
@@ -341,6 +344,7 @@ async function share() {
           </template>
         </UModal>
       </div>
+      <EventShareDialog v-model:open="sharing" :id="id" :title="ev.title" :stage="ev.stage" />
     </template>
   </UDashboardPanel>
 </template>
