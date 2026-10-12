@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.5.0] - 2026-10-12
 
 ### Added
 - New logo: two overlapping circles, where the overlap is the day everyone agrees. It replaces the champagne bottle in the sidebar, the browser tab, the home screen icon and the empty home page.
