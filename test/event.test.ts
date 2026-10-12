@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
-import { COVERS, coverOf } from '../shared/utils/cover.ts';
+import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
+import { cardSvg } from '../shared/utils/card.ts';
 import { DEFAULT_THEME, THEMES, themeOf } from '../shared/utils/theme.ts';
 import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
 
@@ -364,4 +365,20 @@ test('themeOf: known keys pass through, anything else falls back to the default 
   assert.equal(themeOf('nope'), DEFAULT_THEME);
   assert.equal(themeOf(null), DEFAULT_THEME);
   assert.equal(DEFAULT_THEME, 'aurora');
+});
+
+test('coverStops and coverTag: presets map to hex stops, unset is a stable pick, the tag follows the cover', () => {
+  assert.deepEqual(coverStops('ocean', 1), COVER_STOPS.ocean);
+  assert.deepEqual(coverStops('https://x.test/a.jpg', 7), coverStops(null, 7));
+  assert.notEqual(coverTag('ocean'), coverTag('sunset'));
+  assert.equal(coverTag(null), coverTag(null));
+});
+
+test('cardSvg: carries the QR path and the background it was given', () => {
+  const grad = cardSvg('https://x.test/e/1', { stops: COVER_STOPS.aurora });
+  assert.match(grad, /<path d="M\d+ \d+h/);
+  assert.match(grad, /linearGradient/);
+  const pic = cardSvg('https://x.test/e/1', { image: 'data:image/png;base64,AAAA' });
+  assert.match(pic, /<image href="data:image\/png;base64,AAAA"/);
+  assert.doesNotMatch(pic, /linearGradient/);
 });

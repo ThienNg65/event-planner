@@ -5,7 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
-- Sharing an event link now shows a proper preview card in chat and social apps: the event name, when and where, and the cover picture (or the app icon when the cover is a colour).
+- Sharing an event link now shows a proper preview card in chat and social apps: the event name, when and where, and a picture made for that event: its cover (photo or colour) with the QR code of its link in the middle.
 - The Share button opens a dialog with a QR code for the event link, a copy button, and the phone's share sheet when available.
 - Each event has a theme: Aurora (the app's own look and the default), Liquid Glass, Bento, Neo-Brutal, Acid Night, Scrapbook or Game Candy. Pick it when creating the event (the page previews it live) or later in Edit. The event page and its card on the home list use the event's theme. A Preview button opens a sample event page in any theme, so you can compare them before choosing. A palette button at the bottom of the sidebar opens Appearance, where you pick your main style: the theme of the home list, calendar and new events. It is remembered in this browser; an event keeps its own theme.
 

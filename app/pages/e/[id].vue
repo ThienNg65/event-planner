@@ -172,8 +172,8 @@ const noticeActions = computed(() =>
 // Link previews (chat apps, social): crawlers read these from the server-rendered HTML and need absolute URLs.
 const origin = useRequestURL().origin;
 const blurb = computed(() => [when.value, ev.value.venue].filter(Boolean).join(' · '));
-// A cover that is a picture becomes the card image; otherwise the app icon stands in.
-const cardImage = computed(() => ('image' in cover.value ? cover.value.image : `${origin}/icon-512.png`));
+// The card image is made on the server: the event's cover with the QR code of its link on top.
+const cardImage = computed(() => `${origin}/api/events/${id}/card?v=${coverTag(ev.value.cover)}`);
 useSeoMeta({
   title: () => ev.value.title,
   description: () => blurb.value,
@@ -183,8 +183,11 @@ useSeoMeta({
   ogTitle: () => ev.value.title,
   ogDescription: () => blurb.value,
   ogImage: () => cardImage.value,
+  ogImageType: 'image/png',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
   ogImageAlt: () => ev.value.title,
-  twitterCard: () => ('image' in cover.value ? 'summary_large_image' : 'summary'),
+  twitterCard: 'summary_large_image',
   twitterTitle: () => ev.value.title,
   twitterDescription: () => blurb.value,
   twitterImage: () => cardImage.value,
