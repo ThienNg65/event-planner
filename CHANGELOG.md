@@ -12,6 +12,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Pages feel smoother: cards and sections float in one after another when a page opens, and the event page slides to the next step when it moves from voting to RSVP to the bill.
 - While voting is open, you can tap "Can't join" right away instead of picking days. Your votes are withdrawn, you won't be marked Going when the date is locked, and you stop showing as "not answered"; voting again or "I can come after all" takes it back.
 
+### Changed
+- Dates and deadlines are now picked with a calendar and a 24-hour time field instead of the browser's built-in picker. This covers the event start, the voting deadline, the confirm-by deadline and the reopen date.
+
 ## [0.4.0] - 2026-10-12
 
 ### Added
