@@ -16,9 +16,8 @@ const roleLabel = computed(() => t(props.role === 'host' ? 'org.host' : props.ro
     <p v-if="data.hasCoHost" class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-link" class="size-4" />{{ t('org.legacyActive') }}</p>
     <p v-else-if="!active.length" class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-users-round" class="size-4" />{{ t('org.noCohosts') }}</p>
     <p class="text-sm">{{ t('org.yourRole') }} <span class="font-medium">{{ roleLabel }}</span></p>
-    <!-- Reserved height: the role is only known in the browser, so the button must not push the page when it appears. -->
-    <div class="h-8">
-      <UButton v-if="role" size="sm" color="neutral" variant="outline" icon="i-lucide-settings-2" @click="emit('manage')">{{ t('org.manage') }}</UButton>
+    <div v-if="role">
+      <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-settings-2" @click="emit('manage')">{{ t('org.manage') }}</UButton>
     </div>
   </section>
 </template>

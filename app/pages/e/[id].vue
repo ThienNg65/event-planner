@@ -198,9 +198,7 @@ const share = () => (sharing.value = true);
   <UDashboardPanel :id="`event-${id}`">
     <template #header>
       <UDashboardNavbar :title="ev.title">
-        <template #leading>
-          <UButton to="/" icon="i-lucide-chevron-left" color="neutral" variant="outline" :aria-label="t('nav.back')" />
-        </template>
+        <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
             <span class="hidden sm:inline">{{ t('event.share') }}</span>
