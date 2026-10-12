@@ -7,7 +7,8 @@ const { members } = useMe();
 const ev = computed(() => props.data.event);
 const rs = computed(() => props.data.responses);
 const voted = computed(() => rs.value.filter((r) => r.days.length || r.venueIds.length).length);
-const roster = computed(() => Math.max(members.value.length, voted.value));
+const declined = computed(() => rs.value.filter((r) => r.status === 'no' && !r.days.length && !r.venueIds.length).length);
+const roster = computed(() => Math.max(members.value.length, voted.value + declined.value));
 // Names of who is missing are for organizers; everyone else sees the count.
 const pending = computed(() => (can(props.role, 'edit') ? pendingVoters(members.value, rs.value) : []));
 const open = computed(() => votingOpen(ev.value));
@@ -57,7 +58,8 @@ const relative = computed(() => {
       </div>
       <div class="grid grid-cols-2 gap-2 text-sm text-muted tabular-nums">
         <span class="flex items-center gap-2"><UIcon name="i-lucide-user-check" class="size-4 text-primary" />{{ t('overview.votedN', { n: voted }) }}</span>
-        <span class="flex items-center gap-2"><UIcon name="i-lucide-user-round" class="size-4" />{{ t('overview.pendingN', { n: Math.max(roster - voted, 0) }) }}</span>
+        <span class="flex items-center gap-2"><UIcon name="i-lucide-user-round" class="size-4" />{{ t('overview.pendingN', { n: Math.max(roster - voted - declined, 0) }) }}</span>
+        <span v-if="declined" class="flex items-center gap-2"><span class="w-4 text-center" aria-hidden="true">😭</span>{{ t('overview.declinedN', { n: declined }) }}</span>
       </div>
       <p v-if="pending.length" class="text-sm text-muted">
         {{ t('overview.notVoted', { names: pending.slice(0, 5).map((m) => m.name).join(', ') }) }}<template v-if="pending.length > 5">{{ ' ' + t('overview.more', { n: pending.length - 5 }) }}</template>

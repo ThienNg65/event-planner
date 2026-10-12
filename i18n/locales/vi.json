@@ -317,6 +317,12 @@
       "body": "Đã có {n} người bình chọn. Nếu ngày bạn chọn trúng, bạn được tính là đi. Người tổ chức sẽ chốt kết quả.",
       "cta": "Sửa lựa chọn"
     },
+    "declined": {
+      "title": "Tiếc quá, lần này bạn không đi được",
+      "body": "Bạn sẽ không được tính là đi. Nếu đổi ý, cứ chọn lại ngày bất cứ lúc nào trước khi đóng bình chọn.",
+      "cta": "Đổi ý, mình đi được",
+      "cannot": "Không tham gia được"
+    },
     "rsvp": {
       "title": "Bạn có đi không?",
       "body": "{when}",
@@ -602,6 +608,7 @@
     "completedOwed": "Còn {n} người chưa trả",
     "votedN": "{n} đã bình chọn",
     "pendingN": "{n} chưa phản hồi",
+    "declinedN": "{n} không đi được",
     "deadline": "Thời hạn bình chọn",
     "invite": "Mời thêm người"
   },

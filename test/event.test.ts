@@ -93,6 +93,8 @@ test('nextStep: one step per stage and answer, organizer moves only when due', (
     nextStep({ stage, mine, manager: false, allPaid: false, started: false, ...extra });
   assert.equal(s('poll', m({})).step, 'vote');
   assert.equal(s('poll', m({ voted: true })).step, 'voted');
+  assert.equal(s('poll', m({ status: 'no' })).step, 'declined');
+  assert.equal(s('poll', m({ status: 'no' }), { votingClosed: true }).step, 'voteClosed');
   assert.equal(s('rsvp', m({})).step, 'rsvp');
   assert.equal(s('rsvp', m({}), { started: true }).step, 'done');
   assert.equal(s('rsvp', m({ status: 'going' })).step, 'going');
@@ -232,6 +234,7 @@ test('pendingVoters: members with no day and no place picked, in roster order', 
     { memberId: 3, days: [], venueIds: [7] },
   ];
   assert.deepEqual(pendingVoters(roster, rs), [{ id: 2 }, { id: 4 }]);
+  assert.deepEqual(pendingVoters(roster, [...rs, { memberId: 4, days: [], venueIds: [], status: 'no' }]), [{ id: 2 }]);
   assert.deepEqual(pendingVoters(roster, []), roster);
   assert.deepEqual(pendingVoters([], rs), []);
 });

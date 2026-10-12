@@ -317,6 +317,12 @@
       "body": "{n} people have voted so far. If your days win, you're counted as going. The organizer will lock the result.",
       "cta": "Change my votes"
     },
+    "declined": {
+      "title": "Sad to miss you this time",
+      "body": "You won't be counted as going. Changed your mind? Pick days again any time before voting closes.",
+      "cta": "I can come after all",
+      "cannot": "Can't join"
+    },
     "rsvp": {
       "title": "Are you coming?",
       "body": "{when}",
@@ -602,6 +608,7 @@
     "completedOwed": "{n} still owe",
     "votedN": "{n} voted",
     "pendingN": "{n} not answered",
+    "declinedN": "{n} can't join",
     "deadline": "Voting deadline",
     "invite": "Invite people"
   },

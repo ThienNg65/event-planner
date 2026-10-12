@@ -38,6 +38,7 @@ const next = computed(() =>
 const STEP_UI = {
   vote: { icon: 'i-lucide-vote', tone: 'bg-secondary/15 text-secondary', jump: 'poll' },
   voted: { icon: 'i-lucide-circle-check', tone: 'bg-success/15 text-success', jump: 'poll' },
+  declined: { icon: null, tone: 'bg-elevated text-2xl', jump: null },
   voteClosed: { icon: 'i-lucide-lock', tone: 'bg-warning/15 text-warning', jump: null },
   rsvp: { icon: 'i-lucide-hand', tone: 'bg-secondary/15 text-secondary', jump: 'rsvp' },
   confirm: { icon: 'i-lucide-calendar-clock', tone: 'bg-warning/15 text-warning', jump: 'rsvp' },
@@ -78,6 +79,12 @@ const closes = computed(() =>
 
 function jump(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// "Can't join" while polling: the server also withdraws the member's votes. null takes it back.
+async function decline(status: 'no' | null) {
+  await call('/response', 'PUT', { memberId: props.me!.id, status });
+  emit('changed');
 }
 
 async function patch(body: object) {
@@ -201,7 +208,7 @@ async function complete() {
 
   <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'flex flex-col gap-4 sm:flex-row sm:items-center' }">
     <div class="flex min-w-0 flex-1 items-start gap-3">
-      <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon :name="ui.icon" class="size-5" /></span>
+      <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon v-if="ui.icon" :name="ui.icon" class="size-5" /><span v-else aria-hidden="true">😭</span></span>
       <div class="min-w-0">
         <UBadge
           v-if="ev.stage === 'poll' && !ev.cancelledAt"
@@ -224,6 +231,10 @@ async function complete() {
       <UButton v-if="ui.jump" :variant="next.action ? 'outline' : 'solid'" :color="next.action ? 'neutral' : 'primary'" trailing-icon="i-lucide-arrow-down" @click="jump(ui.jump)">
         {{ t(`next.${copy}.cta`) }}
       </UButton>
+      <UButton v-if="me && (next.step === 'vote' || next.step === 'voted')" color="neutral" variant="ghost" icon="i-lucide-circle-x" :loading="busy" @click="decline('no')">
+        {{ t('next.declined.cannot') }}
+      </UButton>
+      <UButton v-if="next.step === 'declined'" color="primary" icon="i-lucide-undo-2" :loading="busy" @click="decline(null)">{{ t('next.declined.cta') }}</UButton>
       <UButton v-if="next.action === 'lock'" color="neutral" variant="outline" :icon="votingClosed ? 'i-lucide-lock-open' : 'i-lucide-lock'" @click="votingClosed ? (reopenOpen = true) : (closeOpen = true)">
         {{ t(votingClosed ? 'next.action.reopen' : 'next.action.close') }}
       </UButton>

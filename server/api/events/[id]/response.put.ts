@@ -30,7 +30,10 @@ export default defineEventHandler(async (event) => {
     picks.venueIds = sql`ARRAY(SELECT DISTINCT v FROM unnest(${sqlArray(wanted.venueIds, 'int')}) AS v WHERE v IN ${currentVenueIds(ev.id)} ORDER BY v)`;
   }
   if ('status' in b) {
-    if (!open('rsvp')) fail(409, 'stageClosed');
+    // While polling, a member may say up front they can't come (or take it back), on the same terms as a vote.
+    const pollDecline = ev.stage === 'poll' && (b.status === 'no' || b.status === null);
+    if (pollDecline) requireVoting(ev, role);
+    else if (!open('rsvp')) fail(409, 'stageClosed');
     if (b.status !== null && !STATUSES.includes(b.status as never)) fail(400, 'invalid');
     const guests = b.guests ?? 0;
     if (!intIn(guests, 0, 10)) fail(400, 'invalidGuests');
@@ -38,6 +41,8 @@ export default defineEventHandler(async (event) => {
     set.guests = guests;
     // An answer given by the member is explicit: it is no longer counted from their votes or held.
     set.derived = null;
+    // Declining a poll withdraws the votes too, so they no longer count toward a day or place.
+    if (pollDecline && b.status === 'no') Object.assign(set, { days: [], venueIds: [] });
   }
   if ('paidAmount' in b || 'addPaid' in b || b.paid === true) {
     // After Completed, participants may still report a payment (addPaid); setting or clearing amounts stays with the organizers.

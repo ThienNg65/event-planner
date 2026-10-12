@@ -44,6 +44,9 @@ function act(fn: () => unknown) {
   if (!readOnly.value) return fn();
 }
 
+// Voting after "can't join" means the member can come after all.
+const undecline = () => (mine.value?.status === 'no' ? { status: null } : {});
+
 // One save at a time, so quick taps never land out of order; a tap during a save is sent right after it.
 let savingDays = false;
 async function tapDay(day: string) {
@@ -55,7 +58,7 @@ async function tapDay(day: string) {
   let ok = true;
   while (ok && draftDays.value && draftDays.value !== sent) {
     sent = draftDays.value;
-    ok = await call('/response', 'PUT', { memberId: props.me!.id, days: sent });
+    ok = await call('/response', 'PUT', { memberId: props.me!.id, days: sent, ...undecline() });
   }
   savingDays = false;
   if (ok && first && sent?.length) confetti();
@@ -73,7 +76,7 @@ watch(
 
 async function save(body: object) {
   const first = !mine.value?.days.length && !mine.value?.venueIds.length;
-  const ok = await call('/response', 'PUT', { memberId: props.me!.id, ...body });
+  const ok = await call('/response', 'PUT', { memberId: props.me!.id, ...body, ...undecline() });
   if (ok && first) confetti();
   // Also on failure: the deadline may have passed or the list changed under us.
   emit('changed');

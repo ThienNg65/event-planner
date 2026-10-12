@@ -10,6 +10,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 - The Share button opens a dialog with a QR code for the event link, a copy button, and the phone's share sheet when available.
 - Each event has a theme: Aurora (the app's own look and the default), Liquid Glass, Bento, Neo-Brutal, Acid Night, Scrapbook or Game Candy. Pick it when creating the event (the page previews it live) or later in Edit. The event page and its card on the home list use the event's theme. A Preview button opens a sample event page in any theme, so you can compare them before choosing. A palette button at the bottom of the sidebar opens Appearance, where you pick your main style: the theme of the home list, calendar and new events. It is remembered in this browser; an event keeps its own theme.
 - Pages feel smoother: cards and sections float in one after another when a page opens, and the event page slides to the next step when it moves from voting to RSVP to the bill.
+- While voting is open, you can tap "Can't join" right away instead of picking days. Your votes are withdrawn, you won't be marked Going when the date is locked, and you stop showing as "not answered"; voting again or "I can come after all" takes it back.
 
 ## [0.4.0] - 2026-10-12
 

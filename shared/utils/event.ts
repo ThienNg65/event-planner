@@ -183,6 +183,7 @@ export function mineOf(row: MyRow | undefined, confirmed: boolean, waitlisted: b
 export type Step =
   | 'vote'
   | 'voted'
+  | 'declined'
   | 'voteClosed'
   | 'rsvp'
   | 'confirm'
@@ -213,7 +214,11 @@ export function nextStep(o: {
   const { stage, mine, manager, allPaid, started } = o;
   if (o.cancelled) return { step: 'cancelled' as Step, action: null };
   let step: Step = 'done';
-  if (stage === 'poll') step = o.votingClosed ? 'voteClosed' : mine?.voted ? 'voted' : 'vote';
+  if (stage === 'poll') {
+    if (o.votingClosed) step = 'voteClosed';
+    else if (mine?.status === 'no') step = 'declined';
+    else step = mine?.voted ? 'voted' : 'vote';
+  }
   else if (stage === 'rsvp') {
     // A held seat (still in time or expired) asks to be confirmed; its stored status is not the member's answer.
     if (mine?.derived === 'reconfirm') step = started ? 'done' : 'confirm';
@@ -283,9 +288,9 @@ export function capacityImpact<T extends QueueEntry>(responses: T[], from: numbe
   };
 }
 
-/** Roster members who have not voted yet (no day and no place picked), in roster order. */
-export const pendingVoters = <M extends { id: number }>(roster: M[], responses: { memberId: number; days: unknown[]; venueIds: unknown[] }[]) => {
-  const voted = new Set(responses.filter((r) => r.days.length || r.venueIds.length).map((r) => r.memberId));
+/** Roster members who have not answered yet (no day, no place picked, not declined), in roster order. */
+export const pendingVoters = <M extends { id: number }>(roster: M[], responses: { memberId: number; days: unknown[]; venueIds: unknown[]; status?: string | null }[]) => {
+  const voted = new Set(responses.filter((r) => r.days.length || r.venueIds.length || r.status === 'no').map((r) => r.memberId));
   return roster.filter((m) => !voted.has(m.id));
 };
 
