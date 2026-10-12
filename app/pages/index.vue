@@ -116,7 +116,7 @@ const tabs = computed(() =>
       </div>
 
       <div v-if="!events.length" class="grid place-items-center gap-3 rounded-xl border border-dashed border-default py-16 text-center">
-        <img src="/apple-touch-icon.png" alt="" class="size-20" />
+        <img src="/logo.svg" alt="" class="size-20" />
         <p class="font-semibold text-highlighted">{{ t('home.emptyTitle') }}</p>
         <p class="max-w-sm text-sm text-muted">{{ t('home.empty') }}</p>
         <UButton to="/new" icon="i-lucide-plus" size="lg">{{ t('home.new') }}</UButton>
