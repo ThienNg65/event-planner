@@ -158,8 +158,9 @@ async function remove() {
             :aria-pressed="myDays.includes(d.day)"
             :aria-disabled="readOnly"
             :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : 'poll.notSelected') })"
-            class="relative flex w-full flex-col items-start gap-1 rounded-xl p-4 text-left shadow-xs ring transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
-            :class="myDays.includes(d.day) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-default ring-default hover:ring-accented'"
+            class="themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
+            :data-on="myDays.includes(d.day)"
+            :data-top="d.top"
             @click="act(() => tapDay(d.day))"
           >
             <span class="absolute top-3 right-3 flex items-center gap-1.5">
@@ -194,8 +195,8 @@ async function remove() {
         <UButton v-if="!readOnly && me && data.venues.length" size="sm" variant="soft" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
       </div>
 
-      <div v-if="!data.venues.length" class="flex flex-col gap-3 rounded-xl bg-elevated/40 p-4 ring ring-default sm:flex-row sm:items-center">
-        <span class="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><UIcon name="i-lucide-map-pin" class="size-5" /></span>
+      <div v-if="!data.venues.length" class="flex flex-col gap-3 themed-tile p-4 sm:flex-row sm:items-center">
+        <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><UIcon name="i-lucide-map-pin" class="size-5" /></span>
         <div class="min-w-0 flex-1">
           <p class="font-medium text-highlighted">{{ t('poll.noVenuesTitle') }}</p>
           <p class="text-sm text-muted">{{ t('poll.noVenues') }}</p>
@@ -205,8 +206,8 @@ async function remove() {
       <div
         v-for="v in data.venues"
         :key="v.id"
-        class="flex items-center gap-3 rounded-xl p-4 shadow-xs ring transition"
-        :class="me && v.upvotes.includes(me.id) ? 'bg-primary/5 ring-2 ring-primary' : 'bg-default ring-default'"
+        class="themed-tile flex items-center gap-3 p-4 transition"
+        :data-on="!!me && v.upvotes.includes(me.id)"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate font-medium">

@@ -256,6 +256,12 @@
     "tentative": "Dự kiến (đang bình chọn)",
     "empty": "Tháng này không có sự kiện."
   },
+  "settings": {
+    "title": "Giao diện",
+    "description": "Chọn giao diện của ứng dụng cho bạn.",
+    "mainStyle": "Phong cách chính",
+    "mainStyleHint": "Dùng cho danh sách sự kiện, lịch và sự kiện mới. Mỗi sự kiện vẫn có thể có giao diện riêng."
+  },
   "theme": {
     "label": "Giao diện",
     "hint": "Cách sự kiện này hiển thị với mọi người",

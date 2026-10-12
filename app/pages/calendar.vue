@@ -70,7 +70,7 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
       </div>
 
       <!-- Month grid (sm and up) -->
-      <div class="hidden overflow-hidden rounded-xl ring ring-default sm:block">
+      <div class="themed-surface hidden overflow-hidden sm:block">
         <div class="grid grid-cols-7 border-b border-default bg-elevated/50 text-center text-xs font-medium text-muted">
           <div v-for="w in weekdays" :key="w" class="py-2">{{ w }}</div>
         </div>
@@ -82,7 +82,7 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
             :class="d.startsWith(monthKey) ? 'bg-default' : 'bg-elevated/40 text-dimmed'"
           >
             <span
-              class="inline-grid size-6 place-items-center rounded-full text-xs tabular-nums"
+              class="inline-grid size-6 place-items-center rounded-md text-xs tabular-nums"
               :class="d === today ? 'bg-primary font-semibold text-inverted' : ''"
             >{{ Number(d.slice(8)) }}</span>
             <NuxtLink
@@ -110,8 +110,8 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
                 v-for="e in byDay.get(d)"
                 :key="e.id"
                 :to="`/e/${e.id}`"
-                class="flex items-center gap-3 rounded-lg p-3 ring ring-default"
-                :class="{ 'border border-dashed border-warning ring-0': e.tentative }"
+                class="themed-tile flex items-center gap-3 p-3"
+                :class="{ 'border-dashed !border-warning': e.tentative }"
               >
                 <span class="w-12 shrink-0 text-sm text-muted tabular-nums">{{ e.time ?? '—' }}</span>
                 <span class="min-w-0 flex-1 truncate font-medium text-highlighted">{{ e.title }}</span>

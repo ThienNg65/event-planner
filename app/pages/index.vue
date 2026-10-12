@@ -92,7 +92,7 @@ const tabs = computed(() =>
               v-for="td in todos"
               :key="td.key"
               :to="`/e/${td.event.id}`"
-              class="flex items-center gap-3 rounded-xl bg-default p-3 ring ring-default transition hover:ring-primary focus-visible:outline-2 focus-visible:outline-primary"
+              class="themed-tile flex items-center gap-3 p-3 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
             >
               <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-secondary/15 text-secondary"><UIcon :name="TODO_ICON[td.kind]" class="size-5" /></span>
               <span class="min-w-0 flex-1">

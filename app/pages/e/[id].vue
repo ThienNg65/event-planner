@@ -214,7 +214,7 @@ async function share() {
       <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div class="min-w-0 space-y-6 lg:col-start-1">
           <header class="space-y-3">
-            <div class="relative overflow-hidden rounded-2xl shadow-sm" :class="['image' in cover ? 'h-44 sm:h-52' : 'h-28', 'gradient' in cover && cover.gradient]">
+            <div class="relative overflow-hidden rounded-xl" :class="['image' in cover ? 'h-44 sm:h-52' : 'h-28', 'gradient' in cover && cover.gradient]">
               <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
               <UButton
                 v-if="can(role, 'edit')"

@@ -190,7 +190,7 @@ async function complete() {
 <template>
   <UCard v-if="!me && !ev.cancelledAt" id="who" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
     <div class="flex items-start gap-3">
-      <span class="grid size-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"><UIcon name="i-lucide-hand-heart" class="size-5" /></span>
+      <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary"><UIcon name="i-lucide-hand-heart" class="size-5" /></span>
       <div>
         <p class="font-semibold text-highlighted">{{ t('next.who.title') }}</p>
         <p class="text-sm text-muted">{{ t('next.who.body') }}</p>
@@ -201,7 +201,7 @@ async function complete() {
 
   <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'flex flex-col gap-4 sm:flex-row sm:items-center' }">
     <div class="flex min-w-0 flex-1 items-start gap-3">
-      <span class="grid size-10 shrink-0 place-items-center rounded-full" :class="ui.tone"><UIcon :name="ui.icon" class="size-5" /></span>
+      <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon :name="ui.icon" class="size-5" /></span>
       <div class="min-w-0">
         <UBadge
           v-if="ev.stage === 'poll' && !ev.cancelledAt"

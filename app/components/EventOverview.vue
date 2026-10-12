@@ -39,7 +39,7 @@ const relative = computed(() => {
 </script>
 
 <template>
-  <section class="space-y-4 rounded-2xl p-5 shadow-xs ring ring-default" :aria-label="t('overview.title')">
+  <section class="space-y-4 themed-surface p-5" :aria-label="t('overview.title')">
     <h2 class="flex items-center gap-2 font-semibold text-highlighted"><UIcon name="i-lucide-chart-pie" class="size-5" />{{ t('overview.title') }}</h2>
 
     <template v-if="ev.cancelledAt">

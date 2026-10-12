@@ -5,6 +5,8 @@ const { t, locale, locales, setLocale } = useI18n();
 const lang = useCookie<typeof locale.value>('lang', { maxAge: 60 * 60 * 24 * 365 });
 const { me, meId } = useMe();
 const whoOpen = ref(false);
+const appTheme = useAppTheme();
+const settingsOpen = ref(false);
 watch(meId, () => (whoOpen.value = false));
 
 function pick(code: typeof locale.value) {
@@ -61,12 +63,23 @@ const nav = computed<NavigationMenuItem[]>(() => [
                 @click="pick(l.code)"
               />
             </UFieldGroup>
-            <UColorModeButton size="sm" />
+            <div class="flex items-center gap-1" :class="collapsed && 'flex-col'">
+              <UButton icon="i-lucide-palette" color="neutral" variant="ghost" size="sm" :aria-label="t('settings.title')" @click="settingsOpen = true" />
+              <UColorModeButton size="sm" />
+            </div>
           </div>
         </div>
       </template>
     </UDashboardSidebar>
 
     <slot />
+
+    <UModal v-model:open="settingsOpen" :title="t('settings.title')" :description="t('settings.description')" :ui="{ content: 'max-w-2xl' }">
+      <template #body>
+        <UFormField :label="t('settings.mainStyle')" :hint="t('settings.mainStyleHint')">
+          <ThemePicker v-model="appTheme" />
+        </UFormField>
+      </template>
+    </UModal>
   </UDashboardGroup>
 </template>

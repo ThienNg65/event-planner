@@ -14,6 +14,7 @@ export default defineAppConfig({
       variants: { variant: { solid: 'tb-solid', outline: 'tb-outline', soft: 'tb-soft', subtle: 'tb-subtle' } },
     },
     badge: { slots: { base: 'themed-badge' } },
+    avatar: { slots: { root: 'rounded-lg' } },
     input: { slots: { base: 'themed-field' } },
     textarea: { slots: { base: 'themed-field' } },
     select: { slots: { base: 'themed-field' } },

@@ -256,6 +256,12 @@
     "tentative": "Tentative (poll)",
     "empty": "No events this month."
   },
+  "settings": {
+    "title": "Appearance",
+    "description": "Choose how the app looks for you.",
+    "mainStyle": "Main style",
+    "mainStyleHint": "Used on the home list, calendar and new events. An event can still have its own theme."
+  },
   "theme": {
     "label": "Theme",
     "hint": "How this event looks to everyone",

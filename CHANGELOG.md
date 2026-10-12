@@ -5,7 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
-- Each event has a theme: Aurora (the app's own look and the default), Liquid Glass, Bento, Neo-Brutal, Acid Night, Scrapbook or Game Candy. Pick it when creating the event (the page previews it live) or later in Edit. The event page and its card on the home list use the event's theme. A Preview button opens a sample event page in any theme, so you can compare them before choosing.
+- Each event has a theme: Aurora (the app's own look and the default), Liquid Glass, Bento, Neo-Brutal, Acid Night, Scrapbook or Game Candy. Pick it when creating the event (the page previews it live) or later in Edit. The event page and its card on the home list use the event's theme. A Preview button opens a sample event page in any theme, so you can compare them before choosing. A palette button at the bottom of the sidebar opens Appearance, where you pick your main style: the theme of the home list, calendar and new events. It is remembered in this browser; an event keeps its own theme.
 
 ## [0.4.0] - 2026-10-12
 

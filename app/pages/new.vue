@@ -18,7 +18,7 @@ const form = reactive({
   bankAccount: '',
   bankHolder: '',
   cover: null as string | null,
-  theme: DEFAULT_THEME as string,
+  theme: useAppTheme().value as string,
 });
 // The whole page previews the picked theme.
 useEventTheme(() => form.theme);
@@ -108,7 +108,7 @@ async function create() {
           size="sm"
           color="neutral"
           variant="outline"
-          class="rounded-full"
+          class="rounded-md"
           :label="templateTitles[i]"
           @click="applyTemplate(i)"
         />
