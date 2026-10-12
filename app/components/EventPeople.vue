@@ -83,7 +83,18 @@ async function saveAmount() {
         </span>
         <UBadge v-if="row.r.derived === 'going'" color="neutral" variant="outline" size="sm" :label="t('people.fromVote')" />
         <UBadge v-else-if="row.r.derived === 'reconfirm' && row.kind !== 'voted'" color="warning" variant="outline" size="sm" :label="t('people.heldUntil', { time: heldUntil })" />
-        <UBadge :color="KIND_COLOR[row.kind]" variant="subtle" :label="label(row.kind, row.waitPlace)" />
+        <template v-if="ev.stage === 'poll'">
+          <UBadge v-if="row.r.days.length" color="primary" variant="subtle" icon="i-lucide-calendar-days" :label="t('people.days', row.r.days.length)" />
+          <UBadge
+            v-if="row.r.venueIds.length"
+            color="secondary"
+            variant="subtle"
+            icon="i-lucide-map-pin"
+            :label="t('people.places', row.r.venueIds.length)"
+            :title="data.venues.filter((v) => row.r.venueIds.includes(v.id)).map((v) => v.name).join(', ')"
+          />
+        </template>
+        <UBadge v-else :color="KIND_COLOR[row.kind]" variant="subtle" :label="label(row.kind, row.waitPlace)" />
         <UBadge
           v-if="paying && row.pay"
           :color="row.pay.done ? 'success' : row.pay.paid > 0 ? 'warning' : 'neutral'"

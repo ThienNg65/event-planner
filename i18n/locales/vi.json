@@ -485,6 +485,8 @@
     "title": "Mọi người",
     "empty": "Chưa có ai.",
     "voted": "Đã chọn",
+    "days": "{n} ngày",
+    "places": "{n} nơi",
     "going": "Đi",
     "waitlist": "Chờ #{n}",
     "maybe": "Có thể",

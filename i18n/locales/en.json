@@ -485,6 +485,8 @@
     "title": "People",
     "empty": "Nobody yet.",
     "voted": "Voted",
+    "days": "{n} day | {n} days",
+    "places": "{n} place | {n} places",
     "going": "Going",
     "waitlist": "Waitlist #{n}",
     "maybe": "Maybe",
