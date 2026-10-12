@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "theme" text DEFAULT 'aurora' NOT NULL;

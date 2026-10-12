@@ -70,5 +70,9 @@ export function eventFields(b: Record<string, unknown>) {
     if (v && !isCoverKey(v) && !isHttpUrl(v)) fail(400, 'invalidCover');
     out.cover = v || null;
   }
+  if ('theme' in b) {
+    if (!isThemeKey(b.theme)) fail(400, 'invalid');
+    out.theme = b.theme;
+  }
   return out;
 }

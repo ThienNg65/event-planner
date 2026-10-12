@@ -256,6 +256,28 @@
     "tentative": "Dự kiến (đang bình chọn)",
     "empty": "Tháng này không có sự kiện."
   },
+  "theme": {
+    "label": "Giao diện",
+    "hint": "Cách sự kiện này hiển thị với mọi người",
+    "aurora": "Aurora",
+    "liquid": "Liquid Glass",
+    "bento": "Bento",
+    "brutal": "Neo-Brutal",
+    "acid": "Acid Night",
+    "scrapbook": "Sổ lưu niệm",
+    "candy": "Game Candy",
+    "preview": "Xem trước",
+    "previewHint": "Xem một sự kiện mẫu ở từng giao diện trước khi chọn.",
+    "use": "Dùng {name}",
+    "close": "Đóng",
+    "sampleTitle": "Ăn trưa cùng team",
+    "sampleMeta": "Thứ sáu 7/11 · Rooftop Sài Gòn",
+    "sampleVote": "Bình chọn",
+    "sampleMaybe": "Có thể",
+    "sampleNo": "Không đi được",
+    "sampleOverview": "Tổng quan",
+    "sampleQuestion": "Bạn đi được ngày nào?"
+  },
   "cover": {
     "label": "Ảnh bìa",
     "url": "Hoặc dán link ảnh (https://…)",

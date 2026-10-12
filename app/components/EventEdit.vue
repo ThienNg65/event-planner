@@ -24,6 +24,7 @@ const blank = () => {
     bankAccount: e.bankAccount ?? '',
     bankHolder: e.bankHolder ?? '',
     cover: e.cover,
+    theme: themeOf(e.theme),
   };
 };
 const form = ref(blank());
@@ -288,6 +289,10 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
 
         <UFormField :label="t('cover.label')" :error="errors.cover">
           <CoverPicker v-model="form.cover" />
+        </UFormField>
+
+        <UFormField :label="t('theme.label')" :hint="t('theme.hint')">
+          <ThemePicker v-model="form.theme" :title="form.title" :cover="form.cover" />
         </UFormField>
 
         <section v-if="prefill" class="space-y-2 rounded-lg p-3 ring ring-default">

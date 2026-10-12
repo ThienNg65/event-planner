@@ -8,7 +8,8 @@ const lang = useCookie<typeof locale.value>('lang', { maxAge: 60 * 60 * 24 * 365
 
 if (lang.value && lang.value !== locale.value) await setLocale(lang.value);
 
-useHead({ htmlAttrs: { lang: locale } });
+// Pages that belong to an event (or preview one) replace the theme with useEventTheme.
+useHead({ htmlAttrs: { lang: locale, 'data-theme': DEFAULT_THEME } });
 </script>
 
 <template>
