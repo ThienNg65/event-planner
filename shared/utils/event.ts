@@ -299,3 +299,7 @@ export const rankDays = (days: string[], responses: { days: string[] }[]) =>
   days
     .map((day) => ({ day, n: responses.filter((r) => r.days.includes(day)).length }))
     .sort((a, b) => b.n - a.n || a.day.localeCompare(b.day));
+
+/** The i18n `stage.*` key for an event's badge: a poll past its deadline reads "waiting for the date", not "voting". */
+export const stageKey = (ev: { stage: string; voteDeadline?: string | Date | null }, now = Date.now()) =>
+  ev.stage === 'poll' && !votingOpen(ev, now) ? 'pollClosed' : ev.stage;

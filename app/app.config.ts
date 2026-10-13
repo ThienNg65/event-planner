@@ -15,6 +15,13 @@ export default defineAppConfig({
     },
     badge: { slots: { base: 'themed-badge' } },
     avatar: { slots: { root: 'rounded-lg' } },
+    // Past days read as unavailable, and today has a ring, not just a color.
+    calendar: {
+      slots: {
+        cellTrigger:
+          'data-disabled:pointer-events-none data-disabled:opacity-30 data-today:not-data-selected:ring-1 data-today:not-data-selected:ring-inset data-today:not-data-selected:ring-primary',
+      },
+    },
     input: { slots: { base: 'themed-field' } },
     textarea: { slots: { base: 'themed-field' } },
     select: { slots: { base: 'themed-field' } },

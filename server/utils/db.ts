@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { eq } from 'drizzle-orm';
+import { eq, sql, type SQLWrapper } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from '../db/schema';
 
@@ -25,3 +25,7 @@ export async function requireMember(id: unknown) {
   if (!m) fail(400, 'unknownMember');
   return m;
 }
+
+/** True when the member created an event: such a name gives host rights. (A co-host has already signed in, and an invite needs its secret link, so co-hosts need no check.) */
+export const organizes = (memberId: number | SQLWrapper) =>
+  sql`exists (select 1 from ${schema.events} where ${schema.events.createdBy} = ${memberId})`;

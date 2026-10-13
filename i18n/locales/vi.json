@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Sự kiện của team",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "colorMode": "Chế độ sáng / tối"
   },
   "cancel": "Huỷ",
   "close": "Đóng",
@@ -10,7 +11,7 @@
     "title": "Sự kiện",
     "new": "Tạo sự kiện",
     "empty": "Tạo sự kiện, chia sẻ liên kết và để mọi người bình chọn ngày.",
-    "planning": "Đang lên kế hoạch",
+    "planning": "Chưa chốt",
     "upcoming": "Sắp diễn ra",
     "past": "Đã qua",
     "search": "Tìm sự kiện hoặc địa điểm…",
@@ -31,7 +32,8 @@
     }
   },
   "stage": {
-    "poll": "Bình chọn",
+    "poll": "Đang bình chọn",
+    "pollClosed": "Chờ chốt ngày",
     "rsvp": "Đã chốt",
     "bill": "Thu tiền",
     "settled": "Hoàn tất",
@@ -91,13 +93,15 @@
     "pollVenueHint": "Mọi người sẽ đề xuất và bình chọn địa điểm.",
     "capacity": "Số chỗ tối đa",
     "capacityHint": "Bỏ trống nếu không giới hạn",
+    "unlimited": "Không giới hạn",
+    "whoTitle": "Tên của bạn",
     "bank": "Tài khoản nhận tiền",
     "bankHint": "Không bắt buộc, dùng để tạo mã VietQR",
     "bankId": "Ngân hàng (VD: VCB)",
     "bankAccount": "Số tài khoản",
     "bankHolder": "Chủ tài khoản",
     "submit": "Tạo sự kiện",
-    "pickFirst": "Chọn tên của bạn trước.",
+    "pickFirst": "Nhập tên của bạn ở trên trước.",
     "done": "Đã tạo sự kiện",
     "keyHint": "Trình duyệt này đã lưu quyền quản lý. Hãy sao chép liên kết quản lý để dùng trên máy khác.",
     "quickStart": "Bắt đầu nhanh:",
@@ -119,13 +123,13 @@
     "guestsHint": "Thêm người đi cùng sẽ xếp bạn xuống cuối hàng chờ nếu đã đủ chỗ.",
     "going": "Tham gia",
     "maybe": "Có thể",
-    "no": "Bận",
+    "no": "Không tham gia",
     "onWaitlist": "Bạn đang ở vị trí #{n} trong danh sách chờ.",
     "list": {
       "going": "Tham gia",
       "waitlist": "Danh sách chờ",
       "maybe": "Có thể",
-      "no": "Bận"
+      "no": "Không tham gia"
     },
     "update": "Cập nhật",
     "fromVote": "Bạn được tính là đi theo phiếu bầu. Đổi câu trả lời nếu bạn không đi được.",
@@ -137,8 +141,8 @@
     "copyLink": "Liên kết quản lý",
     "linkCopied": "Đã sao chép liên kết quản lý",
     "linkHint": "Ai có liên kết này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
-    "lock": "Chốt kết quả và mở đăng ký",
-    "lockButton": "Chốt & mở đăng ký",
+    "lock": "Chốt kết quả",
+    "lockButton": "Chốt ngày",
     "bill": "Tổng hoá đơn (₫)",
     "schedule": "Ngày giờ"
   },
@@ -180,6 +184,7 @@
     "reconfirmTooLate": "Mọi người cần xác nhận lại nhưng thời điểm mới đã qua. Hãy chọn thời điểm trong tương lai.",
     "signInFirst": "Hãy cho biết bạn là ai trước.",
     "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng liên kết đăng nhập của bạn.",
+    "nameOrganizer": "Tên này đang tổ chức một sự kiện nên không thể chọn từ danh sách. Hãy mở liên kết đăng nhập hoặc liên kết quản lý của bạn.",
     "signInInvalid": "Liên kết đăng nhập không hợp lệ."
   },
   "days": {
@@ -306,7 +311,8 @@
     "preset": "Kiểu bìa {name}"
   },
   "card": {
-    "voting": "Đang bình chọn · {n} ngày",
+    "voting": "{n} ngày đề xuất",
+    "answered": "{n} người đã phản hồi",
     "vote": "Bình chọn ngay",
     "rsvp": "Trả lời",
     "going": "Sẽ đi",
@@ -318,9 +324,11 @@
     "confirm": "Xác nhận"
   },
   "next": {
+    "organizers": "ban tổ chức",
     "who": {
       "title": "Trước tiên, bạn là ai?",
-      "body": "Chọn hoặc nhập tên của bạn để phiếu bầu được tính. Không cần đăng ký."
+      "link": "Đây là bạn? Chọn tên của bạn",
+      "body": "Chọn tên của bạn hoặc nhập tên mới để phiếu được tính."
     },
     "vote": {
       "title": "Bạn chưa bình chọn",
@@ -374,7 +382,7 @@
       "body": "Mong là một buổi thật vui."
     },
     "action": {
-      "lock": "Chốt ngày & mở đăng ký",
+      "lock": "Chốt ngày",
       "bill": "Nhập hoá đơn",
       "settle": "Đánh dấu đã xong",
       "pick": "Chọn kết quả",
@@ -384,7 +392,7 @@
       "completeAnyway": "Vẫn hoàn tất"
     },
     "lockDay": "Ngày và giờ",
-    "lockHint": "Sau đó mọi người có thể trả lời Tham gia, Có thể hoặc Bận.",
+    "lockHint": "Ai đã chọn ngày này được tính là tham gia, theo thứ tự bình chọn; hết chỗ thì vào danh sách chờ. Những người khác trả lời Tham gia, Có thể hoặc Không tham gia.",
     "billHint": "Chia cho {n} chỗ",
     "billSave": "Lưu & chia tiền",
     "voteVenue": {
@@ -394,7 +402,7 @@
     },
     "voteClosed": {
       "title": "Đã đóng bình chọn",
-      "body": "Ban tổ chức đang chốt ngày.",
+      "body": "Chờ {host} chốt ngày.",
       "bodyHost": "Chọn ngày và địa điểm được nhiều phiếu nhất."
     },
     "cancelled": {
@@ -411,7 +419,7 @@
     "reopenDate": "Hạn mới",
     "consequences": {
       "end": "Bình chọn kết thúc",
-      "rsvp": "Những người còn lại có thể trả lời Tham gia, Có thể hoặc Bận",
+      "rsvp": "Những người còn lại có thể trả lời Tham gia, Có thể hoặc Không tham gia",
       "kept": "Phiếu vẫn được giữ nếu ban tổ chức mở lại bình chọn"
     },
     "lockGoing": "Tự động tính là tham gia theo phiếu bình chọn: {names}",
@@ -511,7 +519,7 @@
     "going": "Tham gia",
     "waitlist": "Chờ #{n}",
     "maybe": "Có thể",
-    "no": "Bận",
+    "no": "Không tham gia",
     "paid": "Đã trả",
     "unpaid": "Chưa trả",
     "left": "Còn {amount}",
@@ -524,7 +532,8 @@
     "amount": "Số tiền đã trả (₫)",
     "save": "Lưu",
     "fromVote": "Theo phiếu bầu",
-    "heldUntil": "Giữ đến {time}"
+    "heldUntil": "Giữ đến {time}",
+    "declinedCount": "{n} không tham gia"
   },
   "host": {
     "menu": "Thao tác khác",
@@ -549,6 +558,7 @@
     "title": "Ban tổ chức",
     "description": "Ai quản lý được sự kiện này và mỗi vai trò làm được gì.",
     "yourRole": "Vai trò của bạn:",
+    "you": "bạn",
     "host": "Người tổ chức",
     "cohost": "Đồng tổ chức",
     "participant": "Người tham gia",
@@ -570,7 +580,6 @@
     "trust": "Tên chỉ là nhãn do người tổ chức chọn, không phải danh tính đã xác minh: ứng dụng không có đăng nhập. Ai mở liên kết mời trước đều có thể nhận lời, nên hãy gửi riêng tư. Đừng dùng quyền đồng tổ chức trên máy dùng chung.",
     "cohosts": "Đồng tổ chức",
     "noCohosts": "Chưa có đồng tổ chức",
-    "cohostNames": "Đồng tổ chức: {names}",
     "status": {
       "active": "Đang hoạt động",
       "invited": "Đã mời",
@@ -612,7 +621,7 @@
     "seats": "Đã có {n} chỗ",
     "going": "Tham gia {n}",
     "maybe": "Có thể {n}",
-    "no": "Bận {n}",
+    "no": "Không tham gia {n}",
     "paid": "{n}/{total} người đã trả",
     "collected": "Đã thu {got} / {total}",
     "share": "{amount} mỗi chỗ",
@@ -620,6 +629,7 @@
     "completedPaid": "Mọi người đã thanh toán",
     "completedOwed": "Còn {n} người chưa trả",
     "deadline": "Thời hạn bình chọn",
+    "closedAt": "Đã đóng bình chọn lúc",
     "invite": "Mời thêm người",
     "answered": "Đã phản hồi",
     "answeredOf": "{n}/{total} người",

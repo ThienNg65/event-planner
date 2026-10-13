@@ -1,9 +1,9 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, or, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const { events, responses, cohosts } = schema;
   // The signed-in member (looked up alongside the lists); not signed in → no personal status.
-  const [evs, going, { meId, mine, cohosting }] = await Promise.all([
+  const [evs, going, answered, { meId, mine, cohosting }] = await Promise.all([
     useDb()
       .select({
         id: events.id,
@@ -36,6 +36,12 @@ export default defineEventHandler(async (event) => {
       })
       .from(responses)
       .where(eq(responses.status, 'going')),
+    // Who has answered, per event: a day, a place, or can't join (the same rule as pendingVoters).
+    useDb()
+      .select({ eventId: responses.eventId, n: count() })
+      .from(responses)
+      .where(or(sql`cardinality(${responses.days}) > 0`, sql`cardinality(${responses.venueIds}) > 0`, eq(responses.status, 'no')))
+      .groupBy(responses.eventId),
     (async () => {
       const meId = await meOf(event);
       if (!meId) return { meId, mine: [], cohosting: [] };
@@ -49,6 +55,7 @@ export default defineEventHandler(async (event) => {
       return { meId, mine, cohosting };
     })(),
   ]);
+  const answeredBy = new Map(answered.map((a) => [a.eventId, a.n]));
   // ponytail: loads every "going" row to count seats; fine for a team, add a per-event SQL sum if it grows.
   return evs.map((e) => {
     const { confirmed, waitlist, seats } = rollCall(
@@ -63,6 +70,7 @@ export default defineEventHandler(async (event) => {
     return {
       ...e,
       seats,
+      answered: answeredBy.get(e.id) ?? 0,
       allPaid: allPaid(confirmed, share),
       // Organizer by identity; the browser adds events whose manage key it holds.
       manager: meId !== null && (e.createdBy === meId || cohosting.some((c) => c.eventId === e.id)),

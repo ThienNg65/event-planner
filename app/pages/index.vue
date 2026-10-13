@@ -87,7 +87,7 @@ const tabs = computed(() =>
             {{ t('home.todo.title') }}
             <UBadge color="secondary" variant="solid" size="sm" :label="String(todos.length)" />
           </h2>
-          <div class="rise grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="rise grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <NuxtLink
               v-for="td in todos"
               :key="td.key"
@@ -122,7 +122,7 @@ const tabs = computed(() =>
         <UButton to="/new" icon="i-lucide-plus" size="lg">{{ t('home.new') }}</UButton>
       </div>
       <p v-else-if="!shown.length" class="py-10 text-center text-muted">{{ t('home.noMatch') }}</p>
-      <div v-else class="rise grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div v-else class="rise grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         <EventCard v-for="e in shown" :key="e.id" :event="e" />
       </div>
     </template>

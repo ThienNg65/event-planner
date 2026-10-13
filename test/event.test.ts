@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
 import { cardSvg } from '../shared/utils/card.ts';
 import { DEFAULT_THEME, THEMES, themeOf } from '../shared/utils/theme.ts';
-import { dayParts, fmtDateTime, monthGrid } from '../app/utils/format.ts';
+import { dayParts, fmtDateTime, initials, monthGrid, splitMentions } from '../app/utils/format.ts';
 
 const at = (min: number) => new Date(Date.UTC(2026, 9, 1, 0, min));
 const going = (memberId: number, min: number, guests = 0) => ({ memberId, status: 'going', guests, goingAt: at(min) });
@@ -384,4 +384,28 @@ test('cardSvg: carries the QR path and the background it was given', () => {
   const pic = cardSvg('https://x.test/e/1', { image: 'data:image/png;base64,AAAA' });
   assert.match(pic, /<image href="data:image\/png;base64,AAAA"/);
   assert.doesNotMatch(pic, /linearGradient/);
+});
+
+test('initials: two letters, first and last word or the start of a one-word name', () => {
+  assert.equal(initials('Thiên'), 'TH');
+  assert.equal(initials('Lê Văn Đông'), 'LĐ');
+  assert.equal(initials('  tú  '), 'TÚ');
+  assert.equal(initials(''), '');
+});
+
+test('initials: a decomposed accent stays with its letter', () => {
+  assert.equal(initials('Ánh'), 'ÁN');
+});
+
+test('splitMentions: @name plus capitalized words, not emails', () => {
+  assert.deepEqual(splitMentions('Mừng @Dong Le, @Thien dep trai'), ['Mừng ', '@Dong Le', ', ', '@Thien', ' dep trai']);
+  assert.deepEqual(splitMentions('mail a@b.com'), ['mail a@b.com']);
+});
+
+test('stageKey: a poll past its deadline reads as waiting for the date', () => {
+  const now = Date.parse('2026-10-13T06:00:00Z');
+  assert.equal(stageKey({ stage: 'poll', voteDeadline: '2026-10-13T05:00:00Z' }, now), 'pollClosed');
+  assert.equal(stageKey({ stage: 'poll', voteDeadline: '2026-10-14T05:00:00Z' }, now), 'poll');
+  assert.equal(stageKey({ stage: 'poll', voteDeadline: null }, now), 'poll');
+  assert.equal(stageKey({ stage: 'rsvp', voteDeadline: '2026-10-13T05:00:00Z' }, now), 'rsvp');
 });

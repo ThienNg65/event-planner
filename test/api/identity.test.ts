@@ -49,6 +49,24 @@ describe('claiming a name', () => {
     assert.equal(second.message, 'nameClaimed');
   });
 
+  it('a name that organizes an event is not claimable, so nobody inherits its host rights', async () => {
+    const ev = await event();
+    await query('UPDATE members SET token_hash = NULL WHERE id = $1', [ev.createdBy]);
+    const res = await api(`/api/members/${ev.createdBy}/claim`, { method: 'POST' });
+    assert.equal(res.status, 409);
+    assert.equal(res.message, 'nameOrganizer');
+    const list = (await api('/api/members')).body as { id: number; claimed: boolean }[];
+    assert.equal(list.find((m) => m.id === ev.createdBy)?.claimed, true);
+  });
+
+  it('a member invited to co-host can still claim their name, so they can accept', async () => {
+    const ev = await event();
+    const co = await member();
+    await api(`/api/events/${ev.id}/cohosts`, { method: 'POST', key: ev.key, body: { memberId: co } });
+    await query('UPDATE members SET token_hash = NULL WHERE id = $1', [co]);
+    assert.equal((await api(`/api/members/${co}/claim`, { method: 'POST' })).status, 200);
+  });
+
   it('a sign-in link signs another browser in as the same member', async () => {
     const id = await member();
     const { token } = (await api('/api/me/link', { method: 'POST', me: id })).body;

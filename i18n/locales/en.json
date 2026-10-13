@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Team Events",
-    "language": "Language"
+    "language": "Language",
+    "colorMode": "Light / dark mode"
   },
   "cancel": "Cancel",
   "close": "Close",
@@ -10,7 +11,7 @@
     "title": "Events",
     "new": "New event",
     "empty": "Create an event, share the link, and let everyone vote on the day.",
-    "planning": "Planning",
+    "planning": "Undecided",
     "upcoming": "Upcoming",
     "past": "Past",
     "search": "Search events or venues…",
@@ -32,6 +33,7 @@
   },
   "stage": {
     "poll": "Voting",
+    "pollClosed": "Awaiting the date",
     "rsvp": "Confirmed",
     "bill": "Paying",
     "settled": "Completed",
@@ -91,13 +93,15 @@
     "pollVenueHint": "Everyone can suggest and upvote venues.",
     "capacity": "Max seats",
     "capacityHint": "Leave empty for no limit",
+    "unlimited": "No limit",
+    "whoTitle": "Your name",
     "bank": "Bank account for payments",
     "bankHint": "Optional, used for the VietQR code",
     "bankId": "Bank (e.g. VCB)",
     "bankAccount": "Account number",
     "bankHolder": "Account holder",
     "submit": "Create event",
-    "pickFirst": "Pick your name first.",
+    "pickFirst": "Enter your name above first.",
     "done": "Event created",
     "keyHint": "This browser remembers you as organizer. Copy the manage link to manage it elsewhere.",
     "quickStart": "Quick start:",
@@ -119,7 +123,7 @@
     "guestsHint": "Adding guests moves you to the back of the queue if seats are full.",
     "going": "Going",
     "maybe": "Maybe",
-    "no": "Can't",
+    "no": "Can't make it",
     "onWaitlist": "You're #{n} on the waitlist.",
     "list": {
       "going": "Going",
@@ -137,8 +141,8 @@
     "copyLink": "Manage link",
     "linkCopied": "Manage link copied",
     "linkHint": "Anyone with this link can manage the event. Only share it with co-organizers.",
-    "lock": "Lock the result and open RSVP",
-    "lockButton": "Lock & open RSVP",
+    "lock": "Lock the result",
+    "lockButton": "Lock the date",
     "bill": "Bill total (₫)",
     "schedule": "Date & time"
   },
@@ -180,6 +184,7 @@
     "reconfirmTooLate": "People would need to confirm again, but the new time has passed. Pick a future time.",
     "signInFirst": "Tell us who you are first.",
     "nameClaimed": "Someone already signed in with that name. Use your sign-in link instead.",
+    "nameOrganizer": "This name organizes an event, so it can't be picked from the list. Open your sign-in link or manage link instead.",
     "signInInvalid": "This sign-in link is not valid."
   },
   "days": {
@@ -306,7 +311,8 @@
     "preset": "Cover style {name}"
   },
   "card": {
-    "voting": "Voting · {n} days",
+    "voting": "{n} proposed day | {n} proposed days",
+    "answered": "{n} person replied | {n} people replied",
     "vote": "Vote now",
     "rsvp": "Reply",
     "going": "Going",
@@ -318,9 +324,11 @@
     "confirm": "Confirm"
   },
   "next": {
+    "organizers": "the organizers",
     "who": {
       "title": "First, who are you?",
-      "body": "Pick or enter your name so your votes count. No sign-up needed."
+      "link": "Is this you? Pick your name",
+      "body": "Pick your name or enter a new one so your votes count."
     },
     "vote": {
       "title": "You haven't voted yet",
@@ -374,7 +382,7 @@
       "body": "Hope it was a great one."
     },
     "action": {
-      "lock": "Lock date & open RSVP",
+      "lock": "Lock the date",
       "bill": "Enter the bill",
       "settle": "Mark as settled",
       "pick": "Pick the winner",
@@ -384,7 +392,7 @@
       "completeAnyway": "Complete anyway"
     },
     "lockDay": "Day and time",
-    "lockHint": "Everyone can then reply Going, Maybe or Can't.",
+    "lockHint": "Everyone who voted for this day counts as going, in the order they voted; past the seat limit they wait. Everyone else can reply Going, Maybe or Can't make it.",
     "billHint": "Split across {n} seats",
     "billSave": "Save & split the bill",
     "voteVenue": {
@@ -394,7 +402,7 @@
     },
     "voteClosed": {
       "title": "Voting is closed",
-      "body": "The organizers are picking the date.",
+      "body": "Waiting for {host} to pick the date.",
       "bodyHost": "Pick the winning day and place."
     },
     "cancelled": {
@@ -411,7 +419,7 @@
     "reopenDate": "New deadline",
     "consequences": {
       "end": "Voting ends",
-      "rsvp": "Everyone else can answer Going, Maybe or Can't",
+      "rsvp": "Everyone else can answer Going, Maybe or Can't make it",
       "kept": "Votes are kept if the host reopens voting"
     },
     "lockGoing": "Marked Going from their votes: {names}",
@@ -511,7 +519,7 @@
     "going": "Going",
     "waitlist": "Waitlist #{n}",
     "maybe": "Maybe",
-    "no": "Can't",
+    "no": "Can't make it",
     "paid": "Paid",
     "unpaid": "Unpaid",
     "left": "{amount} left",
@@ -524,7 +532,8 @@
     "amount": "Amount paid (₫)",
     "save": "Save",
     "fromVote": "From vote",
-    "heldUntil": "Held until {time}"
+    "heldUntil": "Held until {time}",
+    "declinedCount": "{n} can't make it"
   },
   "host": {
     "menu": "More actions",
@@ -549,6 +558,7 @@
     "title": "Organizers",
     "description": "Who can manage this event, and what each role can do.",
     "yourRole": "Your role:",
+    "you": "you",
     "host": "Host",
     "cohost": "Co-host",
     "participant": "Participant",
@@ -570,7 +580,6 @@
     "trust": "Names are labels the host chose, not verified identities: there is no login. Anyone who opens an invite link first can accept it, so send it privately. Don't use co-host access on a shared computer.",
     "cohosts": "Co-hosts",
     "noCohosts": "No co-hosts yet",
-    "cohostNames": "Co-hosts: {names}",
     "status": {
       "active": "Active",
       "invited": "Invited",
@@ -612,7 +621,7 @@
     "seats": "{n} seats taken",
     "going": "Going {n}",
     "maybe": "Maybe {n}",
-    "no": "Can't {n}",
+    "no": "Can't make it {n}",
     "paid": "{n} of {total} paid",
     "collected": "{got} of {total} collected",
     "share": "{amount} per seat",
@@ -620,6 +629,7 @@
     "completedPaid": "Everyone paid",
     "completedOwed": "{n} still owe",
     "deadline": "Voting deadline",
+    "closedAt": "Voting closed at",
     "invite": "Invite people",
     "answered": "Responded",
     "answeredOf": "{n} of {total}",

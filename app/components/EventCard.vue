@@ -8,6 +8,13 @@ const { t, locale } = useI18n();
 
 const cover = computed(() => coverOf(props.event.cover, props.event.id));
 const block = computed(() => props.event.startsAt && dateBlock(props.event.startsAt, locale.value));
+// The span of proposed days while polling, e.g. "T3, 13 thg 10 – T6, 23 thg 10".
+const range = computed(() => {
+  const days = [...props.event.pollDays].sort();
+  if (!days.length) return '';
+  const [first, last] = [fmtDay(days[0]!, locale.value), fmtDay(days.at(-1)!, locale.value)];
+  return first === last ? first : `${first} – ${last}`;
+});
 // The visitor's own status on this event, as a badge on the cover.
 const STATUS = {
   vote: { color: 'secondary', icon: 'i-lucide-vote' },
@@ -44,23 +51,23 @@ const status = computed(() => {
       <img v-if="'image' in cover" :src="cover.image" alt="" loading="lazy" class="size-full object-cover" />
       <UBadge v-if="status" :color="status.color" variant="solid" :icon="status.icon" :label="status.label" class="absolute top-3 left-3 shadow-sm" />
       <UBadge v-if="event.cancelledAt" color="neutral" variant="solid" :label="t('card.cancelled')" class="absolute top-3 right-3 shadow-sm" />
-      <UBadge v-else :color="STAGE_COLOR[event.stage]" variant="solid" :label="t(`stage.${event.stage}`)" class="absolute top-3 right-3 shadow-sm" />
+      <!-- While voting, the personal "vote now" badge already says the stage. -->
+      <UBadge v-else-if="!(status && event.stage === 'poll')" :color="STAGE_COLOR[event.stage]" variant="solid" :label="t(`stage.${stageKey(event)}`)" class="absolute top-3 right-3 shadow-sm" />
       <div v-if="block" class="absolute -bottom-6 left-4 grid min-w-12 place-items-center rounded-lg bg-default px-1.5 py-1 shadow-md ring ring-default">
         <span class="text-[0.625rem] font-semibold whitespace-nowrap text-primary uppercase">{{ block.month }}</span>
         <span class="text-lg leading-none font-bold text-highlighted">{{ block.day }}</span>
       </div>
-      <!-- Still polling: no date yet, so show the vote instead of a misleading day. -->
-      <div v-else class="absolute -bottom-6 left-4 grid size-12 place-items-center rounded-lg bg-default text-secondary shadow-md ring ring-default">
-        <UIcon name="i-lucide-vote" class="size-6" />
-      </div>
     </div>
 
-    <div class="flex flex-1 flex-col gap-1 p-4 pt-8">
+    <div class="flex flex-1 flex-col gap-1 p-4" :class="block && 'pt-8'">
       <p class="truncate font-semibold text-highlighted group-hover:text-primary">{{ event.title }}</p>
       <p class="truncate text-sm text-muted">
         <template v-if="event.startsAt">{{ fmtDateTime(event.startsAt, locale) }}</template>
-        <template v-else-if="event.pollDays.length">{{ t('card.voting', { n: event.pollDays.length }) }}</template>
+        <template v-else-if="event.pollDays.length">{{ t('card.voting', { n: event.pollDays.length }, event.pollDays.length) }} · {{ range }}</template>
         <template v-else>{{ t('event.dateTbd') }}</template>
+      </p>
+      <p v-if="event.stage === 'poll'" class="flex items-center gap-1 truncate text-sm text-muted">
+        <UIcon name="i-lucide-users-round" class="size-3.5 shrink-0" />{{ t('card.answered', { n: event.answered }, event.answered) }}
       </p>
       <p v-if="event.stage === 'poll' && event.voteDeadline && !event.cancelledAt" class="truncate text-xs text-muted">
         {{ t('card.closes', { when: fmtDateTime(event.voteDeadline, locale) }) }}

@@ -42,9 +42,20 @@ const days = computed(() => {
 
 /** Runs `fn` for a signed-in, allowed visitor; otherwise points to the "who are you" card instead of a silent no-op. */
 function act(fn: () => unknown) {
-  if (!props.me) return document.getElementById('who')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  if (!readOnly.value) return fn();
+  // Closed: say why the tap does nothing.
+  if (readOnly.value) return toast.add({ title: t(ev.value.cancelledAt ? 'poll.closedCancelled' : 'poll.closedDeadline') });
+  if (!props.me) {
+    // The "who are you" card is gone once voting closes (an organizer with a manage key can still edit): say so instead.
+    const who = document.getElementById('who');
+    return who ? who.scrollIntoView({ behavior: 'smooth', block: 'start' }) : toast.add({ title: t('next.who.link') });
+  }
+  return fn();
 }
+
+// Places get the same leader badge and share bar as days: share of everyone who upvoted any place.
+const placeVoters = computed(() => props.data.responses.filter((r) => r.venueIds.length).length);
+const placeBest = computed(() => Math.max(0, ...props.data.venues.map((v) => v.upvotes.length)));
+const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
 
 // Voting after "can't join" means the member can come after all.
 const undecline = () => (mine.value?.status === 'no' ? { status: null } : {});
@@ -167,8 +178,10 @@ async function remove() {
             :data-on="myDays.includes(d.day)"
             @click="act(() => tapDay(d.day))"
           >
-            <!-- Purple means "my pick" only; everyone's totals stay neutral. -->
+            <UBadge v-if="d.top" color="warning" variant="solid" size="sm" icon="i-lucide-crown" :label="t('poll.top')" class="absolute -top-2.5 left-3 shadow-sm" />
+            <!-- Closed: no empty checkbox inviting a tap, only the check on days you picked. -->
             <span
+              v-if="!readOnly || myDays.includes(d.day)"
               class="absolute top-3 right-3 grid size-5 place-items-center rounded-full transition"
               :class="myDays.includes(d.day) ? 'bg-primary text-inverted' : 'ring-1 ring-accented ring-inset'"
               aria-hidden="true"
@@ -178,13 +191,12 @@ async function remove() {
             <span class="text-xs font-medium text-muted">{{ d.weekday }}</span>
             <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
             <span class="mt-1 flex items-center gap-1.5 text-xs text-muted tabular-nums">
-              <UIcon v-if="d.top" name="i-lucide-crown" class="size-3.5 text-warning" />
-              <UIcon v-else name="i-lucide-users-round" class="size-3.5 text-dimmed" />
-              {{ t('poll.chosen', { n: d.names.length }) }}<template v-if="d.top"> · {{ t('poll.top') }}</template>
+              <UIcon name="i-lucide-users-round" class="size-3.5 text-dimmed" />
+              {{ t('poll.chosen', { n: d.names.length }) }}
             </span>
             <span class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
               <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
-                <span class="block h-full rounded-full bg-inverted/50" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
+                <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
               </span>
               <span class="w-8 text-right text-xs text-muted tabular-nums">{{ voted ? Math.round((d.names.length / voted) * 100) : 0 }}%</span>
             </span>
@@ -216,9 +228,18 @@ async function remove() {
       <div
         v-for="v in data.venues"
         :key="v.id"
-        class="themed-tile flex items-center gap-3 p-4 transition"
+        class="themed-tile relative flex items-center gap-3 p-4 transition"
         :data-on="myVote(v)"
       >
+        <UBadge
+          v-if="placeBest > 0 && v.upvotes.length === placeBest"
+          color="warning"
+          variant="solid"
+          size="sm"
+          icon="i-lucide-crown"
+          :label="t('poll.top')"
+          class="absolute -top-2.5 left-3 shadow-sm"
+        />
         <div class="min-w-0 flex-1">
           <!-- The name is the link; no separate button for it. -->
           <p class="font-medium break-words text-highlighted">
@@ -229,11 +250,18 @@ async function remove() {
           </p>
           <p v-if="v.note" class="text-sm text-muted">{{ v.note }}</p>
           <p class="text-xs text-dimmed">{{ t('poll.suggestedBy', { name: v.addedByName }) }}</p>
+          <span class="mt-2 flex max-w-64 items-center gap-2" aria-hidden="true">
+            <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
+              <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${pct(v.upvotes.length, placeVoters)}%` }" />
+            </span>
+            <span class="w-8 text-right text-xs text-muted tabular-nums">{{ pct(v.upvotes.length, placeVoters) }}%</span>
+          </span>
         </div>
         <span class="flex shrink-0 items-center gap-1 text-sm text-muted tabular-nums" :title="t('poll.votes', v.upvotes.length)">
           <UIcon name="i-lucide-users-round" class="size-4 text-dimmed" /><span aria-hidden="true">{{ v.upvotes.length }}</span><span class="sr-only">{{ t('poll.votes', v.upvotes.length) }}</span>
         </span>
         <UButton
+          v-if="!readOnly || myVote(v)"
           :disabled="busy || readOnly"
           :color="myVote(v) ? 'primary' : 'neutral'"
           :variant="myVote(v) ? 'soft' : 'outline'"

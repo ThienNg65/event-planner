@@ -107,6 +107,8 @@ async function answerInvite(accept: boolean) {
 // Long notes show three lines and expand on request.
 const noteOpen = ref(false);
 const longNote = computed(() => (ev.value.note?.length ?? 0) > 150 || (ev.value.note?.split('\n').length ?? 0) > 3);
+// "@Dong Le" in the note shows as a chip.
+const noteParts = computed(() => splitMentions(ev.value.note ?? ''));
 const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 const voters = computed(() => data.value!.responses.filter((r) => r.days.length || r.venueIds.length).length);
 // Finished stages collapse to one line each.
@@ -188,6 +190,8 @@ useSeoMeta({
 
 // The sticky sidebar stays short: a big team shows its first faces and a "+N".
 const AVATARS = 20;
+// Members who said they can't join get a mark on their avatar.
+const declined = computed(() => new Set(data.value!.responses.filter((r) => r.status === 'no').map((r) => r.memberId)));
 const sharing = ref(false);
 const share = () => (sharing.value = true);
 </script>
@@ -228,7 +232,7 @@ const share = () => (sharing.value = true);
             <div class="space-y-1.5">
               <div class="flex min-h-7 items-center justify-between gap-2">
                 <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" class="rounded-full px-2.5" />
-                <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${ev.stage}`)" class="rounded-full px-2.5" />
+                <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${stageKey(ev)}`)" class="rounded-full px-2.5" />
                 <UButton v-if="canPost && !ev.notice" icon="i-lucide-megaphone" color="neutral" variant="ghost" size="xs" @click="openNotice">{{ t('post.open') }}</UButton>
               </div>
               <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-4xl">{{ ev.title }}</h1>
@@ -245,7 +249,9 @@ const share = () => (sharing.value = true);
                 </span>
               </p>
               <div v-if="ev.note" class="text-sm text-toned">
-                <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-3'">{{ ev.note }}</p>
+                <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-3'">
+                  <template v-for="(part, i) in noteParts" :key="i"><span v-if="i % 2" class="rounded bg-primary/10 px-1 font-medium text-primary">{{ part }}</span><template v-else>{{ part }}</template></template>
+                </p>
                 <button v-if="longNote" type="button" class="mt-1 text-primary underline underline-offset-2" :aria-expanded="noteOpen" @click="noteOpen = !noteOpen">
                   {{ t(noteOpen ? 'event.less' : 'event.more') }}
                 </button>
@@ -263,7 +269,7 @@ const share = () => (sharing.value = true);
             :description="ev.cancelReason ?? undefined"
             :actions="restoreActions"
           />
-          <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions">
+          <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions" :ui="{ description: 'text-default' }">
             <template #title>
               {{ t('event.noticeTitle') }}
               <UBadge v-if="unseen" color="secondary" variant="solid" size="sm" :label="t('event.new')" class="ml-1" />
@@ -306,8 +312,14 @@ const share = () => (sharing.value = true);
               <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <UTooltip v-for="m in members.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="m.name">
-                <UAvatar :alt="m.name" size="md" tabindex="0" />
+              <UTooltip v-for="m in members.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="declined.has(m.id) ? `${m.name} · ${t('people.no')}` : m.name">
+                <span class="relative" tabindex="0">
+                  <MemberAvatar :id="m.id" :name="m.name" size="md" :class="declined.has(m.id) && 'opacity-50 grayscale'" />
+                  <!-- The background sits on a wrapper: on the icon itself it would replace the masked glyph's color. -->
+                  <span v-if="declined.has(m.id)" role="img" :aria-label="t('people.no')" class="absolute -right-1.5 -bottom-1.5 grid place-items-center rounded-full bg-default">
+                    <UIcon name="i-lucide-circle-slash" class="size-4 text-error" />
+                  </span>
+                </span>
               </UTooltip>
               <span v-if="members.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
                 +{{ members.length - AVATARS }}

@@ -30,14 +30,14 @@ const CHIP = {
   settled: 'bg-secondary/15 text-secondary',
 };
 
-type Entry ={ id: number; title: string; stage: keyof typeof STAGE_COLOR; tentative: boolean; time: string | null };
+type Entry ={ id: number; title: string; stage: keyof typeof STAGE_COLOR; label: string; tentative: boolean; time: string | null };
 // Fixed events sit on their team-time day; events still polling show on every candidate day, tentatively.
 const byDay = computed(() => {
   const map = new Map<string, Entry[]>();
   const put = (day: string, e: Entry) => map.set(day, [...(map.get(day) ?? []), e]);
   for (const e of events.value) {
     if (e.cancelledAt) continue;
-    const base = { id: e.id, title: e.title, stage: e.stage };
+    const base = { id: e.id, title: e.title, stage: e.stage, label: stageKey(e) };
     if (e.startsAt) put(toTeamInput(e.startsAt).slice(0, 10), { ...base, tentative: false, time: toTeamInput(e.startsAt).slice(11) });
     else for (const d of e.pollDays) put(d, { ...base, tentative: true, time: null });
   }
@@ -115,7 +115,7 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
               >
                 <span class="w-12 shrink-0 text-sm text-muted tabular-nums">{{ e.time ?? '—' }}</span>
                 <span class="min-w-0 flex-1 truncate font-medium text-highlighted">{{ e.title }}</span>
-                <UBadge :color="STAGE_COLOR[e.stage]" variant="subtle" size="sm" :label="t(`stage.${e.stage}`)" />
+                <UBadge :color="STAGE_COLOR[e.stage]" variant="subtle" size="sm" :label="t(`stage.${e.label}`)" />
               </NuxtLink>
             </div>
           </li>

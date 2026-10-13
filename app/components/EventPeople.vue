@@ -15,7 +15,8 @@ const canSet = computed(() => can(props.role, 'setOthers') && !ev.value.cancelle
 const paying = computed(() => ev.value.stage === 'bill' || ev.value.stage === 'settled');
 
 // One list for everyone: who is in, with their answer and (when paying) how much they have settled.
-const ORDER = ['going', 'waitlist', 'maybe', 'no', 'voted'] as const;
+// People who are coming first; those who can't join last.
+const ORDER = ['going', 'waitlist', 'maybe', 'voted', 'no'] as const;
 const rows = computed(() =>
   props.data.responses
     .filter((r) => (ev.value.stage === 'poll' ? r.days.length || r.venueIds.length || r.status === 'no' : r.status))
@@ -33,9 +34,10 @@ const rows = computed(() =>
     })
     .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind) || a.r.name.localeCompare(b.r.name))
 );
+const declinedCount = computed(() => rows.value.filter((r) => r.kind === 'no').length);
 const shown = computed(() => (showAll.value ? rows.value : rows.value.slice(0, COLLAPSED)));
 
-const KIND_COLOR = { going: 'success', waitlist: 'warning', maybe: 'neutral', no: 'neutral', voted: 'neutral' } as const;
+const KIND_COLOR = { going: 'success', waitlist: 'warning', maybe: 'neutral', no: 'error', voted: 'neutral' } as const;
 const heldUntil = computed(() => (ev.value.reconfirmBy ? fmtDateTime(ev.value.reconfirmBy, locale.value) : ''));
 const label = (kind: (typeof ORDER)[number], place: number) => (kind === 'waitlist' ? t('people.waitlist', { n: place }) : t(`people.${kind}`));
 
@@ -75,12 +77,16 @@ async function saveAmount() {
 
 <template>
   <section class="space-y-3 border-t border-default pt-6">
-    <h2 class="text-lg font-semibold text-highlighted">{{ t('people.title') }}</h2>
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-highlighted">
+      {{ t('people.title') }}
+      <!-- Declined people sort last and may sit behind "show all", so the count is up here. -->
+      <UBadge v-if="declinedCount" color="error" variant="subtle" icon="i-lucide-circle-slash" :label="t('people.declinedCount', { n: declinedCount })" />
+    </h2>
     <p v-if="!rows.length" class="text-sm text-muted">{{ t('people.empty') }}</p>
     <ul v-else class="divide-y divide-default">
       <li v-for="row in shown" :key="row.r.memberId" class="flex items-center gap-3 py-2">
-        <UAvatar :alt="row.r.name" size="sm" />
-        <span class="min-w-0 flex-1 truncate">
+        <MemberAvatar :id="row.r.memberId" :name="row.r.name" :class="row.kind === 'no' && 'opacity-60'" />
+        <span class="min-w-0 flex-1 truncate" :class="row.kind === 'no' && 'text-muted'">
           {{ row.r.name }}<span v-if="row.r.guests && (row.kind === 'going' || row.kind === 'waitlist')" class="text-muted"> +{{ row.r.guests }}</span>
         </span>
         <UBadge v-if="row.r.derived === 'going'" color="neutral" variant="outline" size="sm" :label="t('people.fromVote')" />
@@ -96,7 +102,7 @@ async function saveAmount() {
             :title="data.venues.filter((v) => row.r.venueIds.includes(v.id)).map((v) => v.name).join(', ')"
           />
         </template>
-        <UBadge v-else :color="KIND_COLOR[row.kind]" variant="subtle" :label="label(row.kind, row.waitPlace)" />
+        <UBadge v-else :color="KIND_COLOR[row.kind]" variant="subtle" :icon="row.kind === 'no' ? 'i-lucide-circle-slash' : undefined" :label="label(row.kind, row.waitPlace)" />
         <UBadge
           v-if="paying && row.pay"
           :color="row.pay.done ? 'success' : row.pay.paid > 0 ? 'warning' : 'neutral'"
@@ -108,7 +114,7 @@ async function saveAmount() {
         </UDropdownMenu>
       </li>
     </ul>
-    <UButton v-if="rows.length > COLLAPSED" color="neutral" variant="link" size="sm" @click="showAll = !showAll">
+    <UButton v-if="rows.length > COLLAPSED" color="neutral" variant="outline" size="sm" block :trailing-icon="showAll ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" @click="showAll = !showAll">
       {{ showAll ? t('people.showLess') : t('people.showAll', { n: rows.length }) }}
     </UButton>
 

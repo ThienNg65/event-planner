@@ -82,10 +82,10 @@ const relative = computed(() => {
       <div v-if="ev.voteDeadline" class="flex items-start gap-3 border-t border-default pt-3">
         <UIcon name="i-lucide-clock" class="mt-0.5 size-4 shrink-0 text-dimmed" />
         <div class="min-w-0 space-y-0.5">
-          <p class="text-xs text-muted">{{ t('overview.deadline') }}</p>
+          <p class="text-xs text-muted">{{ t(open ? 'overview.deadline' : 'overview.closedAt') }}</p>
           <p class="flex flex-wrap items-center gap-2 text-sm font-medium text-highlighted">
             {{ fmtDateTime(ev.voteDeadline, locale) }}
-            <UBadge v-if="relative" :color="soon ? 'warning' : 'neutral'" variant="subtle" size="sm" :label="relative" class="rounded-full" />
+            <UBadge v-if="open && relative" :color="soon ? 'warning' : 'neutral'" variant="subtle" size="sm" :label="relative" class="rounded-full" />
           </p>
         </div>
       </div>

@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0] - 2026-10-13
+
+### Added
+- Event cards on the home list show how many people have replied and the range of proposed days ("9 proposed days · Tue 13 Oct – Fri 23 Oct").
+- Places now show a "Leading" badge and a percentage bar, like the days.
+- The Everyone list shows how many people can't make it, right in its heading.
+- Mentions like @Dong Le in an event's description are highlighted.
+
+### Changed
+- Once voting closes, the page says so everywhere: the badge reads "Awaiting the date", the overview shows when voting closed, and visitors see "Waiting for <organizer> to pick the date". Days and places no longer look tappable, and tapping explains that voting is closed.
+- "Can't make it" replaces "Can't" / "Bận", with a red mark. People who can't come are listed last, and their avatar is marked.
+- Avatars show two initials and a colour per person, so people with the same first letter are easier to tell apart.
+- The lock button now says "Lock the date" and explains that people who voted for that day are counted as going in voting order, with anyone past the seat limit waiting.
+- The Create page asks only for your name (it no longer lists the team), keeps the Create button in a footer, shows "No limit" for an empty seat limit, greys out past days and rings today on the calendar.
+- Organizers are listed as "Thiên (you) · Host". Text is a little larger, progress bars use the accent colour, and wide screens show four event cards per row.
+
+### Security
+- A name that created an event can no longer be claimed from the team list, so nobody can pick it and become that event's host. Its owner signs in with their sign-in or manage link.
+
+### Fixed
+- The "Who are you?" card on the Create page was squeezed to a thin dark line.
+
 ## [0.5.0] - 2026-10-12
 
 ### Added

@@ -23,6 +23,7 @@ const mine = computed(() => {
 });
 const canAdvance = computed(() => can(props.role, 'advance'));
 const votingClosed = computed(() => ev.value.stage === 'poll' && !votingOpen(ev.value));
+const whoOpen = ref(false);
 const next = computed(() =>
   nextStep({
     stage: ev.value.stage,
@@ -70,6 +71,7 @@ const params = computed(() => ({
   place: props.data.waitlist.indexOf(props.me?.id ?? -1) + 1,
   amount: fmtVnd(mine.value?.left ?? 0),
   reason: ev.value.cancelReason ?? '',
+  host: props.data.hostName || t('next.organizers'),
 }));
 // One solid button per card: the visitor's own to-do comes first, otherwise the organizer's next move.
 const myTodo = computed(() => TODO_STEPS.includes(next.value.step) || next.value.step === 'declined');
@@ -194,7 +196,8 @@ async function complete() {
 </script>
 
 <template>
-  <UCard v-if="!me && !ev.cancelledAt" id="who" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
+  <!-- After voting closes there is nothing to answer, so the big "who are you" card gives way to a small link below. -->
+  <UCard v-if="!me && !ev.cancelledAt && !votingClosed" id="who" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
     <div class="flex items-start gap-3">
       <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary"><UIcon name="i-lucide-hand-heart" class="size-5" /></span>
       <div>
@@ -205,7 +208,7 @@ async function complete() {
     <MemberPicker />
   </UCard>
 
-  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'space-y-4' }">
+  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance || votingClosed)" :ui="{ body: 'space-y-4' }">
     <!-- Your own answer -->
     <div class="flex flex-wrap items-center gap-4">
       <div class="flex min-w-64 flex-1 items-start gap-3">
@@ -213,8 +216,12 @@ async function complete() {
         <div class="min-w-0">
           <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
           <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
+          <template v-if="!me && votingClosed">
+            <button v-if="!whoOpen" type="button" class="mt-1 text-sm text-primary underline underline-offset-2" @click="whoOpen = true">{{ t('next.who.link') }}</button>
+            <MemberPicker v-else class="mt-2" />
+          </template>
           <UAvatarGroup v-if="next.step === 'settled' && payers.length" :max="8" size="xs" class="mt-2">
-            <UAvatar v-for="p in payers" :key="p.memberId" :alt="p.name" :title="p.name" />
+            <MemberAvatar v-for="p in payers" :id="p.memberId" :key="p.memberId" :name="p.name" :title="p.name" size="xs" />
           </UAvatarGroup>
         </div>
       </div>

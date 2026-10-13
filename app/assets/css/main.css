@@ -13,6 +13,8 @@
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
+    /* 17px base (from 16px) for easier reading; a percentage still follows the browser's font-size setting. */
+    font-size: 106.25%;
   }
   h1,
   h2 {

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+// `newOnly`: just a name field (the create page), so other people's names are not listed there.
+const props = defineProps<{ newOnly?: boolean }>();
 const { t } = useI18n();
 const toast = useToast();
 const { members, refresh, refreshMe } = useMe();
 
-const adding = ref(false);
+const adding = ref(props.newOnly);
 const newName = ref('');
 const busy = ref(false);
 // Only names nobody has signed in as yet can be taken over; a claimed name needs that member's sign-in link.
@@ -17,7 +19,7 @@ async function signIn(req: Promise<unknown>) {
   busy.value = true;
   try {
     await req;
-    adding.value = false;
+    adding.value = props.newOnly;
     newName.value = '';
     await Promise.all([refreshMe(), refresh()]);
   } catch (e) {
@@ -54,9 +56,10 @@ const add = () => signIn($fetch('/api/members', { method: 'POST', body: { name: 
 
     <form v-else class="space-y-2" @submit.prevent="add">
       <div class="flex gap-2">
-        <UInput v-model="newName" :placeholder="t('me.yourName')" :maxlength="50" autofocus class="flex-1" />
+        <!-- No autofocus on the create page: the field shows on load, and focus there would pop the phone keyboard. -->
+        <UInput v-model="newName" :placeholder="t('me.yourName')" :maxlength="50" :autofocus="!newOnly" class="flex-1" />
         <UButton type="submit" :loading="busy" :disabled="!newName.trim()">{{ t('me.join') }}</UButton>
-        <UButton variant="ghost" color="neutral" @click="adding = false">{{ t('cancel') }}</UButton>
+        <UButton v-if="!newOnly" variant="ghost" color="neutral" @click="adding = false">{{ t('cancel') }}</UButton>
       </div>
       <UAlert
         v-if="lookalike && !lookalike.claimed"
@@ -66,6 +69,7 @@ const add = () => signIn($fetch('/api/members', { method: 'POST', body: { name: 
         :actions="[{ label: t('me.thatsMe'), onClick: () => claim(lookalike!.id) }]"
       />
       <UAlert v-else-if="lookalike" color="warning" variant="subtle" :title="t('me.claimedName', { name: lookalike.name })" />
+      <p v-if="newOnly" class="text-xs text-muted">{{ t('me.otherDevice') }}</p>
     </form>
   </div>
 </template>

@@ -94,9 +94,9 @@ async function create() {
 
     <template #body>
       <!-- MemberPicker has its own <form>, so it stays outside the create form. -->
-      <UCard v-if="!meId" class="mx-auto w-full max-w-5xl" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
-        <p class="font-semibold text-highlighted">{{ t('next.who.title') }}</p>
-        <MemberPicker />
+      <UCard v-if="!meId" class="mx-auto w-full max-w-5xl shrink-0" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
+        <p class="font-semibold text-highlighted">{{ t('create.whoTitle') }}</p>
+        <MemberPicker new-only />
       </UCard>
 
       <div class="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-2">
@@ -113,7 +113,7 @@ async function create() {
         />
       </div>
 
-      <UForm :state="form" class="mx-auto w-full max-w-5xl space-y-6" @submit="create">
+      <UForm id="create-form" :state="form" class="mx-auto w-full max-w-5xl space-y-6" @submit="create">
         <div class="grid items-start gap-6 lg:grid-cols-2">
           <div class="space-y-6">
             <UCard :ui="{ body: 'space-y-4' }">
@@ -170,7 +170,7 @@ async function create() {
 
             <UCard :ui="{ body: 'space-y-5' }">
               <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')">
-                <UInputNumber v-model="form.capacity" :min="1" :max="500" class="w-40" />
+                <UInputNumber v-model="form.capacity" :min="1" :max="500" :placeholder="t('create.unlimited')" class="w-44" />
               </UFormField>
 
               <UCollapsible class="space-y-3">
@@ -188,14 +188,17 @@ async function create() {
             </UCard>
           </div>
         </div>
-
-        <div class="flex flex-col items-end gap-2">
-          <UButton type="submit" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!meId || !form.title.trim()">
-            {{ t('create.submit') }}
-          </UButton>
-          <p v-if="!meId" class="text-sm text-muted">{{ t('create.pickFirst') }}</p>
-        </div>
       </UForm>
+    </template>
+
+    <!-- In the panel footer: always in reach, never over the form. The button submits the form by id. -->
+    <template #footer>
+      <div class="flex items-center justify-end gap-3 border-t border-default px-4 py-3 sm:px-6">
+        <p v-if="!meId" class="text-sm text-muted">{{ t('create.pickFirst') }}</p>
+        <UButton type="submit" form="create-form" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!meId || !form.title.trim()">
+          {{ t('create.submit') }}
+        </UButton>
+      </div>
     </template>
   </UDashboardPanel>
 </template>
