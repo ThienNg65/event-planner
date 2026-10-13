@@ -107,12 +107,12 @@ describe('deadline rules', () => {
     assert.equal(late.message, 'invalidDate');
   });
 
-  it('refuses a plan change that would hold seats with a start that has already passed', async () => {
+  it('refuses moving the date into the past', async () => {
     const { id, key, b } = await setup();
     const before = await rowOf(id, b);
     const res = await patch(id, key, { startsAt: new Date(Date.now() - 86_400_000).toISOString() });
-    assert.equal(res.status, 409);
-    assert.equal(res.message, 'reconfirmTooLate');
+    assert.equal(res.status, 400);
+    assert.equal(res.message, 'startsInPast');
     assert.deepEqual(await rowOf(id, b), before);
   });
 
@@ -164,6 +164,7 @@ describe('leaving the RSVP stage', () => {
   it('entering the bill releases pending holds', async () => {
     const { id, key, b } = await setup();
     await patch(id, key, { startsAt: at(11) });
+    await query(`UPDATE events SET starts_at = now() - interval '1 hour' WHERE id = $1`, [id]);
     assert.equal((await patch(id, key, { stage: 'bill', billTotal: 100_000 })).status, 200);
     const row = await rowOf(id, b);
     assert.deepEqual([row.status, row.derived], [null, null]);

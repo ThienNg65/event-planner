@@ -36,6 +36,7 @@
     "poll": "Đang bình chọn",
     "pollClosed": "Chờ chốt ngày",
     "rsvp": "Đã chốt",
+    "awaitingBill": "Chờ nhập hóa đơn",
     "bill": "Thu tiền",
     "settled": "Hoàn tất",
     "cancelled": "Đã huỷ"
@@ -56,7 +57,7 @@
     "otherDevice": "Đã dùng app trên thiết bị khác? Hãy mở liên kết đăng nhập từ thiết bị đó.",
     "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị bạn đã dùng.",
     "signOut": "Đăng xuất",
-    "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại.",
+    "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
     "continue": "Tiếp tục",
     "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập của bạn."
   },
@@ -105,6 +106,9 @@
     "bankHolder": "Chủ tài khoản",
     "submit": "Tạo sự kiện",
     "pickFirst": "Nhập tên của bạn ở trên trước.",
+    "needTitle": "Hãy đặt tên cho sự kiện.",
+    "needDays": "Chọn ít nhất một ngày để bình chọn.",
+    "needDate": "Chọn ngày và giờ.",
     "done": "Đã tạo sự kiện",
     "keyHint": "Trình duyệt này đã lưu quyền quản lý. Hãy sao chép liên kết quản lý để dùng trên máy khác.",
     "quickStart": "Bắt đầu nhanh:",
@@ -134,7 +138,6 @@
       "maybe": "Có thể",
       "no": "Không tham gia"
     },
-    "update": "Cập nhật",
     "fromVote": "Bạn được tính là đi theo phiếu bầu. Đổi câu trả lời nếu bạn không đi được.",
     "held": "Kế hoạch đã đổi. Chỗ của bạn được giữ đến {deadline}. Hãy xác nhận để giữ chỗ.",
     "released": "Chỗ giữ của bạn đã được nhả. Bạn vẫn có thể tham gia.",
@@ -152,6 +155,7 @@
     "generic": "Có lỗi xảy ra, vui lòng thử lại.",
     "invalid": "Dữ liệu không hợp lệ.",
     "notFound": "Không tìm thấy sự kiện.",
+    "organizersOnly": "Chỉ người đã từng tạo sự kiện mới làm được việc này.",
     "forbidden": "Bạn không có quyền quản lý sự kiện này.",
     "stageClosed": "Phần này đã đóng.",
     "nameRequired": "Vui lòng nhập tên.",
@@ -183,7 +187,8 @@
     "hasPayments": "Đã có khoản thanh toán được ghi nhận. Hãy xác nhận giữ lại.",
     "notStarted": "Sự kiện chưa diễn ra.",
     "planFrozen": "Ngày và địa điểm đã cố định khi sự kiện bắt đầu. Hãy dùng \"Sửa ngày hoặc địa điểm\".",
-    "reconfirmTooLate": "Mọi người cần xác nhận lại nhưng thời điểm mới đã qua. Hãy chọn thời điểm trong tương lai.",
+    "notAttending": "Chỉ người có chỗ trong sự kiện mới cần trả phần chia.",
+    "startsInPast": "Thời điểm này đã qua. Hãy chọn thời điểm trong tương lai.",
     "signInFirst": "Hãy cho biết bạn là ai trước.",
     "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng liên kết đăng nhập của bạn.",
     "nameOrganizer": "Tên này đang tổ chức một sự kiện nên không thể chọn từ danh sách. Hãy mở liên kết đăng nhập hoặc liên kết quản lý của bạn.",
@@ -280,8 +285,15 @@
     "today": "Hôm nay",
     "prev": "Tháng trước",
     "next": "Tháng sau",
+    "pollDays": "{n} ngày để bình chọn | {n} ngày để bình chọn",
     "tentative": "Dự kiến (đang bình chọn)",
     "empty": "Tháng này không có sự kiện."
+  },
+  "team": {
+    "manage": "Dọn danh sách thành viên",
+    "hint": "Lưu trữ những người không còn tham gia. Họ sẽ rời danh sách tên và không còn tính vào \"chưa phản hồi\", và quay lại khi đăng nhập lại.",
+    "archive": "Lưu trữ",
+    "archiveName": "Lưu trữ {name}"
   },
   "settings": {
     "title": "Giao diện",
@@ -385,7 +397,8 @@
     },
     "settled": {
       "title": "🎉 Đã xong xuôi, cảm ơn mọi người!",
-      "body": "Mong là một buổi thật vui."
+      "body": "Mong là một buổi thật vui.",
+      "who": "Những người đã tham gia"
     },
     "action": {
       "lock": "Chốt ngày",
@@ -394,7 +407,7 @@
       "close": "Đóng bình chọn",
       "reopen": "Mở lại bình chọn",
       "completeFree": "Hoàn tất, không có hoá đơn",
-      "completeAnyway": "Vẫn hoàn tất",
+      "completeAnyway": "Hoàn tất dù còn nợ",
       "lockBoth": "Chốt ngày & địa điểm",
       "lockPlace": "Chốt địa điểm"
     },
@@ -430,7 +443,7 @@
       "kept": "Phiếu vẫn được giữ nếu ban tổ chức mở lại bình chọn"
     },
     "lockGoing": "Tự động tính là tham gia theo phiếu bình chọn: {names}",
-    "lockWaiting": "{n} người chờ chỗ | {n} người chờ chỗ",
+    "lockWaiting": "{n} người chờ chỗ: {names} | {n} người chờ chỗ: {names}",
     "lockConfirm": "{n} người đã bình chọn sẽ được hỏi xác nhận | {n} người đã bình chọn sẽ được hỏi xác nhận",
     "confirm": {
       "title": "Bạn đi được không?",
@@ -462,6 +475,7 @@
     "hostTitle": "Dành cho ban tổ chức",
     "allAnswered": "Mọi người đã phản hồi. Chốt luôn?",
     "closeVsLock": "Đóng bình chọn: ngừng nhận phiếu, chưa chốt gì. Chốt: chọn ngày (và địa điểm), ai đã chọn sẽ được tính tham gia. Đến hạn, bình chọn tự đóng và chờ bạn chốt.",
+    "billAfter": "Bạn có thể nhập hóa đơn khi sự kiện bắt đầu ({when}).",
     "lockOnly": "Bình chọn đã đóng. Chốt để chọn ngày (và địa điểm); ai đã chọn sẽ được tính tham gia."
   },
   "edit": {
@@ -632,6 +646,7 @@
     "locked": "Đã chốt ngày: {when}",
     "seatsOf": "Đã có {n}/{cap} chỗ",
     "seats": "Đã có {n} chỗ",
+    "seatLimit": "Giới hạn {cap} chỗ. Ai đến trước được chỗ trước.",
     "going": "Tham gia {n}",
     "maybe": "Có thể {n}",
     "no": "Không tham gia {n}",

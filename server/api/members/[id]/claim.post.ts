@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   const token = randomBytes(32).toString('base64url');
   const [member] = await useDb()
     .update(members)
-    .set({ tokenHash: sha256(token) })
+    .set({ tokenHash: sha256(token), archivedAt: null })
     .where(and(eq(members.id, id), isNull(members.tokenHash), sql`not ${organizes(id)}`))
     .returning({ id: members.id, name: members.name });
   if (!member) {

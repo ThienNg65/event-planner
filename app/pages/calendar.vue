@@ -30,8 +30,8 @@ const CHIP = {
   settled: 'bg-secondary/15 text-secondary',
 };
 
-type Entry ={ id: number; title: string; stage: keyof typeof STAGE_COLOR; label: string; tentative: boolean; time: string | null };
-// Fixed events sit on their team-time day; events still polling show on every candidate day, tentatively.
+type Entry ={ id: number; title: string; stage: keyof typeof STAGE_COLOR; label: string; tentative: boolean; time: string | null; days?: number };
+// Fixed events sit on their team-time day; an event still polling shows tentatively on its first candidate day of each month.
 const byDay = computed(() => {
   const map = new Map<string, Entry[]>();
   const put = (day: string, e: Entry) => map.set(day, [...(map.get(day) ?? []), e]);
@@ -39,7 +39,7 @@ const byDay = computed(() => {
     if (e.cancelledAt) continue;
     const base = { id: e.id, title: e.title, stage: e.stage, label: stageKey(e) };
     if (e.startsAt) put(toTeamInput(e.startsAt).slice(0, 10), { ...base, tentative: false, time: toTeamInput(e.startsAt).slice(11) });
-    else for (const d of e.pollDays) put(d, { ...base, tentative: true, time: null });
+    else e.pollDays.forEach((d, i) => (i === 0 || d.slice(0, 7) !== e.pollDays[i - 1]!.slice(0, 7)) && put(d, { ...base, tentative: true, time: null, days: e.pollDays.length }));
   }
   return map;
 });
@@ -93,7 +93,7 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
               :class="e.tentative ? 'border border-dashed border-warning bg-warning/10 text-warning' : CHIP[e.stage]"
               :title="e.title"
             >
-              <span v-if="e.time" class="tabular-nums opacity-75">{{ e.time }} </span>{{ e.title }}
+              <span v-if="e.time" class="tabular-nums opacity-75">{{ e.time }} </span>{{ e.title }}<span v-if="e.days" class="opacity-75"> · {{ t('calendar.pollDays', { n: e.days }, e.days) }}</span>
             </NuxtLink>
           </div>
         </div>
@@ -111,10 +111,11 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
                 :key="e.id"
                 :to="`/e/${e.id}`"
                 class="themed-tile flex items-center gap-3 p-3"
+                :title="e.title"
                 :class="{ 'border-dashed !border-warning': e.tentative }"
               >
                 <span class="w-12 shrink-0 text-sm text-muted tabular-nums">{{ e.time ?? '—' }}</span>
-                <span class="min-w-0 flex-1 truncate font-medium text-highlighted">{{ e.title }}</span>
+                <span class="min-w-0 flex-1 truncate font-medium text-highlighted">{{ e.title }}<span v-if="e.days" class="font-normal text-muted"> · {{ t('calendar.pollDays', { n: e.days }, e.days) }}</span></span>
                 <UBadge :color="STAGE_COLOR[e.stage]" variant="subtle" size="sm" :label="t(`stage.${e.label}`)" />
               </NuxtLink>
             </div>

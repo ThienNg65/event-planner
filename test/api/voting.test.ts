@@ -1,6 +1,6 @@
 import { after, afterEach, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { api, cleanup, cohostKey, day, event, member, startServer, stopServer } from './harness.ts';
+import { api, cleanup, cohostKey, day, event, member, query, startServer, stopServer } from './harness.ts';
 
 /** Closing and reopening voting, reopening to the poll, and the one-step stage rule (plan Phase 3). */
 before(startServer);
@@ -135,6 +135,8 @@ describe('stage moves', () => {
     assert.equal(jump.message, 'stageClosed');
     assert.equal((await get(ev.id)).event.stage, 'poll');
     assert.equal((await patch(ev.id, ev.key, lock)).status, 200);
+    assert.equal((await patch(ev.id, ev.key, { stage: 'bill' })).message, 'notStarted');
+    await query(`UPDATE events SET starts_at = now() - interval '1 hour' WHERE id = $1`, [ev.id]);
     assert.equal((await patch(ev.id, ev.key, { stage: 'bill' })).status, 200);
   });
 });

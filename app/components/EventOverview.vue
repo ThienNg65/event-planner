@@ -76,6 +76,7 @@ const relative = computed(() => {
           <span class="font-medium text-highlighted tabular-nums">{{ s.n }}</span>
         </li>
       </ul>
+      <p v-if="ev.capacity" class="flex items-center gap-2 text-sm text-muted"><UIcon name="i-lucide-armchair" class="size-4 shrink-0" />{{ t('overview.seatLimit', { cap: ev.capacity }) }}</p>
       <p v-if="pending.length" class="text-sm text-muted">
         {{ t('overview.notVoted', { names: pending.slice(0, 5).map((m) => m.name).join(', ') }) }}<template v-if="pending.length > 5">{{ ' ' + t('overview.more', { n: pending.length - 5 }) }}</template>
       </p>

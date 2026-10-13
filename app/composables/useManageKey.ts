@@ -26,6 +26,15 @@ export function forgetManageKey(id: number) {
   }
 }
 
+/** Drops every organizer key on this device: signing out must not leave host powers to the next person. */
+export function forgetAllManageKeys() {
+  try {
+    localStorage.removeItem(STORE);
+  } catch {
+    /* storage blocked: nothing stored to forget */
+  }
+}
+
 const RANK: Record<string, number> = { host: 2, cohost: 1 };
 const rankOf = (id: number, key: string) =>
   $fetch(`/api/events/${id}`, { headers: { 'x-manage-key': key } }).then((r) => RANK[r.role ?? ''] ?? 0, () => 0);

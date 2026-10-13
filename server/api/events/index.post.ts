@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
   await requireMembers(f.honorees);
   const pollDays = f.pollDays ?? [];
   if (!pollDays.length && !f.startsAt) fail(400, 'invalidDate');
+  if (!pollDays.length && f.startsAt! <= new Date()) fail(400, 'startsInPast');
 
   const key = randomBytes(32).toString('base64url');
   const [ev] = await useDb()

@@ -84,7 +84,7 @@ const lockKey = computed(() => {
   if (!ev.value.pollDays.length) return 'next.action.lockPlace';
   return places ? 'next.action.lockBoth' : 'next.action.lock';
 });
-const hostActions = computed(() => canAdvance.value && (!!next.value.action || ev.value.stage === 'bill'));
+const hostActions = computed(() => canAdvance.value && (!!next.value.action || ev.value.stage === 'bill' || ev.value.stage === 'rsvp'));
 
 function jump(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -230,7 +230,8 @@ async function complete() {
             <button v-if="!whoOpen" type="button" class="mt-1 text-sm text-primary underline underline-offset-2" @click="whoOpen = true">{{ t('next.who.link') }}</button>
             <MemberPicker v-else pick-only class="mt-2" />
           </template>
-          <UAvatarGroup v-if="next.step === 'settled' && payers.length" :max="8" size="xs" class="mt-2">
+          <p v-if="next.step === 'settled' && payers.length" class="mt-2 text-xs text-muted">{{ t('next.settled.who') }}</p>
+          <UAvatarGroup v-if="next.step === 'settled' && payers.length" :max="8" size="xs" class="mt-1">
             <MemberAvatar v-for="p in payers" :id="p.memberId" :key="p.memberId" :name="p.name" :title="p.name" size="xs" />
           </UAvatarGroup>
         </div>
@@ -258,6 +259,7 @@ async function complete() {
       <p v-if="next.action === 'lock' && allAnswered" class="basis-full text-sm font-medium text-success">{{ t('next.allAnswered') }}</p>
       <!-- Close and lock look alike; one line says what each does and what the deadline does on its own. -->
       <p v-if="next.action === 'lock'" class="basis-full text-xs text-muted">{{ t(votingClosed ? 'next.lockOnly' : 'next.closeVsLock') }}</p>
+      <p v-if="ev.stage === 'rsvp' && next.action !== 'bill' && ev.startsAt" class="basis-full text-xs text-muted">{{ t('next.billAfter', { when: fmtDateTime(ev.startsAt, locale) }) }}</p>
       <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
       <UButton v-if="next.action === 'bill'" v-bind="hostMain" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
       <UButton v-if="ev.stage === 'bill' && next.action !== 'settle'" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'anyway'">
@@ -304,7 +306,7 @@ async function complete() {
           <ul class="list-disc space-y-0.5 pl-5">
             <li>{{ t('next.consequences.end') }}</li>
             <li v-if="lockSeen.going.length">{{ t('next.lockGoing', { names: nameList(lockSeen.going) }) }}</li>
-            <li v-if="lockSeen.waiting.length">{{ t('next.lockWaiting', { n: lockSeen.waiting.length }, lockSeen.waiting.length) }}</li>
+            <li v-if="lockSeen.waiting.length">{{ t('next.lockWaiting', { n: lockSeen.waiting.length, names: nameList(lockSeen.waiting) }, lockSeen.waiting.length) }}</li>
             <li v-if="lockSeen.confirm.length">{{ t('next.lockConfirm', { n: lockSeen.confirm.length }, lockSeen.confirm.length) }}</li>
             <li>{{ t('next.consequences.rsvp') }}</li>
             <li>{{ t('next.consequences.kept') }}</li>

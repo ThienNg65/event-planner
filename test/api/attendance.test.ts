@@ -100,6 +100,7 @@ describe('reopen to the poll', () => {
     const a = await member();
     await vote(ev.id, a, [day(10)]);
     await patch(ev.id, ev.key, lockAt(10));
+    await query(`UPDATE events SET starts_at = now() - interval '1 hour' WHERE id = $1`, [ev.id]);
     await patch(ev.id, ev.key, { stage: 'bill', billTotal: 100_000 });
     await api(`/api/events/${ev.id}/response`, { method: 'PUT', me: a, body: { memberId: a, addPaid: 50_000 } });
     const refused = await patch(ev.id, ev.key, { stage: 'poll', reopenVoting: true, voteDeadline: null });

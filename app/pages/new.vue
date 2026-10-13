@@ -23,6 +23,14 @@ const form = reactive({
 // The whole page previews the picked theme.
 useEventTheme(() => form.theme);
 const busy = ref(false);
+// The first thing still missing, shown next to the disabled Create button so it never looks broken.
+const missing = computed(() => {
+  if (!meId.value) return 'create.pickFirst';
+  if (!form.title.trim()) return 'create.needTitle';
+  if (form.dateMode === 'poll' && !form.pollDays.length) return 'create.needDays';
+  if (form.dateMode === 'fixed' && !form.startsAt) return 'create.needDate';
+  return null;
+});
 
 // Quick starts: one tap fills a title (unless you typed your own) and a matching cover.
 const TEMPLATES = [
@@ -195,8 +203,8 @@ async function create() {
     <template #footer>
       <div class="border-t border-default px-4 py-3 sm:px-6">
         <div class="mx-auto flex w-full max-w-5xl items-center justify-end gap-3">
-          <p v-if="!meId" class="text-sm text-muted">{{ t('create.pickFirst') }}</p>
-          <UButton type="submit" form="create-form" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!meId || !form.title.trim()">
+          <p v-if="missing" class="text-sm text-muted">{{ t(missing) }}</p>
+          <UButton type="submit" form="create-form" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!!missing">
             {{ t('create.submit') }}
           </UButton>
         </div>

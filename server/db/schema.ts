@@ -12,6 +12,8 @@ export const members = pgTable('members', {
   // sha256 of the random sign-in token held in the httpOnly `sid` cookie; null until someone claims the name.
   tokenHash: text().unique(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  // Set when someone hides a leftover member from the roster; cleared when the member signs in or is added again.
+  archivedAt: timestamp({ withTimezone: true }),
 });
 
 export const events = pgTable(

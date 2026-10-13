@@ -120,7 +120,7 @@ const FIELD_OF: Record<string, string> = {
   invalidCapacity: 'capacity',
   invalidBank: 'bank',
   invalidCover: 'cover',
-  reconfirmTooLate: 'startsAt',
+  startsInPast: 'startsAt',
 };
 
 async function save() {

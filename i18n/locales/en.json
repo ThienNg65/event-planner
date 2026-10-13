@@ -36,6 +36,7 @@
     "poll": "Voting",
     "pollClosed": "Awaiting the date",
     "rsvp": "Confirmed",
+    "awaitingBill": "Awaiting the bill",
     "bill": "Paying",
     "settled": "Completed",
     "cancelled": "Cancelled"
@@ -56,7 +57,7 @@
     "otherDevice": "Used the app on another device? Open your sign-in link from there instead.",
     "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from the device you used before.",
     "signOut": "Sign out",
-    "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself.",
+    "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself. Organizer links opened on this device are forgotten too.",
     "continue": "Continue",
     "noneToPick": "No names left to pick. If you have used the app before, open your sign-in link."
   },
@@ -105,6 +106,9 @@
     "bankHolder": "Account holder",
     "submit": "Create event",
     "pickFirst": "Enter your name above first.",
+    "needTitle": "Give the event a name.",
+    "needDays": "Pick at least one day to vote on.",
+    "needDate": "Pick the date and time.",
     "done": "Event created",
     "keyHint": "This browser remembers you as organizer. Copy the manage link to manage it elsewhere.",
     "quickStart": "Quick start:",
@@ -134,7 +138,6 @@
       "maybe": "Maybe",
       "no": "Can't make it"
     },
-    "update": "Update",
     "fromVote": "Counted as going from your votes. Change your answer if you can't make it.",
     "held": "The plan changed. Your seat is held until {deadline}. Confirm to keep it.",
     "released": "Your held seat was released. You can still join.",
@@ -153,6 +156,7 @@
     "invalid": "Invalid data.",
     "notFound": "Event not found.",
     "forbidden": "You can't manage this event.",
+    "organizersOnly": "Only people who have created an event can do this.",
     "stageClosed": "This part is closed.",
     "nameRequired": "Please enter a name.",
     "nameTaken": "That name is already on the list.",
@@ -183,7 +187,8 @@
     "hasPayments": "Payments were already recorded. Confirm that you want to keep them.",
     "notStarted": "The event has not started yet.",
     "planFrozen": "The date and place are fixed once the event has started. Use \"Correct date or place\".",
-    "reconfirmTooLate": "People would need to confirm again, but the new time has passed. Pick a future time.",
+    "notAttending": "Only people with a seat at this event pay a share.",
+    "startsInPast": "That time has already passed. Pick a time in the future.",
     "signInFirst": "Tell us who you are first.",
     "nameClaimed": "Someone already signed in with that name. Use your sign-in link instead.",
     "nameOrganizer": "This name organizes an event, so it can't be picked from the list. Open your sign-in link or manage link instead.",
@@ -281,7 +286,14 @@
     "prev": "Previous month",
     "next": "Next month",
     "tentative": "Tentative (poll)",
+    "pollDays": "{n} day to vote on | {n} days to vote on",
     "empty": "No events this month."
+  },
+  "team": {
+    "manage": "Tidy the team list",
+    "hint": "Archive people who no longer take part. They leave the name list and the \"no reply yet\" counts, and come back when they sign in again.",
+    "archive": "Archive",
+    "archiveName": "Archive {name}"
   },
   "settings": {
     "title": "Appearance",
@@ -385,7 +397,8 @@
     },
     "settled": {
       "title": "🎉 All settled, thanks everyone!",
-      "body": "Hope it was a great one."
+      "body": "Hope it was a great one.",
+      "who": "Who came"
     },
     "action": {
       "lock": "Lock the date",
@@ -394,7 +407,7 @@
       "close": "Close voting",
       "reopen": "Reopen voting",
       "completeFree": "Complete, no bill",
-      "completeAnyway": "Complete anyway",
+      "completeAnyway": "Complete with open debts",
       "lockBoth": "Lock date & place",
       "lockPlace": "Lock the place"
     },
@@ -430,7 +443,7 @@
       "kept": "Votes are kept if the host reopens voting"
     },
     "lockGoing": "Marked Going from their votes: {names}",
-    "lockWaiting": "{n} person waits for a seat | {n} people wait for a seat",
+    "lockWaiting": "{n} person waits for a seat: {names} | {n} people wait for a seat: {names}",
     "lockConfirm": "{n} voter is asked to confirm | {n} voters are asked to confirm",
     "confirm": {
       "title": "Can you make it?",
@@ -462,6 +475,7 @@
     "hostTitle": "For organizers",
     "allAnswered": "Everyone has replied. Lock it now?",
     "closeVsLock": "Close voting: stop taking votes, nothing is decided. Lock: pick the day (and place); everyone who voted for it counts as going. At the deadline, voting closes by itself and waits for you to lock.",
+    "billAfter": "You can enter the bill once the event starts ({when}).",
     "lockOnly": "Voting is closed. Lock to pick the day (and place); everyone who voted for it counts as going."
   },
   "edit": {
@@ -632,6 +646,7 @@
     "locked": "Date locked: {when}",
     "seatsOf": "{n} of {cap} seats taken",
     "seats": "{n} seats taken",
+    "seatLimit": "Seat limit: {cap}. Seats go first come, first served.",
     "going": "Going {n}",
     "maybe": "Maybe {n}",
     "no": "Can't make it {n}",
