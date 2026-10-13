@@ -689,10 +689,11 @@
   "compare": {
     "title": "Compare the leading days",
     "suggested": "Suggested",
-    "in": "Can come ({n}):",
-    "out": "Can't ({n}):",
+    "provisional": "Tentative pick",
+    "in": "Can come:",
+    "out": "Can't come ({n})",
     "pending": "{n} haven't replied yet.",
     "tieHonorees": "Tied at {n} votes. {day} is suggested because more honorees can come.",
-    "tieEarlier": "Tied at {n} votes. {day} is suggested because it is earlier; check who can make each day below."
+    "tieEarlier": "Tied at {n} votes. {day} is only a tentative pick because it is earlier, not because more people can come; check who can make each day below."
   }
 }

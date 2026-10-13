@@ -6,7 +6,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ### Added
 - Organizers can mark who the event is for (birthday people, a guest of honour) in Edit. Every proposed day then shows whether each of them can come.
-- Organizers see the leading days side by side: who can come, who can't, which honorees can come and how many haven't replied yet.
+- Organizers see the leading days side by side: who can come, who can't, which honorees can come and how many haven't replied yet. A day that only wins a tie by being earlier is labelled "Tentative pick" with a note that it has no more people, and the "can't come" names are folded away.
 - When days are tied, the app suggests one (the day more honorees can make, then the earlier one), explains why, and preselects it when locking.
 - Once everyone has replied, organizers get a nudge to lock the date now.
 - Organizers can archive leftover or test names from the team list ("Tidy the team list" in the account menu). Archived people leave the name list and the "no reply yet" counts, and come back when they sign in again.

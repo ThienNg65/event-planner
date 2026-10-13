@@ -68,6 +68,7 @@ const compare = computed(() => {
   const answered = rows.value.filter((r) => r.days.length || r.venueIds.length || r.status === 'no');
   return {
     tie,
+    answered: answered.length,
     pending: pendingVoters(members.value, rows.value).length,
     days: top.map((d) => ({
       ...d,
@@ -239,17 +240,21 @@ async function remove() {
         <h3 class="flex items-center gap-2 font-semibold text-highlighted"><UIcon name="i-lucide-columns-3" class="size-4 text-muted" />{{ t('compare.title') }}</h3>
         <p v-if="compare.tie" class="text-sm text-warning">{{ t(compare.tie === 'honorees' ? 'compare.tieHonorees' : 'compare.tieEarlier', { day: compare.days[0]!.label, n: compare.days[0]!.n }) }}</p>
         <div class="grid gap-3 sm:grid-cols-3">
-          <div v-for="(d, i) in compare.days" :key="d.day" class="space-y-2 rounded-lg bg-elevated/50 p-3 text-sm">
+          <div v-for="(d, i) in compare.days" :key="d.day" class="min-w-0 space-y-2 rounded-lg bg-elevated/50 p-3 text-sm">
             <p class="flex items-baseline justify-between gap-2">
               <span class="font-semibold text-highlighted">{{ d.label }}</span>
-              <span class="text-muted tabular-nums">{{ t('poll.votes', d.n) }}</span>
+              <!-- Same number as the "can come" list (a vote is a yes), so show it once, against everyone who answered. -->
+              <span class="text-muted tabular-nums"><span class="font-semibold text-success">{{ d.inNames.length }}</span>/{{ compare.answered }}</span>
             </p>
-            <UBadge v-if="i === 0" color="primary" variant="subtle" size="sm" :label="t('compare.suggested')" />
+            <UBadge v-if="i === 0" color="primary" variant="subtle" size="sm" :label="t(compare.tie === 'earlier' ? 'compare.provisional' : 'compare.suggested')" />
             <p v-if="d.honorees.length" class="flex flex-wrap gap-1">
               <span v-for="h in d.honorees" :key="h.id" :class="h.in ? 'text-success' : 'text-dimmed line-through'">🎂 {{ h.name }}</span>
             </p>
-            <p><span class="font-medium text-success">{{ t('compare.in', { n: d.inNames.length }) }}</span> <span class="text-muted">{{ d.inNames.join(', ') }}</span></p>
-            <p v-if="d.outNames.length"><span class="font-medium text-error">{{ t('compare.out', { n: d.outNames.length }) }}</span> <span class="text-muted">{{ d.outNames.join(', ') }}</span></p>
+            <p class="break-words"><span class="font-medium text-success">{{ t('compare.in') }}</span> <span class="text-muted">{{ d.inNames.join(', ') }}</span></p>
+            <details v-if="d.outNames.length" class="break-words">
+              <summary class="cursor-pointer text-muted">{{ t('compare.out', { n: d.outNames.length }) }}</summary>
+              <p class="mt-1 text-dimmed">{{ d.outNames.join(', ') }}</p>
+            </details>
           </div>
         </div>
         <p v-if="compare.pending" class="text-xs text-muted">{{ t('compare.pending', { n: compare.pending }) }}</p>

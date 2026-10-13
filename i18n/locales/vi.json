@@ -689,10 +689,11 @@
   "compare": {
     "title": "So sánh các ngày dẫn đầu",
     "suggested": "Gợi ý chốt",
-    "in": "Đi được ({n}):",
-    "out": "Không đi được ({n}):",
+    "provisional": "Ưu tiên tạm thời",
+    "in": "Đi được:",
+    "out": "Không đi được ({n})",
     "pending": "{n} người chưa phản hồi.",
     "tieHonorees": "Đang hoà {n} phiếu. {day} được gợi ý vì nhiều người được chúc mừng đi được hơn.",
-    "tieEarlier": "Đang hoà {n} phiếu. {day} được gợi ý vì sớm hơn; hãy cân nhắc ai đi được ngày nào bên dưới."
+    "tieEarlier": "Đang hoà {n} phiếu. {day} chỉ được ưu tiên tạm thời vì sớm hơn, không phải vì nhiều người đi hơn; hãy cân nhắc ai đi được ngày nào bên dưới."
   }
 }
