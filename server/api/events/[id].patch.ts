@@ -77,11 +77,10 @@ export default defineEventHandler(async (event) => {
   if (f.stage && f.stage !== ev.stage) {
     const jump = STAGES.indexOf(f.stage) - STAGES.indexOf(ev.stage);
     requireCan(role, jump > 0 ? 'advance' : 'reopen');
-    if (jump > 1) {
-      // The one skip: a started event that never got a bill is completed straight from the RSVP stage.
-      if (ev.stage !== 'rsvp' || f.stage !== 'settled' || ev.billTotal !== null || 'billTotal' in b) fail(409, 'stageClosed');
-      if (!ev.startsAt || ev.startsAt > now) fail(409, 'notStarted');
-    }
+    // The one skip: a started event that never got a bill is completed straight from the RSVP stage.
+    if (jump > 1 && (ev.stage !== 'rsvp' || f.stage !== 'settled' || ev.billTotal !== null || 'billTotal' in b)) fail(409, 'stageClosed');
+    // Leaving the RSVP stage (bill or complete) needs the event to have started.
+    if (jump > 0 && ev.stage === 'rsvp' && (!ev.startsAt || ev.startsAt > now)) fail(409, 'notStarted');
   }
   // Reopening voting always names the new deadline (a future time, or null for none) and needs the poll stage.
   const reopen = b.reopenVoting === true;
@@ -98,6 +97,9 @@ export default defineEventHandler(async (event) => {
   // Past the poll stage the event needs a fixed date (that's what "Lock" sets).
   const next = { ...ev, ...f, ...(repoll && { startsAt: null }) };
   if (next.stage !== 'poll' && !next.startsAt) fail(400, 'invalidDate');
+  // A date being locked in or changed must lie ahead: nobody can be asked to come to the past.
+  const dateMoved = 'startsAt' in f && f.startsAt?.getTime() !== ev.startsAt?.getTime();
+  if (((f.stage === 'rsvp' && ev.stage === 'poll') || dateMoved) && next.startsAt && next.startsAt <= now) fail(400, 'startsInPast');
 
   // Writes to other members' rows that must land in the same batch as the event UPDATE (batch is the only transaction on Neon HTTP).
   const extras: BatchItem<'pg'>[] = [];
@@ -132,7 +134,6 @@ export default defineEventHandler(async (event) => {
       before.push(releaseExpired(ev.id, ev.reconfirmBy));
       reconfirmBy = null;
       if (holds > 0) {
-        if (next.startsAt! <= now) fail(409, 'reconfirmTooLate');
         reconfirmBy = wantedBy ?? new Date(Math.min(now.getTime() + RECONFIRM_MS, next.startsAt!.getTime()));
         if (reconfirmBy <= now || reconfirmBy > next.startsAt!) fail(400, 'invalidDate');
       }

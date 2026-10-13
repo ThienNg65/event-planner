@@ -17,7 +17,7 @@ Code: `shareOf`, `paymentOf`, `allPaid`, `vietqrUrl` in `shared/utils/event.ts`;
 
 The bank fields are optional. They can also be set when creating the event (the create page remembers the last bank details in the browser under `te:bank`) or in Edit.
 Entering the bill releases any seat still being held ([04](04-polling-and-locking.md#plan-changes-after-the-lock)) and freezes the plan.
-The UI offers "Enter bill" only after the start time. The server does not check "started" for this move (see [11](11-known-behaviours.md)).
+The move needs the event to have started (`notStarted` before that), and the UI offers "Enter bill" only then.
 Without a bill, a started event can be completed straight from `rsvp` ("Complete, no bill").
 
 ## 6.2 The split
@@ -59,7 +59,8 @@ Who may use them:
 | Participant, own row | `paid`, `paidAmount`, `addPaid` | `addPaid` only |
 | Organizer, any row | all three | all three |
 
-The server does **not** check that the member is confirmed, owes anything, or that the amount is at most what is owed. It trusts the session (`requireSelf`) and the stage.
+A participant may report a payment only while holding a seat (confirmed in `rollCall(seated(...))`); otherwise `notAttending` (409). Organizers may record anyone.
+The server does **not** check the amount against what is owed: an overpayment is accepted and clamped on read (`left = 0`).
 
 ## 6.4 VietQR
 
@@ -74,7 +75,7 @@ The server does **not** check that the member is confirmed, owes anything, or th
 
 `allPaid(confirmed, share)` is true when there is a share, at least one confirmed party, and every confirmed party is done. It turns the organizer's main button into **Mark as settled**.
 
-- **Completed does not mean all paid.** Organizers can complete with debts open. The UI shows a confirm dialog listing debtors first (`owing`); the server does not require it.
+- **Completed does not mean all paid.** Organizers can complete with debts open (**Complete with open debts**). The UI shows a confirm dialog listing debtors first (`owing`); the server does not require it.
 - After Completed, members who still owe can keep reporting payments (`addPaid`); only organizers set or clear amounts. The page headline reads "Completed, some payments outstanding" until the last debt is paid, then "All settled".
 - A free event (no bill) completes from `rsvp` once started.
 - Reopening to `poll` with any recorded payment requires `acknowledgePayments:true`; payments are never deleted by a reopen.

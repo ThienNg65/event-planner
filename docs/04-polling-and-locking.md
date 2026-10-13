@@ -58,7 +58,7 @@ The UI sends:
 - `startsAt = teamTime(chosenDay, chosenTime)` when the event polls days. The time field defaults to **19:00** (it is not derived from the event type).
 - `venue` and `venueLink` copied from the chosen suggested place when the event has no fixed venue and places exist.
 
-The server requires the resulting event to have a `startsAt` (`invalidDate` otherwise), moves the stage, and **derives attendance from votes** in the same batch.
+The server requires the resulting event to have a `startsAt` (`invalidDate` otherwise) that lies ahead (`startsInPast`), moves the stage, and **derives attendance from votes** in the same batch.
 
 ### The plan
 
@@ -91,7 +91,7 @@ A member who voted only for places on a day plan has no day, so they do not fit;
 | Never voted | Untouched; next-step says **Answer** |
 
 Who actually gets a *seat* is then decided on read by the waitlist rule: strict first-come by queue time, `memberId` breaking ties.
-See [05](05-rsvp-and-seats.md). The lock dialog previews exactly this (`lockImpact`): who is marked Going, who waits, who is asked to confirm.
+See [05](05-rsvp-and-seats.md). The lock dialog previews exactly this (`lockImpact`): it names who is marked Going and who waits, and counts who is asked to confirm.
 
 All derived writes carry the guard "event still in `rsvp` with this date and place, member unpaid, member still unanswered" in SQL, so an answer a member gave a moment earlier always wins and a lost race writes nothing.
 
@@ -108,7 +108,7 @@ attendance is re-derived in mode **`edit`**:
 | Derived and no longer fits | **Held**: `derived = 'reconfirm'`, seat kept until the confirm-by deadline |
 | Hold already expired | Released (status cleared); never revived by a later edit |
 
-- **Confirm-by deadline** (`events.reconfirmBy`): defaults to `min(now + 48 h, new start)`. The organizer may set another time that is in the future and not after the new start (`invalidDate`). If anyone would be held and the new start is already past, the edit is refused (`reconfirmTooLate`).
+- **Confirm-by deadline** (`events.reconfirmBy`): defaults to `min(now + 48 h, new start)`. The organizer may set another time that is in the future and not after the new start (`invalidDate`).
 - A held seat **expires on read**: every seat reader goes through `seated()`, which ignores `reconfirm` rows past the deadline. A cleanup (`releaseExpired`) also clears them when the next plan edit commits.
 - The holder **confirms** by answering Going: if the deadline is still ahead and guests did not increase, they keep their queue spot; otherwise they join the back. Declining or silence releases the seat; a later Going joins the back.
 - **Entering the bill, completing, or reopening to poll releases all holds** (`releaseHolds`, `clearDerived`).

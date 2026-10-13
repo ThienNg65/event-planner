@@ -18,6 +18,8 @@ A DB check ties them: `derived` may only be set while `status = 'going'`.
 
 Any answer a member gives themselves clears `derived` (it becomes an explicit answer). Only **Going** takes seats. Maybe and Can't take none.
 
+In the UI every answer saves at once: the status buttons on tap, the guest count on its own 600 ms after the last change while the member is Going (`EventRsvp.vue`; there is no Update button).
+
 Who may write what and when: participants write their own row while the stage is `rsvp` (organizers: any stage, anyone's row). The server does **not** check "started"; after the start time the UI simply stops prompting (`nextStep` returns `done`).
 
 ## 5.2 Seats and the waitlist (`rollCall`)

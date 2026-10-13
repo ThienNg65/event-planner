@@ -33,7 +33,7 @@ Requires a signed-in member (the creator becomes **host**) and either poll days 
 | Fixed date, "let people suggest places" (no venue) | `startsAt`, no venue | `poll` (places are voted; days are not) |
 | Poll days + fixed venue | `pollDays`, `venue` | `poll` |
 
-Rule in code: `stage = pollDays.length || !venue ? 'poll' : 'rsvp'`. The server does **not** check that a fixed date is in the future.
+Rule in code: `stage = pollDays.length || !venue ? 'poll' : 'rsvp'`. A fixed date must lie ahead (`startsInPast` otherwise); a few minutes ahead is enough.
 
 ## Transition table
 
@@ -41,8 +41,8 @@ Rule in code: `stage = pollDays.length || !venue ? 'poll' : 'rsvp'`. The server 
 
 | Move | Who | Request body (essentials) | Preconditions | Side effects on people |
 |---|---|---|---|---|
-| **Lock**: `poll → rsvp` | Organizer | `stage:'rsvp'`, plus `startsAt` (day polls) and/or `venue` (place polls) | Event must end up with a `startsAt` | Members with votes that fit the plan and no answer become `going` (derived). See [04](04-polling-and-locking.md). Votes are kept. |
-| **Enter bill**: `rsvp → bill` | Organizer | `stage:'bill'`, `billTotal`, optional bank fields | UI offers it only after the start time; the server itself does not check "started" | Pending holds are released. |
+| **Lock**: `poll → rsvp` | Organizer | `stage:'rsvp'`, plus `startsAt` (day polls) and/or `venue` (place polls) | Event must end up with a `startsAt`, and it must lie ahead (`startsInPast`) | Members with votes that fit the plan and no answer become `going` (derived). See [04](04-polling-and-locking.md). Votes are kept. |
+| **Enter bill**: `rsvp → bill` | Organizer | `stage:'bill'`, `billTotal`, optional bank fields | Event has started (`notStarted` otherwise) | Pending holds are released. |
 | **Complete, no bill**: `rsvp → settled` | Organizer | `stage:'settled'` (no `billTotal`) | Event has started (`notStarted` otherwise) and has no bill | Pending holds are released. The only allowed skip of a stage. |
 | **Complete**: `bill → settled` | Organizer | `stage:'settled'` | None on the server. The UI asks for confirmation when someone still owes. | None. People who owe may still report payments. |
 | **Reopen to an earlier stage** | **Host** | `stage:<earlier>` | Not cancelled | See below. |
@@ -89,6 +89,7 @@ and never touches attendance, holds or payments. In `rsvp`, a corrected `startsA
 
 - **Capacity** has no side effects on rows: the queue is recomputed on read, so lowering it pushes the last confirmed parties onto the waitlist and raising it promotes the first waiting parties. The edit panel previews this with `capacityImpact`.
 - **Days** (stage `poll`): `addDays` / `removeDays` are diffs applied to the live list so a day suggested meanwhile survives; votes for removed days are pruned in the same batch. At least 1 and at most 20 days (`daysRequired`, `tooManyDays`). A diff cannot be combined with a stage move or a plan change.
+- **A new `startsAt`** must lie ahead (`startsInPast`), in `poll` and in `rsvp`. Only a correction (above) may set a past time.
 - **Moving date or place in `rsvp`** creates holds. See [04](04-polling-and-locking.md#plan-changes-after-the-lock).
 - **Notice**: setting a different notice stamps `noticeAt`; clearing removes both. Clients show a "new" dot until they have seen that version.
 
@@ -105,6 +106,8 @@ The "next step" card and the home page's "needs you" list both use `nextStep()` 
 | any, cancelled | `cancelled` | Nothing to do |
 
 The **organizer's action** is separate: `lock` in `poll`; `bill` in `rsvp` once started; `settle` in `bill` once everyone has paid.
+Before the start, organizers see when the bill opens ("You can enter the bill once the event starts").
+The stage badge (`stageKey`) of a started `rsvp` event reads "Awaiting the bill" (`awaitingBill`) instead of "Confirmed"; the stage is still `rsvp`.
 To-do kinds shown on the home page: `vote`, `rsvp`, `confirm`, `pay` (visitor) and `lock`, `bill`, `settle` (organizer).
 
 ## Where events appear on the home page

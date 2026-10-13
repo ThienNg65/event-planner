@@ -10,12 +10,13 @@ Every handler validates its own input (there is no shared schema layer): `server
 
 | Method and path | Auth | Purpose | Notable errors |
 |---|---|---|---|
-| `GET /api/members` | none | Roster `[{ id, name, claimed }]`, sorted by name | |
-| `POST /api/members` `{name}` | none | Create a member and sign this browser in (201) | `nameRequired`, `nameTaken` |
+| `GET /api/members` | none | Roster `[{ id, name, claimed }]`, sorted by name; archived members left out | |
+| `POST /api/members` `{name}` | none | Create a member and sign this browser in (201). An archived, never-claimed, non-organizer name is reused and un-archived | `nameRequired`, `nameTaken` |
 | `POST /api/members/:id/claim` | none | Sign in as an unclaimed, non-organizer member | `unknownMember`, `nameClaimed`, `nameOrganizer` |
-| `GET /api/me` | none | The signed-in member or `null` | |
+| `POST /api/members/:id/archive` | signed in, has created an event | Hide a member from the roster ([03](03-identity-and-roles.md#archived-members)) | `signInFirst`, `organizersOnly`, `unknownMember` |
+| `GET /api/me` | none | The signed-in member `{ id, name, organizer }` or `null` | |
 | `POST /api/me/link` | signed in | `{ token }` to build a sign-in link | `signInFirst` |
-| `POST /api/me/signin` `{token}` | none | Sign in from a link | `signInInvalid` |
+| `POST /api/me/signin` `{token}` | none | Sign in from a link; un-archives the member | `signInInvalid` |
 | `POST /api/me/signout` | none | Clear this browser's cookie | |
 
 ## Events
@@ -23,7 +24,7 @@ Every handler validates its own input (there is no shared schema layer): `server
 | Method and path | Auth | Purpose | Notable errors |
 |---|---|---|---|
 | `GET /api/events` | none | All events with seats, answered count, `allPaid`, `manager`, and the visitor's `mine` (newest first) | |
-| `POST /api/events` | signed in | Create; returns `{ id, key }` (201). Ignores `stage` and `reconfirmBy` in the body | `signInFirst`, `titleRequired`, `invalidDate`, `invalidDays`, `invalidLink`, `invalidCapacity`, `invalidBank`, `invalidCover`, `unknownMember` |
+| `POST /api/events` | signed in | Create; returns `{ id, key }` (201). Ignores `stage` and `reconfirmBy` in the body | `signInFirst`, `titleRequired`, `invalidDate`, `startsInPast`, `invalidDays`, `invalidLink`, `invalidCapacity`, `invalidBank`, `invalidCover`, `unknownMember` |
 | `GET /api/events/:id` | none (role from key/session) | Full detail (see below) | `notFound` |
 | `PATCH /api/events/:id` | organizer (some moves host) | Edit, stage moves, cancel/restore, close/reopen voting, day diffs, corrections | many, see below |
 | `DELETE /api/events/:id` | host | Delete with cascade | `hostOnly`, `forbidden` |
@@ -34,7 +35,7 @@ Every handler validates its own input (there is no shared schema layer): `server
 `event` (all columns except the key hashes), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
 `hostName`, `votingOpen`, `responses` (every member's row plus `name`), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).
 
-**Everything is public**, including every member's votes and payments, and the event's bank details.
+Everything is public by design ([03](03-identity-and-roles.md#34-security-properties-worth-remembering)).
 
 ### `PATCH /api/events/:id`: which body does what
 
@@ -47,9 +48,9 @@ The handler tests, in this order:
 | `correct:true` + `notice` + `startsAt`/`venue`/`venueLink` | Correct a frozen plan; nothing else allowed | organizer | `stageClosed` (not frozen), `invalid`, `invalidDate` |
 | `closeVoting:true` | Close voting now | organizer | `stageClosed` |
 | `addDays` / `removeDays` | Day diffs (stage `poll`) | organizer | `invalidDays`, `daysRequired`, `tooManyDays`, `daysChanged`, `stageClosed`, `invalid` (cannot mix with `pollDays`, a stage move or a plan change) |
-| `stage` | Move: forward one step by organizer, backward by host, the single skip `rsvp → settled` | organizer / host | `stageClosed`, `notStarted`, `hasPayments`, `invalidDate`, `hostOnly` |
+| `stage` | Move: forward one step by organizer, backward by host, the single skip `rsvp → settled`. Leaving `rsvp` needs the event to have started; a lock needs a future start | organizer / host | `stageClosed`, `notStarted`, `startsInPast`, `hasPayments`, `invalidDate`, `hostOnly` |
 | `reopenVoting:true` + `voteDeadline` | Reopen voting; also validates the move to `poll` | organizer (host if leaving a later stage) | `invalid`, `invalidDate` |
-| any of `title, note, pollDays, startsAt, venue, venueLink, capacity, billTotal, bankId, bankAccount, bankHolder, cover, theme, honorees, notice, voteDeadline, reconfirmBy` | Field edits, validated by `eventFields` | organizer | `planFrozen` for date/place once frozen; `reconfirmTooLate`; `votingClosed` for a deadline edit on a closed poll |
+| any of `title, note, pollDays, startsAt, venue, venueLink, capacity, billTotal, bankId, bankAccount, bankHolder, cover, theme, honorees, notice, voteDeadline, reconfirmBy` | Field edits, validated by `eventFields` | organizer | `planFrozen` for date/place once frozen; `startsInPast` for a changed `startsAt` in the past; `votingClosed` for a deadline edit on a closed poll |
 | `acknowledgePayments:true` | Required when reopening to `poll` with payments | host | `hasPayments` |
 
 Multi-row effects (attendance derivation, hold release) run in one `db.batch` together with the event UPDATE, guarded on the event still being in the stage the decision was made in; a lost race returns `stageClosed`.
@@ -58,7 +59,7 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 
 | Method and path | Auth | Body | Purpose | Notable errors |
 |---|---|---|---|---|
-| `PUT /api/events/:id/response` | self | `memberId` + any of `days`, `venueIds`, `status` (+`guests`), `paid`, `addPaid`, `paidAmount` | Write the member's own row ([04](04-polling-and-locking.md), [05](05-rsvp-and-seats.md), [06](06-bill-and-payments.md)) | `unknownMember`, `notYou`, `cancelled`, `stageClosed`, `votingClosed`, `invalidDays`, `unknownVenue`, `invalidGuests`, `invalid`, `daysChanged`, `venuesChanged` |
+| `PUT /api/events/:id/response` | self | `memberId` + any of `days`, `venueIds`, `status` (+`guests`), `paid`, `addPaid`, `paidAmount` | Write the member's own row ([04](04-polling-and-locking.md), [05](05-rsvp-and-seats.md), [06](06-bill-and-payments.md)) | `unknownMember`, `notYou`, `cancelled`, `stageClosed`, `votingClosed`, `invalidDays`, `unknownVenue`, `invalidGuests`, `invalid`, `daysChanged`, `venuesChanged`, `notAttending` (participant paying without a seat) |
 | `POST /api/events/:id/days` | self | `memberId`, `day` | Suggest (or vote for) a day | `invalidDays`, `tooManyDays`, `daysChanged`, `stageClosed`, `votingClosed` |
 | `POST /api/events/:id/venues` | self | `addedBy`, `name`, `link?`, `note?` | Suggest a place (201) | `nameRequired`, `invalidLink`, `venueExists` (with `data.id`), `stageClosed` |
 | `DELETE /api/events/:id/venues/:venueId` | organizer | | Remove a place and its upvotes | `cancelled`, `notFound` |
@@ -81,6 +82,7 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `notFound` | 404 | Unknown event or route id |
 | `invalid` | 400 | Body is not a well-formed request for this endpoint |
 | `forbidden` | 403 | No role (participant or visitor) on an organizer action |
+| `organizersOnly` | 403 | Archiving a member without having created an event |
 | `hostOnly` | 403 | Has a role but not enough (co-host on a host action) |
 | `notYou` | 403 | Participant writing another member's row |
 | `signInFirst` | 401 | Needs a signed-in member |
@@ -90,6 +92,8 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `planFrozen` | 409 | Date or place edited after the plan froze; use a correction |
 | `daysChanged`, `venuesChanged` | 409 | The list changed under the caller; refresh |
 | `hasPayments` | 409 | Reopening to the poll needs `acknowledgePayments` |
-| `reconfirmTooLate` | 409 | A plan move would hold seats but the new start has passed |
+| `notStarted` | 409 | Leaving the RSVP stage before the event starts |
+| `startsInPast` | 400 | A start time being set (create, lock, date change) has already passed |
+| `notAttending` | 409 | A participant without a seat reports a payment |
 
 The full list with texts is `err.*` in `i18n/locales/en.json`. **Every new code needs a key in both locale files.**

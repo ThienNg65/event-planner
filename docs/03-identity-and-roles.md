@@ -11,7 +11,7 @@ Two independent mechanisms exist and are combined in `roleOf`.
 | Cookie | `sid`, `httpOnly`, `sameSite=lax`, `secure` outside dev, max-age 400 days. |
 | Lookup | `meOf(event)` resolves the cookie to a member id once per request (cached in `event.context.me`). |
 | Sign-in link | `/#signin=<token>`. The page posts the token to `/api/me/signin`, which sets the cookie. The token **is** the cookie value, so the link works like a password. |
-| Sign-out | `POST /api/me/signout` clears this browser's cookie only. The token stays valid; the sign-in link still works. |
+| Sign-out | `POST /api/me/signout` clears this browser's cookie. The page then forgets every manage and co-host key stored on this device (`te:keys`, `forgetAllManageKeys`), and the confirm text says so. The token stays valid; the sign-in link still works. A host gets access back by signing in (the creator is host) or by opening the manage link again. |
 
 ### Ways to become a member
 
@@ -30,10 +30,19 @@ flowchart TD
     C -- Have a sign-in link --> I["POST /api/me/signin {token}"] --> Z
 ```
 
-- **I'm new** (`POST /api/members`): trims and collapses whitespace in the name (max 50). The name is unique as an exact string; a 409 `nameTaken` means someone has it. The UI also asks "Is that you?" when a *similar* name exists (`norm()` ignores case and diacritics: Thien / Thiên / THIEN).
+- **I'm new** (`POST /api/members`): trims and collapses whitespace in the name (max 50). The name is unique as an exact string; a 409 `nameTaken` means someone has it. The one exception is an archived name that was never claimed and created no event: adding it again reuses that member (signs in as it and un-archives it). The UI also asks "Is that you?" when a *similar* name exists (`norm()` ignores case and diacritics: Thien / Thiên / THIEN).
 - **Claim** (`POST /api/members/:id/claim`): for names added before sign-in existed (no token yet). One conditional UPDATE lets only the first claimer win. A name that **created an event** can never be claimed, because claiming would hand over host rights (`nameOrganizer`).
 - **Move to another device**: `POST /api/me/link` returns the current token (requires being signed in); open `/#signin=<token>` elsewhere.
-- `GET /api/members` lists the roster with `claimed` (token set, or creator of an event). `GET /api/me` returns the current member or `null`.
+- `GET /api/members` lists the roster (archived members left out) with `claimed` (token set, or creator of an event). `GET /api/me` returns the current member with `organizer` (has created an event), or `null`.
+
+### Archived members
+
+Members are team-wide and never deleted. To hide leftover or test names, anyone who has **created at least one event** may archive any member
+(`POST /api/members/:id/archive`, sets `members.archivedAt`; from "Tidy the team list" in the sidebar account menu).
+
+- An archived member drops out of `GET /api/members`, so out of the name list, the roster avatars and every "no reply yet" count.
+- Their responses, votes and payments stay. Nothing else changes.
+- They come back when they sign in with their sign-in link (`/api/me/signin` and a claim from the name list both clear `archivedAt`), or, if the name was never claimed, when someone adds the same name again (see **I'm new**). A browser still signed in by cookie stays hidden until then.
 
 ## 3.2 What may I do on this event? (role)
 
@@ -77,7 +86,7 @@ Enforced in the API, not the UI:
 | Own votes (`days`, `venueIds`) | Only while voting is open and stage is `poll` | Any time in `poll`, on anyone's row |
 | Suggest a day / place | Same window | Same |
 | Own RSVP status and guests | Stage `rsvp` (and "can't join" while polling) | Any stage, anyone's row |
-| Own payment | Stage `bill`; `addPaid` also in `settled` | Both stages, anyone's row, any amount |
+| Own payment | Stage `bill`; `addPaid` also in `settled`; only with a seat ([06](06-bill-and-payments.md#63-recording-payments)) | Both stages, anyone's row, any amount |
 | Another member's row | ✘ `notYou` (403) | ✔ |
 
 `requireSelf` is the check: a participant may only write the row of the member their session cookie resolves to.
@@ -110,5 +119,6 @@ sequenceDiagram
 ## 3.4 Security properties worth remembering
 
 - A name is only as safe as its sign-in link. Whoever holds the token acts as that member.
-- Whoever holds an event's manage key is its host, **regardless of who is signed in**. Because the key sits in `localStorage`, anyone using that browser profile has host power on that event, even after signing out and signing in as someone else (see [11](11-known-behaviours.md)).
+- Whoever holds an event's manage key is its host, **regardless of who is signed in**. Because the key sits in `localStorage`, anyone using that browser profile has host power on that event while the key is stored. Signing out forgets every key on that device (see 3.1).
 - The create page only asks for a new name and never lists others, so it can't be used to browse the roster.
+- **Everything is readable by anyone, by design**: all events, every member's votes, answers and payments, and the event's bank id, account number and holder. The app is team-internal; there is no per-event privacy.

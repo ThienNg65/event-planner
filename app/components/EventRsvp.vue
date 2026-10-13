@@ -13,7 +13,15 @@ const shown = computed(() => (mine.value?.derived === 'reconfirm' ? null : (mine
 const held = computed(() => props.data.held.includes(props.me?.id ?? -1));
 const heldUntil = computed(() => (props.data.event.reconfirmBy ? fmtDateTime(props.data.event.reconfirmBy, locale.value) : ''));
 const guests = ref(0);
-watch(mine, (r) => (guests.value = r?.guests ?? 0), { immediate: true });
+// Guests save on their own, like the answer buttons; the pause sends a few taps on +/- as one write.
+// While a save is pending, the server's copy doesn't overwrite what is being typed.
+let guestTimer: ReturnType<typeof setTimeout> | undefined;
+watch(mine, (r) => !guestTimer && (guests.value = r?.guests ?? 0), { immediate: true });
+watch(guests, (n) => {
+  clearTimeout(guestTimer);
+  guestTimer = undefined;
+  if (mine.value?.status === 'going' && n !== mine.value.guests) guestTimer = setTimeout(() => answer('going'), 600);
+});
 
 const open = computed(() => props.data.event.stage === 'rsvp' && !props.data.event.cancelledAt);
 const myPlace = computed(() => {
@@ -29,6 +37,9 @@ const OPTIONS = [
 
 async function answer(status: 'going' | 'maybe' | 'no') {
   if (!props.me) return;
+  // A tapped answer replaces a guest save still waiting to go out.
+  clearTimeout(guestTimer);
+  guestTimer = undefined;
   const ok = await call('/response', 'PUT', {
     memberId: props.me.id,
     status,
@@ -71,10 +82,7 @@ async function answer(status: 'going' | 'maybe' | 'no') {
       </div>
       <p v-if="data.event.capacity && mine?.derived === 'going'" class="text-xs text-muted">{{ t('rsvp.guestsQueue') }}</p>
       <template v-if="mine">
-        <div v-if="mine?.status === 'going' && guests !== mine.guests" class="flex items-center gap-3">
-          <p class="flex-1 text-xs text-muted">{{ t('rsvp.guestsHint') }}</p>
-          <UButton size="sm" :loading="busy" @click="answer('going')">{{ t('rsvp.update') }}</UButton>
-        </div>
+        <p v-if="mine.status === 'going' && !mine.derived && data.event.capacity" class="text-xs text-muted">{{ t('rsvp.guestsHint') }}</p>
         <UAlert v-if="myPlace" color="warning" variant="subtle" :title="t('rsvp.onWaitlist', { n: myPlace })" />
       </template>
     </div>

@@ -20,7 +20,7 @@ The stack is Nuxt 4 + Nuxt UI, Nitro server routes, Postgres (Neon over HTTP) th
 | **Participant** | Any team member. Votes, suggests days and places, answers RSVP, reports their own payment, only while that step is open. |
 | **Visitor (not signed in)** | Can browse every event; cannot write anything until they say who they are. |
 
-The app is **team-internal and public inside the team**: every event is visible to everyone who opens the site, and the roster is every member that ever signed in or was added. There is no per-event privacy.
+The app is **team-internal and public inside the team**: every event is visible to everyone who opens the site, and the roster is every member that ever signed in or was added, minus the archived ones ([03](03-identity-and-roles.md#archived-members)). There is no per-event privacy.
 
 ## Glossary
 

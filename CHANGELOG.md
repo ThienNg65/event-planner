@@ -9,12 +9,24 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Organizers see the leading days side by side: who can come, who can't, which honorees can come and how many haven't replied yet.
 - When days are tied, the app suggests one (the day more honorees can make, then the earlier one), explains why, and preselects it when locking.
 - Once everyone has replied, organizers get a nudge to lock the date now.
+- Organizers can archive leftover or test names from the team list ("Tidy the team list" in the account menu). Archived people leave the name list and the "no reply yet" counts, and come back when they sign in again.
+- While voting, the event shows its seat limit.
+- Before the event starts, organizers see when they will be able to enter the bill.
 
 ### Changed
 - One line under the organizer buttons explains the difference between closing voting and locking, and what happens at the deadline. The lock button says "Lock date & place" when places are being voted on too.
 - After voting closes, the sections read "Day results" and "Place results" without voting instructions, and the extra "voting closed: past deadline" line is gone. "Is this you?" only lets returning voters pick their name.
 - Place percentages use the same base as days (everyone who voted), and each place shows "3 votes · 30%" next to its bar.
 - On the Create page the name button says "Continue" and the Create button lines up with the form. The announcement title is easier to read, the event page has a single main heading, and the logo link is labelled for screen readers.
+- Signing out also forgets the organizer links opened on that device, so the next person using the browser no longer gets organizer controls.
+- The bill can only be entered once the event has started.
+- Creating, locking or moving an event to a time that has already passed is refused.
+- Only people with a seat can report a payment; organizers can still record anyone's.
+- The Create button says what is still missing (your name, a title, days or a date) instead of just staying greyed out.
+- The number of guests saves on its own, like Going / Maybe / Can't make it; the Update button is gone.
+- The lock preview names the people who will wait for a seat.
+- A started event that has no bill yet reads "Awaiting the bill" instead of "Confirmed". "Complete anyway" now reads "Complete with open debts", and the avatars on a completed event are labelled "Who came".
+- The calendar shows an event that is still voting on its first proposed day of each month, with the number of days, instead of on every proposed day.
 
 ## [0.6.0] - 2026-10-13
 

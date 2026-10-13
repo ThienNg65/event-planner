@@ -14,7 +14,7 @@ erDiagram
     events  ||--o{ cohosts : "event_id (cascade)"
 ```
 
-Event deletion cascades to `responses`, `venues` and `cohosts`. Members are never deleted by the app.
+Event deletion cascades to `responses`, `venues` and `cohosts`. Members are never deleted by the app; archiving (`archived_at`) hides them ([03](03-identity-and-roles.md#archived-members)). The API tests delete their own `zz-test-` members with SQL in `stopServer()`.
 
 ## `members`
 
@@ -24,6 +24,7 @@ Event deletion cascades to `responses`, `venues` and `cohosts`. Members are neve
 | `name` | text, **unique**, not null | Exact-string unique; fuzzy matching (`norm`) is done in the UI |
 | `token_hash` | text, unique | SHA-256 of the sign-in token; **null = unclaimed** |
 | `created_at` | timestamptz | |
+| `archived_at` | timestamptz | null = on the roster; set = hidden from `GET /api/members`; cleared on sign-in or when the unclaimed name is added again |
 
 ## `events`
 
@@ -102,5 +103,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`.
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`.
 `netlify.toml` runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

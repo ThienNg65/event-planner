@@ -398,6 +398,7 @@ test('stageKey: a poll past its deadline reads as waiting for the date', () => {
   assert.equal(stageKey({ stage: 'poll', voteDeadline: '2026-10-14T05:00:00Z' }, now), 'poll');
   assert.equal(stageKey({ stage: 'poll', voteDeadline: null }, now), 'poll');
   assert.equal(stageKey({ stage: 'rsvp', voteDeadline: '2026-10-13T05:00:00Z' }, now), 'rsvp');
+  assert.equal(stageKey({ stage: 'rsvp', startsAt: '2026-10-13T05:00:00Z' }, now), 'awaitingBill');
 });
 
 test('compareDays: ties go to the day more honorees can make, then the earlier day', () => {

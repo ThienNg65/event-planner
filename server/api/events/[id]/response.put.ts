@@ -5,8 +5,13 @@ export default defineEventHandler(async (event) => {
   const { events, responses } = schema;
   const id = routeId(event);
   const b = await readJson(event);
-  // Read together: each database round trip is the slow part of a vote.
-  const [ev, member] = await Promise.all([findEvent(id), requireMember(b.memberId)]);
+  const paying = 'paidAmount' in b || 'addPaid' in b || b.paid === true;
+  // Read together: each database round trip is the slow part of a vote. A payment also needs the rows, to check the payer's seat.
+  const [ev, member, rows] = await Promise.all([
+    findEvent(id),
+    requireMember(b.memberId),
+    paying ? useDb().select().from(responses).where(eq(responses.eventId, id)) : Promise.resolve([]),
+  ]);
   const role = await roleOf(event, ev);
   await requireSelf(event, member.id, role);
   if (ev.cancelledAt) fail(409, 'cancelled');
@@ -44,10 +49,12 @@ export default defineEventHandler(async (event) => {
     // Declining a poll withdraws the votes too, so they no longer count toward a day or place.
     if (pollDecline && b.status === 'no') Object.assign(set, { days: [], venueIds: [] });
   }
-  if ('paidAmount' in b || 'addPaid' in b || b.paid === true) {
+  if (paying) {
     // After Completed, participants may still report a payment (addPaid); setting or clearing amounts stays with the organizers.
     const stages = role !== null || 'addPaid' in b ? ['bill', 'settled'] : ['bill'];
     if (!stages.includes(ev.stage)) fail(409, 'stageClosed');
+    // Only a member with a seat owes a share, so only they can report paying one (organizers may record anyone).
+    if (role === null && !rollCall(seated(rows, ev), ev.capacity).confirmed.some((r) => r.memberId === member.id)) fail(409, 'notAttending');
     if (b.paid === true) {
       // Paid in full: no amount, so it stays full if the bill or guests change later.
       set.paidAmount = null;

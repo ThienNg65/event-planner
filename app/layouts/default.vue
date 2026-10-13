@@ -4,7 +4,7 @@ import type { NavigationMenuItem } from '@nuxt/ui';
 const { t, locale, locales, setLocale } = useI18n();
 const lang = useCookie<typeof locale.value>('lang', { maxAge: 60 * 60 * 24 * 365 });
 const toast = useToast();
-const { me, meId, refreshMe, refresh: refreshMembers } = useMe();
+const { me, meId, members, refreshMe, refresh: refreshMembers } = useMe();
 const whoOpen = ref(false);
 const appTheme = useAppTheme();
 const settingsOpen = ref(false);
@@ -37,9 +37,26 @@ watch(whoOpen, () => (confirmSignOut.value = false));
 async function signOut() {
   try {
     await $fetch('/api/me/signout', { method: 'POST' });
-    await Promise.all([refreshMe(), refreshMembers()]);
+    forgetAllManageKeys();
+    // A full reload, so an open event page also drops the organizer key it holds in memory.
+    reloadNuxtApp({ force: true });
   } catch (e) {
     toast.add({ color: 'error', title: errMsg(e) });
+  }
+}
+
+// Organizers tidy the roster: an archived member drops out of the name list and "no reply yet" until they sign in again.
+const teamOpen = ref(false);
+const archiving = ref<number | null>(null);
+async function archive(id: number) {
+  archiving.value = id;
+  try {
+    await $fetch(`/api/members/${id}/archive`, { method: 'POST' });
+    await refreshMembers();
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  } finally {
+    archiving.value = null;
   }
 }
 
@@ -100,6 +117,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
                   <p class="text-sm">{{ me.name }}</p>
                   <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
                   <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
+                  <UButton v-if="me.organizer" color="neutral" variant="ghost" size="sm" icon="i-lucide-users" @click="teamOpen = true">{{ t('team.manage') }}</UButton>
                   <div class="border-t border-default pt-2">
                     <div v-if="confirmSignOut" class="space-y-2">
                       <p class="text-xs text-warning">{{ t('me.signOutConfirm') }}</p>
@@ -140,6 +158,18 @@ const nav = computed<NavigationMenuItem[]>(() => [
     </UDashboardSidebar>
 
     <slot />
+
+    <UModal v-model:open="teamOpen" :title="t('team.manage')" :description="t('team.hint')">
+      <template #body>
+        <ul class="divide-y divide-default">
+          <li v-for="m in members.filter((x) => x.id !== me?.id)" :key="m.id" class="flex items-center gap-3 py-2">
+            <MemberAvatar :id="m.id" :name="m.name" />
+            <span class="min-w-0 flex-1 truncate text-sm">{{ m.name }}</span>
+            <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-archive" :loading="archiving === m.id" :aria-label="t('team.archiveName', { name: m.name })" @click="archive(m.id)">{{ t('team.archive') }}</UButton>
+          </li>
+        </ul>
+      </template>
+    </UModal>
 
     <UModal v-model:open="settingsOpen" :title="t('settings.title')" :description="t('settings.description')" :ui="{ content: 'max-w-2xl' }">
       <template #body>
