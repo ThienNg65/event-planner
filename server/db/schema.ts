@@ -9,6 +9,8 @@ export const DERIVED = ['going', 'reconfirm'] as const;
 export const members = pgTable('members', {
   id: serial().primaryKey(),
   name: text().notNull().unique(),
+  // sha256 of the random sign-in token held in the httpOnly `sid` cookie; null until someone claims the name.
+  tokenHash: text().unique(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 

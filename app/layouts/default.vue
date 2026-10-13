@@ -3,11 +3,58 @@ import type { NavigationMenuItem } from '@nuxt/ui';
 
 const { t, locale, locales, setLocale } = useI18n();
 const lang = useCookie<typeof locale.value>('lang', { maxAge: 60 * 60 * 24 * 365 });
-const { me, meId } = useMe();
+const toast = useToast();
+const { me, meId, refreshMe, refresh: refreshMembers } = useMe();
 const whoOpen = ref(false);
 const appTheme = useAppTheme();
 const settingsOpen = ref(false);
 watch(meId, () => (whoOpen.value = false));
+
+// The sign-in link is fetched when the menu opens: Safari rejects clipboard writes that follow an await.
+const signInLink = ref('');
+watch(whoOpen, async (o) => {
+  if (!o || !me.value || signInLink.value) return;
+  try {
+    const { token } = await $fetch('/api/me/link', { method: 'POST' });
+    signInLink.value = `${location.origin}/#signin=${token}`;
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  }
+});
+watch(meId, () => (signInLink.value = ''));
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(signInLink.value);
+    toast.add({ title: t('me.linkCopied'), description: t('me.linkHint') });
+  } catch {
+    /* clipboard blocked: the link is still shown to copy by hand */
+  }
+}
+
+// A claimed name can't be picked again, so signing out asks first: the sign-in link is the only way back.
+const confirmSignOut = ref(false);
+watch(whoOpen, () => (confirmSignOut.value = false));
+async function signOut() {
+  try {
+    await $fetch('/api/me/signout', { method: 'POST' });
+    await Promise.all([refreshMe(), refreshMembers()]);
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  }
+}
+
+// A sign-in link arrives as /#signin=<token>; the fragment never reaches a server log. It is used once, then removed.
+onMounted(async () => {
+  const token = new URLSearchParams(location.hash.slice(1)).get('signin');
+  if (!token) return;
+  history.replaceState(history.state, '', location.pathname + location.search);
+  try {
+    await $fetch('/api/me/signin', { method: 'POST', body: { token } });
+    await Promise.all([refreshMe(), refreshMembers()]);
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  }
+});
 
 function pick(code: typeof locale.value) {
   lang.value = code;
@@ -42,13 +89,28 @@ const nav = computed<NavigationMenuItem[]>(() => [
               <UAvatar :alt="me?.name" :icon="me ? undefined : 'i-lucide-user-round'" size="sm" />
               <span v-if="!collapsed" class="min-w-0 text-left">
                 <span class="block truncate font-medium text-highlighted">{{ me?.name ?? t('me.label') }}</span>
-                <span class="block truncate text-xs font-normal text-muted">{{ me ? t('me.switch') : t('me.pick') }}</span>
+                <span class="block truncate text-xs font-normal text-muted">{{ me ? t('me.signedIn') : t('me.pick') }}</span>
               </span>
             </UButton>
             <template #content>
               <div class="w-80 max-w-[calc(100vw-2rem)] space-y-2 p-3">
                 <p class="text-sm font-semibold text-highlighted">{{ t('me.label') }}</p>
-                <MemberPicker />
+                <div v-if="me" class="space-y-2">
+                  <p class="text-sm">{{ me.name }}</p>
+                  <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
+                  <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
+                  <div class="border-t border-default pt-2">
+                    <div v-if="confirmSignOut" class="space-y-2">
+                      <p class="text-xs text-warning">{{ t('me.signOutConfirm') }}</p>
+                      <div class="flex gap-2">
+                        <UButton color="warning" size="sm" @click="signOut">{{ t('me.signOut') }}</UButton>
+                        <UButton color="neutral" variant="ghost" size="sm" @click="confirmSignOut = false">{{ t('cancel') }}</UButton>
+                      </div>
+                    </div>
+                    <UButton v-else color="neutral" variant="ghost" size="sm" icon="i-lucide-log-out" @click="confirmSignOut = true">{{ t('me.signOut') }}</UButton>
+                  </div>
+                </div>
+                <MemberPicker v-else />
               </div>
             </template>
           </UPopover>

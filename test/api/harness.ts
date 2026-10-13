@@ -98,21 +98,27 @@ export async function cleanup() {
 
 type Opts = { method?: string; body?: unknown; key?: string; me?: number };
 
-/** A request against the built server: `key` becomes x-manage-key, `me` the member cookie. */
+// Each test member's sign-in token, from the cookie POST /api/members sets.
+const tokens = new Map<number, string>();
+
+/** A request against the built server: `key` becomes x-manage-key, `me` signs in as that member (see `member()`). */
 export async function api(path: string, { method = 'GET', body, key, me }: Opts = {}) {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['content-type'] = 'application/json';
   if (key) headers['x-manage-key'] = key;
-  if (me) headers.cookie = `me=${me}`;
+  if (me) headers.cookie = `sid=${tokens.get(me)}`;
   const res = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const text = await res.text();
-  return { status: res.status, message: res.status >= 400 ? (JSON.parse(text).statusMessage as string) : '', body: text ? JSON.parse(text) : null };
+  return { headers: res.headers, status: res.status, message: res.status >= 400 ? (JSON.parse(text).statusMessage as string) : '', body: text ? JSON.parse(text) : null };
 }
 
 /** A new member named zz-test-…; returns the id. */
 export async function member() {
   const res = await api('/api/members', { method: 'POST', body: { name: `zz-test-${randomBytes(4).toString('hex')}` } });
   if (res.status !== 201) throw new Error(`member() failed: ${res.status}`);
+  const sid = /sid=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1];
+  if (!sid) throw new Error('member() got no sid cookie');
+  tokens.set(res.body.id, sid);
   return res.body.id as number;
 }
 
@@ -122,7 +128,7 @@ export const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOStr
 /** A new poll event (days +10 and +11) titled zz-test-…; `extra` overrides any create field. Returns the id, host key and creator. */
 export async function event(extra: Record<string, unknown> = {}) {
   const createdBy = await member();
-  const res = await api('/api/events', { method: 'POST', body: { title: `zz-test-${randomBytes(4).toString('hex')}`, pollDays: [day(10), day(11)], createdBy, ...extra } });
+  const res = await api('/api/events', { method: 'POST', me: createdBy, body: { title: `zz-test-${randomBytes(4).toString('hex')}`, pollDays: [day(10), day(11)], ...extra } });
   if (res.status !== 201) throw new Error(`event() failed: ${res.status} ${res.message}`);
   const made = { id: res.body.id as number, key: res.body.key as string };
   created.push({ ...made, dayPoll: !!(extra.pollDays ?? [1]).length });

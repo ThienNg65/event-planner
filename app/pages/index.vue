@@ -2,7 +2,7 @@
 const { t } = useI18n();
 const { meId } = useMe();
 const { data: events, refresh } = await useFetch('/api/events', { default: () => [] });
-// Personal status comes from the `me` cookie, so switching person reloads the list.
+// Personal status follows the signed-in member, so signing in reloads the list.
 watch(meId, () => refresh());
 
 type Bucket = 'planning' | 'upcoming' | 'past';
@@ -33,7 +33,7 @@ const todos = computed(() =>
     const { step, action } = nextStep({
       stage: e.stage,
       mine: e.mine,
-      manager: mounted.value && hasManageKey(e.id),
+      manager: e.manager || (mounted.value && hasManageKey(e.id)),
       allPaid: e.allPaid,
       started: started(e),
       cancelled: !!e.cancelledAt,

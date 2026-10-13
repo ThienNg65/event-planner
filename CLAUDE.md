@@ -29,9 +29,9 @@ There is no linter. `netlify.toml` runs `db:migrate` before `nuxt build`, so a p
 - **Server** (`server/api/events/**`, `members.*`) uses Nitro auto-imports. `server/utils/db.ts` has `useDb()` (Neon HTTP driver, so no interactive transactions), `findEvent`, `requireMember`. `http.ts` has `fail`, `roleOf`, `requireSelf`, `requireCan`, `requireVoting`, `readJson`. `eventFields.ts` is the single validator for create and PATCH bodies.
 - **Concurrency model:** each member writes only their own `responses` row per event. The waitlist, seat count and per-seat share are computed on read in `[id].get.ts` (not stored), so concurrent RSVPs cannot corrupt the queue. Keep it that way: do not add stored counters.
   - The only bulk writes to other members' rows are the lock, plan-edit, reopen-to-poll and bill/complete batches in `[id].patch.ts` (statements in `server/utils/attendance.ts`, always batched with the event UPDATE and guarded so an explicit or paid row is never changed). Held seats (`derived = 'reconfirm'`) expire on read: every seat reader goes through `seated()`, and `releaseExpired` must run before `reconfirm_by` is rewritten.
-- **Auth has no login by design.**
-  - Identity is an unsigned `me` cookie (member id), checked by `requireSelf`.
-  - Organizer rights come from the `x-manage-key` header, compared by sha256 against `events.manageKeyHash` (host) or `coHostKeyHash` (co-host).
+- **Auth has no password by design.**
+  - Identity is a random token in the httpOnly `sid` cookie; only its sha256 is stored (`members.tokenHash`). `meOf` resolves it (once per request), `requireSelf` checks it. `POST /api/members` and `/api/members/:id/claim` (only while `tokenHash` is null) set it; `/api/me/link` + `/api/me/signin` move it to another device via `/#signin=<token>`.
+  - `roleOf` grants host to the signed-in creator or the `x-manage-key` header matching `events.manageKeyHash`, and co-host to an active `cohosts` row for the signed-in member, its access key, or the legacy `coHostKeyHash`.
   - The browser keeps keys in localStorage (`app/composables/useManageKey.ts`) and `useEventApi` attaches the header. A `?key=` URL param is stored then stripped, and the higher-ranked key wins.
   - Check permissions through `can()`/`requireCan`, never ad hoc role comparisons.
 - **Event lifecycle:** `stage` is `poll → rsvp → bill → settled`. Cancelled is an overlay (`cancelledAt`), not a stage, so restoring returns to the same stage.

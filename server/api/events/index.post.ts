@@ -3,7 +3,8 @@ import { randomBytes } from 'node:crypto';
 export default defineEventHandler(async (event) => {
   const b = await readJson(event);
   const { stage: _ignored, reconfirmBy: _held, ...f } = eventFields({ title: '', ...b });
-  const creator = await requireMember(b.createdBy);
+  const createdBy = await meOf(event);
+  if (createdBy === null) fail(401, 'signInFirst');
   const pollDays = f.pollDays ?? [];
   if (!pollDays.length && !f.startsAt) fail(400, 'invalidDate');
 
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
       startsAt: pollDays.length ? null : f.startsAt,
       // Anything still undecided (days or venue) starts in the poll stage.
       stage: pollDays.length || !f.venue ? 'poll' : 'rsvp',
-      createdBy: creator.id,
+      createdBy,
       manageKeyHash: sha256(key),
     })
     .returning({ id: schema.events.id });

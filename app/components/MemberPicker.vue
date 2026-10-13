@@ -1,50 +1,55 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const toast = useToast();
-const { meId, members, refresh } = useMe();
+const { members, refresh, refreshMe } = useMe();
 
 const adding = ref(false);
 const newName = ref('');
 const busy = ref(false);
+// Only names nobody has signed in as yet can be taken over; a claimed name needs that member's sign-in link.
+const unclaimed = computed(() => members.value.filter((m) => !m.claimed));
 const lookalike = computed(() => {
   const n = norm(newName.value);
   return n ? members.value.find((m) => norm(m.name) === n) : undefined;
 });
 
-function pick(id: number) {
-  meId.value = id;
-  adding.value = false;
-  newName.value = '';
-}
-
-async function add() {
+async function signIn(req: Promise<unknown>) {
   busy.value = true;
   try {
-    const m = await $fetch<Member>('/api/members', { method: 'POST', body: { name: newName.value } });
-    await refresh();
-    pick(m.id);
+    await req;
+    adding.value = false;
+    newName.value = '';
+    await Promise.all([refreshMe(), refresh()]);
   } catch (e) {
     toast.add({ color: 'error', title: errMsg(e) });
+    // A name someone else just claimed must drop out of the list.
+    refresh();
   } finally {
     busy.value = false;
   }
 }
+const claim = (id: number) => signIn($fetch(`/api/members/${id}/claim`, { method: 'POST' }));
+const add = () => signIn($fetch('/api/members', { method: 'POST', body: { name: newName.value } }));
 </script>
 
 <template>
   <div class="space-y-2">
-    <div v-if="!adding" class="flex gap-2">
-      <USelectMenu
-        :model-value="meId ?? undefined"
-        :items="members"
-        value-key="id"
-        label-key="name"
-        :placeholder="t('me.pick')"
-        :search-input="{ placeholder: t('me.search') }"
-        class="flex-1"
-        @update:model-value="meId = $event ?? null"
-      />
-      <UButton variant="soft" icon="i-lucide-user-plus" @click="adding = true">{{ t('me.new') }}</UButton>
+    <div v-if="!adding" class="space-y-2">
+      <div class="flex gap-2">
+        <USelectMenu
+          v-if="unclaimed.length"
+          :items="unclaimed"
+          value-key="id"
+          label-key="name"
+          :placeholder="t('me.pick')"
+          :search-input="{ placeholder: t('me.search') }"
+          :disabled="busy"
+          class="flex-1"
+          @update:model-value="(id: number) => id && claim(id)"
+        />
+        <UButton variant="soft" icon="i-lucide-user-plus" @click="adding = true">{{ t('me.new') }}</UButton>
+      </div>
+      <p class="text-xs text-muted">{{ t('me.otherDevice') }}</p>
     </div>
 
     <form v-else class="space-y-2" @submit.prevent="add">
@@ -54,12 +59,13 @@ async function add() {
         <UButton variant="ghost" color="neutral" @click="adding = false">{{ t('cancel') }}</UButton>
       </div>
       <UAlert
-        v-if="lookalike"
+        v-if="lookalike && !lookalike.claimed"
         color="warning"
         variant="subtle"
         :title="t('me.isThisYou', { name: lookalike.name })"
-        :actions="[{ label: t('me.thatsMe'), onClick: () => pick(lookalike!.id) }]"
+        :actions="[{ label: t('me.thatsMe'), onClick: () => claim(lookalike!.id) }]"
       />
+      <UAlert v-else-if="lookalike" color="warning" variant="subtle" :title="t('me.claimedName', { name: lookalike.name })" />
     </form>
   </div>
 </template>

@@ -3,14 +3,14 @@ import { and, eq, gt, sql } from 'drizzle-orm';
 
 /**
  * Exchanges a valid invite for an access key (returned once). The invite is burned in the same conditional UPDATE,
- * so of two simultaneous accepts only one wins. `me` must be the invited member: that guards mistakes, it is not identity.
+ * so of two simultaneous accepts only one wins. The signed-in member must be the invited one.
  */
 export default defineEventHandler(async (event) => {
   const { cohosts } = schema;
   const ev = await findEvent(routeId(event));
   const row = await inviteRow(ev.id, await readJson(event));
   if (row.expired) fail(410, 'inviteExpired');
-  if (meOf(event) !== row.memberId) fail(403, 'notYou');
+  if ((await meOf(event)) !== row.memberId) fail(403, 'notYou');
   if (ev.cancelledAt) fail(409, 'cancelled');
 
   const key = randomBytes(32).toString('base64url');

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ data: EventDetail; manageKey: string }>();
+const props = defineProps<{ data: EventDetail; manageKey: string | null }>();
 const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
@@ -46,7 +46,7 @@ async function save() {
     await $fetch(`/api/events/${ev.value.id}`, {
       method: 'PATCH',
       body: { correct: true, ...rest, ...(startsAt && { startsAt: startsAtIso.value }), notice: notice.value.trim() },
-      headers: { 'x-manage-key': props.manageKey },
+      headers: props.manageKey ? { 'x-manage-key': props.manageKey } : {},
     });
   } catch (e) {
     error.value = errMsg(e);

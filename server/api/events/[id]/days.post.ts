@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const role = await roleOf(event, ev);
   const b = await readJson(event);
   const member = await requireMember(b.memberId);
-  requireSelf(event, member.id, role);
+  await requireSelf(event, member.id, role);
   requireVoting(ev, role);
   const day = b.day;
   if (!isDay(day) || day < teamToday()) fail(400, 'invalidDays');

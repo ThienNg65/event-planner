@@ -3,7 +3,7 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const id = Number(useRoute().params.id);
 const key = useManageKey(id);
-const { me, members } = useMe();
+const { me, meId, members } = useMe();
 
 const { data, refresh, error } = await useFetch(`/api/events/${id}`, {
   key: `event-${id}`,
@@ -31,16 +31,9 @@ watch(key, async (k) => {
 });
 
 const ev = computed(() => data.value!.event);
-// The key is browser-only, so the server renders every visitor as a participant until it is known.
-// Browser-only too: with a member picked, organizer rights show only for the creator or an active co-host, so switching to
-// another member shows the participant view (UI only: the key in this browser is still accepted by the server).
-const role = computed<Role>(() => {
-  if (!key.value) return null;
-  const d = data.value!;
-  const id = me.value?.id;
-  if (id === undefined || id === d.event.createdBy || d.cohosts.some((c) => c.memberId === id && c.status === 'active')) return d.role;
-  return null;
-});
+// The server decides: the signed-in member (known during SSR too) or a manage key held by this browser.
+const role = computed<Role>(() => data.value!.role);
+watch(meId, () => refresh());
 const when = computed(() => {
   if (ev.value.startsAt) return fmtDateTime(ev.value.startsAt, locale.value);
   return ev.value.pollDays.length ? t('card.voting', { n: ev.value.pollDays.length }) : t('event.dateTbd');
@@ -211,7 +204,7 @@ const share = () => (sharing.value = true);
           <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
             <span class="hidden sm:inline">{{ t('edit.open') }}</span>
           </UButton>
-          <EventHostMenu v-if="can(role, 'cancel') && key" :data="data!" :manage-key="key" @changed="refresh" />
+          <EventHostMenu v-if="can(role, 'cancel')" :data="data!" :manage-key="key" @changed="refresh" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -291,7 +284,7 @@ const share = () => (sharing.value = true);
                 <p v-if="inviteForMe">{{ t('invite.body') }}</p>
                 <template v-else>
                   <p>{{ t('invite.notYou', { name: peek.name }) }}</p>
-                  <MemberPicker />
+                  <MemberPicker v-if="!me" />
                 </template>
                 <p v-if="inviteError" class="text-error">{{ inviteError }}</p>
                 <div class="flex flex-wrap gap-2">
@@ -338,8 +331,11 @@ const share = () => (sharing.value = true);
           <EventPeople :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>
 
-        <EventEdit v-if="role && key" v-model:open="editing" :data="data" :manage-key="key" @changed="refresh" />
-        <EventOrganizersDialog v-if="role && key" v-model:open="organizing" :data="data" :manage-key="key" :role="role" @changed="refresh" />
+        <!-- Organizer-only panels: kept out of SSR, where they would not hydrate cleanly. -->
+        <ClientOnly>
+          <EventEdit v-if="role" v-model:open="editing" :data="data" :manage-key="key" @changed="refresh" />
+          <EventOrganizersDialog v-if="role" v-model:open="organizing" :data="data" :manage-key="key" :role="role" @changed="refresh" />
+        </ClientOnly>
 
         <UModal v-model:open="posting" :title="t('post.title')" :description="t('post.body')">
           <template #body>

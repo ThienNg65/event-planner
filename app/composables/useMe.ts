@@ -1,9 +1,9 @@
-export type Member = { id: number; name: string };
+export type Member = { id: number; name: string; claimed?: boolean };
 
-/** The roster plus the current visitor (member id kept in a cookie, so SSR knows it too). */
+/** The roster plus the signed-in visitor (an httpOnly session cookie, so SSR knows it too). */
 export function useMe() {
-  const meId = useCookie<number | null>('me', { maxAge: 60 * 60 * 24 * 365, default: () => null });
+  const { data: me, refresh: refreshMe } = useFetch<Member | null>('/api/me', { key: 'me', default: () => null });
   const { data: members, refresh } = useFetch<Member[]>('/api/members', { key: 'members', default: () => [] });
-  const me = computed(() => members.value.find((m) => m.id === meId.value) ?? null);
-  return { meId, me, members, refresh };
+  const meId = computed(() => me.value?.id ?? null);
+  return { meId, me, members, refresh, refreshMe };
 }

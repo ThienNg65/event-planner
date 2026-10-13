@@ -58,7 +58,6 @@ async function create() {
       body: {
         title: form.title,
         note: form.note,
-        createdBy: meId.value,
         pollDays: poll ? form.pollDays : [],
         startsAt: !poll && form.startsAt ? teamTime(...(form.startsAt.split('T') as [string, string])) : null,
         venue: fixedVenue ? form.venue : null,

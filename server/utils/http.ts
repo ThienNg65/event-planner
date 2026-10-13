@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import type { H3Event } from 'h3';
 
 export function fail(statusCode: number, message: string): never {
@@ -25,29 +25,64 @@ export function routeId(event: H3Event) {
 const hashMatches = (key: string, hash: string | null) =>
   !!hash && timingSafeEqual(Buffer.from(sha256(key), 'hex'), Buffer.from(hash, 'hex'));
 
-/** The caller's role, from the x-manage-key header: the manage key is the host; the legacy shared key or a named co-host's access key is a co-host. */
-export async function roleOf(event: H3Event, ev: { id: number; manageKeyHash: string; coHostKeyHash: string | null }): Promise<Role> {
+/**
+ * The caller's role. The manage key, or being signed in as the creator, makes the host; the legacy shared key, a named
+ * co-host's access key, or being signed in as an active named co-host makes a co-host.
+ */
+export async function roleOf(
+  event: H3Event,
+  ev: { id: number; createdBy: number; manageKeyHash: string; coHostKeyHash: string | null }
+): Promise<Role> {
   const key = getHeader(event, 'x-manage-key');
-  if (!key) return null;
-  if (hashMatches(key, ev.manageKeyHash)) return 'host';
-  if (hashMatches(key, ev.coHostKeyHash)) return 'cohost';
+  if (key && hashMatches(key, ev.manageKeyHash)) return 'host';
+  const me = await meOf(event);
+  if (me === ev.createdBy) return 'host';
+  if (key && hashMatches(key, ev.coHostKeyHash)) return 'cohost';
+  if (!key && me === null) return null;
   const { cohosts } = schema;
   const [row] = await useDb()
     .select({ memberId: cohosts.memberId })
     .from(cohosts)
-    .where(and(eq(cohosts.eventId, ev.id), eq(cohosts.keyHash, sha256(key)), eq(cohosts.status, 'active')));
+    .where(
+      and(
+        eq(cohosts.eventId, ev.id),
+        eq(cohosts.status, 'active'),
+        or(key ? eq(cohosts.keyHash, sha256(key)) : undefined, me === null ? undefined : eq(cohosts.memberId, me))
+      )
+    );
   return row ? 'cohost' : null;
 }
 
-/** The visitor's member id from the unsigned `me` cookie (guards against mistakes, not attackers). */
-export function meOf(event: H3Event) {
-  const me = Number(getCookie(event, 'me'));
-  return Number.isInteger(me) && me > 0 ? me : null;
+const SID = 'sid';
+
+/** Signs this browser in: the random token goes into an httpOnly cookie, only its hash is stored. */
+export function setSession(event: H3Event, token: string) {
+  setCookie(event, SID, token, { httpOnly: true, secure: !import.meta.dev, sameSite: 'lax', path: '/', maxAge: 400 * 24 * 3600 });
+  // The old unsigned member-id cookie no longer means anything.
+  deleteCookie(event, 'me');
+}
+
+export const sessionToken = (event: H3Event) => getCookie(event, SID) || null;
+
+/** Signs this browser out. The member's token stays valid, so their sign-in link still works. */
+export const clearSession = (event: H3Event) => deleteCookie(event, SID, { path: '/' });
+
+/** The member a sign-in token belongs to, or null. */
+export async function memberByToken(token: string | null) {
+  if (!token) return null;
+  const { members } = schema;
+  const [m] = await useDb().select({ id: members.id, name: members.name }).from(members).where(eq(members.tokenHash, sha256(token)));
+  return m ?? null;
+}
+
+/** The signed-in member id from the `sid` cookie, or null. Looked up once per request. */
+export function meOf(event: H3Event): Promise<number | null> {
+  return (event.context.me ??= memberByToken(sessionToken(event)).then((m) => m?.id ?? null));
 }
 
 /** A participant may only write their own answers; hosts and co-hosts may write anyone's. */
-export function requireSelf(event: H3Event, memberId: number, role: Role) {
-  if (role === null && memberId !== meOf(event)) fail(403, 'notYou');
+export async function requireSelf(event: H3Event, memberId: number, role: Role) {
+  if (role === null && memberId !== (await meOf(event))) fail(403, 'notYou');
 }
 
 export function requireCan(role: Role, action: Action) {

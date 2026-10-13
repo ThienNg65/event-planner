@@ -1,10 +1,9 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
-  const { events, responses } = schema;
-  // The visitor's picked name (cookie set by useMe); no cookie → no personal status.
-  const meId = meOf(event);
-  const [evs, going, mine] = await Promise.all([
+  const { events, responses, cohosts } = schema;
+  // The signed-in member (looked up alongside the lists); not signed in → no personal status.
+  const [evs, going, { meId, mine, cohosting }] = await Promise.all([
     useDb()
       .select({
         id: events.id,
@@ -20,6 +19,7 @@ export default defineEventHandler(async (event) => {
         voteDeadline: events.voteDeadline,
         cancelledAt: events.cancelledAt,
         reconfirmBy: events.reconfirmBy,
+        createdBy: events.createdBy,
       })
       .from(events)
       .orderBy(desc(events.createdAt)),
@@ -36,7 +36,18 @@ export default defineEventHandler(async (event) => {
       })
       .from(responses)
       .where(eq(responses.status, 'going')),
-    meId ? useDb().select().from(responses).where(eq(responses.memberId, meId)) : [],
+    (async () => {
+      const meId = await meOf(event);
+      if (!meId) return { meId, mine: [], cohosting: [] };
+      const [mine, cohosting] = await Promise.all([
+        useDb().select().from(responses).where(eq(responses.memberId, meId)),
+        useDb()
+          .select({ eventId: cohosts.eventId })
+          .from(cohosts)
+          .where(and(eq(cohosts.memberId, meId), eq(cohosts.status, 'active'))),
+      ]);
+      return { meId, mine, cohosting };
+    })(),
   ]);
   // ponytail: loads every "going" row to count seats; fine for a team, add a per-event SQL sum if it grows.
   return evs.map((e) => {
@@ -53,6 +64,8 @@ export default defineEventHandler(async (event) => {
       ...e,
       seats,
       allPaid: allPaid(confirmed, share),
+      // Organizer by identity; the browser adds events whose manage key it holds.
+      manager: meId !== null && (e.createdBy === meId || cohosting.some((c) => c.eventId === e.id)),
       mine: meId
         ? mineOf(
             row,

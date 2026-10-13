@@ -43,6 +43,13 @@
       "when": 1791783677605,
       "tag": "0005_event_theme",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791858176849,
+      "tag": "0006_member_token",
+      "breakpoints": true
     }
   ]
 }

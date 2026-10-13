@@ -46,7 +46,14 @@
     "join": "Tham gia",
     "isThisYou": "Đã có \"{name}\" trong danh sách. Có phải bạn không?",
     "thatsMe": "Đúng, là tôi",
-    "switch": "Là bạn · đổi người"
+    "signedIn": "Là bạn",
+    "copyLink": "Sao chép link đăng nhập",
+    "linkCopied": "Đã sao chép link đăng nhập",
+    "linkHint": "Mở link này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có link là dùng được tên bạn.",
+    "otherDevice": "Đã tham gia trên thiết bị khác? Hãy mở link đăng nhập từ thiết bị đó.",
+    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở link đăng nhập từ thiết bị bạn đã dùng.",
+    "signOut": "Đăng xuất",
+    "signOutConfirm": "Hãy sao chép link đăng nhập trước: tên của bạn đã được khóa, nên chỉ link này mới giúp bạn đăng nhập lại."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
@@ -153,7 +160,7 @@
     "invalidGuests": "Số người đi cùng từ 0 đến 10.",
     "unknownVenue": "Địa điểm không tồn tại.",
     "invalidCover": "Chọn một ảnh bìa hoặc dán link ảnh bắt đầu bằng https://",
-    "notYou": "Đó không phải bạn. Hãy chọn đúng tên của bạn.",
+    "notYou": "Bạn chỉ có thể sửa câu trả lời của chính mình.",
     "hostOnly": "Chỉ người tổ chức chính mới làm được.",
     "cancelled": "Sự kiện đã bị huỷ.",
     "venueExists": "Địa điểm này đã có trong danh sách.",
@@ -169,7 +176,10 @@
     "hasPayments": "Đã có khoản thanh toán được ghi nhận. Hãy xác nhận giữ lại.",
     "notStarted": "Sự kiện chưa diễn ra.",
     "planFrozen": "Ngày và địa điểm đã cố định khi sự kiện bắt đầu. Hãy dùng \"Sửa ngày hoặc địa điểm\".",
-    "reconfirmTooLate": "Mọi người cần xác nhận lại nhưng thời điểm mới đã qua. Hãy chọn thời điểm trong tương lai."
+    "reconfirmTooLate": "Mọi người cần xác nhận lại nhưng thời điểm mới đã qua. Hãy chọn thời điểm trong tương lai.",
+    "signInFirst": "Hãy cho biết bạn là ai trước.",
+    "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng link đăng nhập của bạn.",
+    "signInInvalid": "Link đăng nhập không hợp lệ."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -308,7 +318,7 @@
   "next": {
     "who": {
       "title": "Trước tiên, bạn là ai?",
-      "body": "Chọn tên của bạn để phiếu bầu được tính. Không cần đăng ký."
+      "body": "Chọn hoặc nhập tên của bạn để phiếu bầu được tính. Không cần đăng ký."
     },
     "vote": {
       "title": "Ngày nào bạn đi được?",

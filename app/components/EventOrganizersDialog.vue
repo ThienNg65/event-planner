@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ data: EventDetail; manageKey: string; role: Role }>();
+const props = defineProps<{ data: EventDetail; manageKey: string | null; role: Role }>();
 const open = defineModel<boolean>('open', { required: true });
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
@@ -77,7 +77,7 @@ async function invite(memberId: number, reissue = false) {
   try {
     const { invite: secret } = await $fetch<{ invite: string }>(`/api/events/${props.data.event.id}/cohosts`, {
       method: 'POST',
-      headers: { 'x-manage-key': props.manageKey },
+      headers: props.manageKey ? { 'x-manage-key': props.manageKey } : {},
       body: { memberId, reissue },
     });
     const name = members.value.find((m) => m.id === memberId)?.name ?? '';
@@ -206,7 +206,7 @@ async function revokeLegacy() {
           </div>
         </section>
 
-        <div v-if="isHost" class="space-y-2 border-t border-default pt-6">
+        <div v-if="isHost && manageKey" class="space-y-2 border-t border-default pt-6">
           <UButton
             color="neutral"
             variant="outline"

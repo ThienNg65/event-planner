@@ -25,8 +25,10 @@ export default defineEventHandler(async (event) => {
       .innerJoin(members, eq(members.id, cohosts.memberId))
       .where(eq(cohosts.eventId, id))
       .orderBy(asc(cohosts.invitedAt)),
+    // Warms the per-request session lookup that roleOf needs, so it doesn't wait for the lists.
+    meOf(event),
   ]);
-  const role = await roleOf(event, { id, manageKeyHash, coHostKeyHash });
+  const role = await roleOf(event, { id, createdBy: ev.createdBy, manageKeyHash, coHostKeyHash });
   const { confirmed, waitlist, seats } = rollCall(seated(rs, ev), ev.capacity);
   const venueList = vs
     .map((v) => ({ ...v, upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId) }))

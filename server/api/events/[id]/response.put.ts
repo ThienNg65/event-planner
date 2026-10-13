@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   // Read together: each database round trip is the slow part of a vote.
   const [ev, member] = await Promise.all([findEvent(id), requireMember(b.memberId)]);
   const role = await roleOf(event, ev);
-  requireSelf(event, member.id, role);
+  await requireSelf(event, member.id, role);
   if (ev.cancelledAt) fail(409, 'cancelled');
   // The organizers may fix anyone's answer at any stage; everyone else only while that block is open.
   const open = (...stages: string[]) => role !== null || stages.includes(ev.stage);

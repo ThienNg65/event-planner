@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const role = await roleOf(event, ev);
   const b = await readJson(event);
   const member = await requireMember(b.addedBy);
-  requireSelf(event, member.id, role);
+  await requireSelf(event, member.id, role);
   requireVoting(ev, role);
   if (ev.venue) fail(409, 'stageClosed');
   const name = clean(b.name, 100);

@@ -46,7 +46,14 @@
     "join": "Join",
     "isThisYou": "\"{name}\" is already on the list. Is that you?",
     "thatsMe": "Yes, that's me",
-    "switch": "That's you · switch"
+    "signedIn": "That's you",
+    "copyLink": "Copy my sign-in link",
+    "linkCopied": "Sign-in link copied",
+    "linkHint": "Open this link on your other phone or computer to be you there too. Keep it to yourself: anyone with it can act as you.",
+    "otherDevice": "Already joined on another device? Open your sign-in link from there instead.",
+    "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from the device you used before.",
+    "signOut": "Sign out",
+    "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself."
   },
   "event": {
     "dateTbd": "Date not set yet",
@@ -153,7 +160,7 @@
     "invalidGuests": "Guests must be between 0 and 10.",
     "unknownVenue": "That venue doesn't exist.",
     "invalidCover": "Pick a cover or paste an image link starting with https://",
-    "notYou": "That's not you. Pick your own name.",
+    "notYou": "You can only change your own answers.",
     "hostOnly": "Only the host can do that.",
     "cancelled": "This event is cancelled.",
     "venueExists": "That place is already on the list.",
@@ -169,7 +176,10 @@
     "hasPayments": "Payments were already recorded. Confirm that you want to keep them.",
     "notStarted": "The event has not started yet.",
     "planFrozen": "The date and place are fixed once the event has started. Use \"Correct date or place\".",
-    "reconfirmTooLate": "People would need to confirm again, but the new time has passed. Pick a future time."
+    "reconfirmTooLate": "People would need to confirm again, but the new time has passed. Pick a future time.",
+    "signInFirst": "Tell us who you are first.",
+    "nameClaimed": "Someone already signed in with that name. Use your sign-in link instead.",
+    "signInInvalid": "This sign-in link is not valid."
   },
   "days": {
     "edit": "Edit days",
@@ -308,7 +318,7 @@
   "next": {
     "who": {
       "title": "First, who are you?",
-      "body": "Pick your name so your votes count. No sign-up needed."
+      "body": "Pick or enter your name so your votes count. No sign-up needed."
     },
     "vote": {
       "title": "Which days work for you?",

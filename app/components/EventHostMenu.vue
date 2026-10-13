@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ data: EventDetail; manageKey: string }>();
+const props = defineProps<{ data: EventDetail; manageKey: string | null }>();
 const emit = defineEmits<{ changed: [] }>();
 const { t } = useI18n();
 const { call } = useEventApi(
@@ -60,7 +60,7 @@ async function run(method: 'PATCH' | 'DELETE', body?: object) {
   busy.value = true;
   error.value = '';
   try {
-    await $fetch(`/api/events/${ev.value.id}`, { method, body, headers: { 'x-manage-key': props.manageKey } });
+    await $fetch(`/api/events/${ev.value.id}`, { method, body, headers: props.manageKey ? { 'x-manage-key': props.manageKey } : {} });
     return true;
   } catch (e) {
     error.value = errMsg(e);
