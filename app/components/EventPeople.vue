@@ -18,10 +18,12 @@ const paying = computed(() => ev.value.stage === 'bill' || ev.value.stage === 's
 const ORDER = ['going', 'waitlist', 'maybe', 'no', 'voted'] as const;
 const rows = computed(() =>
   props.data.responses
-    .filter((r) => (ev.value.stage === 'poll' ? r.days.length || r.venueIds.length : r.status))
+    .filter((r) => (ev.value.stage === 'poll' ? r.days.length || r.venueIds.length || r.status === 'no' : r.status))
     .map((r) => {
       const waitPlace = props.data.waitlist.indexOf(r.memberId) + 1;
-      const answered = ev.value.stage !== 'poll';
+      // While polling, "can't join" is the only answer that counts (it withdraws the votes).
+      const declined = ev.value.stage === 'poll' && r.status === 'no' && !r.days.length && !r.venueIds.length;
+      const answered = ev.value.stage !== 'poll' || declined;
       // A held seat past its deadline is released: that person is back to "voted, no answer".
       const lost = r.derived === 'reconfirm' && !props.data.held.includes(r.memberId);
       const kind = !answered || lost ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : (r.status ?? 'voted');
@@ -83,7 +85,7 @@ async function saveAmount() {
         </span>
         <UBadge v-if="row.r.derived === 'going'" color="neutral" variant="outline" size="sm" :label="t('people.fromVote')" />
         <UBadge v-else-if="row.r.derived === 'reconfirm' && row.kind !== 'voted'" color="warning" variant="outline" size="sm" :label="t('people.heldUntil', { time: heldUntil })" />
-        <template v-if="ev.stage === 'poll'">
+        <template v-if="ev.stage === 'poll' && row.kind !== 'no'">
           <UBadge v-if="row.r.days.length" color="primary" variant="subtle" icon="i-lucide-calendar-days" :label="t('people.days', row.r.days.length)" />
           <UBadge
             v-if="row.r.venueIds.length"
