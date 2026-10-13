@@ -8,6 +8,8 @@ const ev = computed(() => props.data.event);
 const rs = computed(() => props.data.responses);
 const voted = computed(() => rs.value.filter((r) => r.days.length || r.venueIds.length).length);
 const declined = computed(() => rs.value.filter((r) => r.status === 'no' && !r.days.length && !r.venueIds.length).length);
+// A "can't join" is an answer too, so it counts toward progress.
+const answered = computed(() => voted.value + declined.value);
 const roster = computed(() => Math.max(members.value.length, voted.value + declined.value));
 // Names of who is missing are for organizers; everyone else sees the count.
 const pending = computed(() => (can(props.role, 'edit') ? pendingVoters(members.value, rs.value) : []));
@@ -50,10 +52,10 @@ const relative = computed(() => {
     <template v-else-if="ev.stage === 'poll'">
       <UBadge v-if="!open" color="warning" variant="subtle" icon="i-lucide-lock" :label="t('overview.closed')" />
       <div class="space-y-2">
-        <p class="text-sm tabular-nums">{{ t('overview.voted', { n: voted, total: roster }) }}</p>
+        <p class="text-sm tabular-nums">{{ t('overview.voted', { n: answered, total: roster }) }}</p>
         <div class="flex items-center gap-3">
-          <UProgress :model-value="voted" :max="Math.max(roster, 1)" size="sm" class="flex-1" :aria-label="t('overview.voted', { n: voted, total: roster })" />
-          <span class="text-xs text-muted tabular-nums">{{ Math.round((voted / Math.max(roster, 1)) * 100) }}%</span>
+          <UProgress :model-value="answered" :max="Math.max(roster, 1)" size="sm" class="flex-1" :aria-label="t('overview.voted', { n: answered, total: roster })" />
+          <span class="text-xs text-muted tabular-nums">{{ Math.round((answered / Math.max(roster, 1)) * 100) }}%</span>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2 text-sm text-muted tabular-nums">

@@ -11,7 +11,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Each event has a theme: Aurora (the app's own look and the default), Liquid Glass, Bento, Neo-Brutal, Acid Night, Scrapbook or Game Candy. Pick it when creating the event (the page previews it live) or later in Edit. The event page and its card on the home list use the event's theme. A Preview button opens a sample event page in any theme, so you can compare them before choosing. A palette button at the bottom of the sidebar opens Appearance, where you pick your main style: the theme of the home list, calendar and new events. It is remembered in this browser; an event keeps its own theme.
 - Pages feel smoother: cards and sections float in one after another when a page opens, and the event page slides to the next step when it moves from voting to RSVP to the bill.
 - While voting is open, you can tap "Can't join" right away instead of picking days. Your votes are withdrawn, you won't be marked Going when the date is locked, and you stop showing as "not answered"; voting again or "I can come after all" takes it back.
-- People who tapped "Can't join" while voting was open now appear in the Everyone list marked as not going, instead of disappearing from it.
+- People who tapped "Can't join" while voting was open now appear in the Everyone list marked as not going, instead of disappearing from it. The overview's voting progress also counts them as answered, so it reaches 100% once everyone has voted or declined.
 
 ### Changed
 - Dates and deadlines are now picked with a calendar and a 24-hour time field instead of the browser's built-in picker. This covers the event start, the voting deadline, the confirm-by deadline and the reopen date.
