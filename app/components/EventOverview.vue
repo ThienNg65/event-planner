@@ -11,7 +11,7 @@ const declined = computed(() => rs.value.filter((r) => r.status === 'no' && !r.d
 // A "can't join" is an answer too, so it counts toward progress.
 const answered = computed(() => voted.value + declined.value);
 const roster = computed(() => Math.max(members.value.length, voted.value + declined.value));
-// Dot colours match the bar segments above the legend.
+// The legend rows; the first two also draw the bar segments, so dot and bar colours stay in step.
 const stats = computed(() => [
   { key: 'votedL', n: voted.value, dot: 'bg-primary' },
   { key: 'declinedL', n: declined.value, dot: 'bg-inverted/35' },
@@ -39,10 +39,11 @@ const total = computed(() => payers.value.reduce((s, p) => s + p.owes, 0));
 const mounted = ref(false);
 onMounted(() => (mounted.value = true));
 // The countdown turns amber only in the last day, so it doesn't alarm for a week.
-const soon = computed(() => open.value && mounted.value && !!ev.value.voteDeadline && new Date(ev.value.voteDeadline).getTime() - Date.now() < 86_400_000);
+const msLeft = computed(() => (mounted.value && ev.value.voteDeadline ? new Date(ev.value.voteDeadline).getTime() - Date.now() : null));
+const soon = computed(() => open.value && msLeft.value !== null && msLeft.value < 86_400_000);
 const relative = computed(() => {
-  if (!mounted.value || !ev.value.voteDeadline) return '';
-  const ms = new Date(ev.value.voteDeadline).getTime() - Date.now();
+  const ms = msLeft.value;
+  if (ms === null) return '';
   const fmt = new Intl.RelativeTimeFormat(locale.value, { numeric: 'auto' });
   const days = Math.round(ms / 86_400_000);
   return Math.abs(days) >= 1 ? fmt.format(days, 'day') : fmt.format(Math.round(ms / 3_600_000), 'hour');
@@ -66,8 +67,7 @@ const relative = computed(() => {
         </p>
         <!-- One bar, three parts: voted, can't join, no reply yet (the empty track). -->
         <div class="flex h-2 overflow-hidden rounded-full bg-accented" role="img" :aria-label="`${t('overview.answered')} ${t('overview.answeredOf', { n: answered, total: roster })}`">
-          <span class="h-full bg-primary" :style="{ width: `${(voted / Math.max(roster, 1)) * 100}%` }" />
-          <span class="h-full bg-inverted/35" :style="{ width: `${(declined / Math.max(roster, 1)) * 100}%` }" />
+          <span v-for="s in stats.slice(0, 2)" :key="s.key" class="h-full" :class="s.dot" :style="{ width: `${(s.n / Math.max(roster, 1)) * 100}%` }" />
         </div>
       </div>
       <ul class="space-y-1.5 text-sm">

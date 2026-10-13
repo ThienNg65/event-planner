@@ -27,6 +27,8 @@ const rows = computed<Row[]>(() => {
 });
 const voters = (pick: (r: Row) => boolean) => rows.value.filter(pick).map((r) => r.name);
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
+// My vote on a place (the server list, no optimistic draft for places).
+const myVote = (v: EventDetail['venues'][number]) => !!props.me && v.upvotes.includes(props.me.id);
 
 // Closed (deadline passed or cancelled): participants see the results, organizers can still fix votes.
 const readOnly = computed(() => !props.role && (!!ev.value.cancelledAt || !votingOpen(ev.value)));
@@ -215,7 +217,7 @@ async function remove() {
         v-for="v in data.venues"
         :key="v.id"
         class="themed-tile flex items-center gap-3 p-4 transition"
-        :data-on="!!me && v.upvotes.includes(me.id)"
+        :data-on="myVote(v)"
       >
         <div class="min-w-0 flex-1">
           <p class="font-medium break-words">
@@ -246,16 +248,16 @@ async function remove() {
           @click="removing = v"
         />
         <span class="flex shrink-0 items-center gap-1 text-sm text-muted tabular-nums" :title="t('poll.votes', v.upvotes.length)">
-          <UIcon name="i-lucide-users-round" class="size-4 text-dimmed" />{{ v.upvotes.length }}
+          <UIcon name="i-lucide-users-round" class="size-4 text-dimmed" /><span aria-hidden="true">{{ v.upvotes.length }}</span><span class="sr-only">{{ t('poll.votes', v.upvotes.length) }}</span>
         </span>
         <UButton
           :disabled="busy || readOnly"
-          :color="me && v.upvotes.includes(me.id) ? 'primary' : 'neutral'"
-          :variant="me && v.upvotes.includes(me.id) ? 'solid' : 'outline'"
-          :icon="me && v.upvotes.includes(me.id) ? 'i-lucide-check' : 'i-lucide-plus'"
-          :label="t(me && v.upvotes.includes(me.id) ? 'poll.myVote' : 'poll.vote')"
+          :color="myVote(v) ? 'primary' : 'neutral'"
+          :variant="myVote(v) ? 'solid' : 'outline'"
+          :icon="myVote(v) ? 'i-lucide-check' : 'i-lucide-plus'"
+          :label="t(myVote(v) ? 'poll.myVote' : 'poll.vote')"
           class="shrink-0"
-          :aria-pressed="!!me && v.upvotes.includes(me.id)"
+          :aria-pressed="myVote(v)"
           :aria-label="t('poll.voteFor', { name: v.name })"
           @click="act(() => save({ venueIds: toggle(mine?.venueIds ?? [], v.id) }))"
         />

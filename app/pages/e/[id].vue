@@ -186,8 +186,6 @@ useSeoMeta({
   ogImageType: 'image/png',
   ogImageWidth: 1200,
   ogImageHeight: 630,
-// The sticky sidebar stays short: a big team shows its first faces and a "+N".
-const AVATARS = 20;
   ogImageAlt: () => ev.value.title,
   twitterCard: 'summary_large_image',
   twitterTitle: () => ev.value.title,
@@ -195,6 +193,8 @@ const AVATARS = 20;
   twitterImage: () => cardImage.value,
 });
 
+// The sticky sidebar stays short: a big team shows its first faces and a "+N".
+const AVATARS = 20;
 const sharing = ref(false);
 const share = () => (sharing.value = true);
 </script>
@@ -309,9 +309,6 @@ const share = () => (sharing.value = true);
           <EventOverview :data="data" :role="role" @invite="share" />
           <section v-if="members.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
             <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
-              <span v-if="members.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
-                +{{ members.length - AVATARS }}
-              </span>
               <UIcon name="i-lucide-users-round" class="size-4 text-muted" />{{ t('members.title') }}
               <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
             </h2>
@@ -319,6 +316,9 @@ const share = () => (sharing.value = true);
               <UTooltip v-for="m in members.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="m.name">
                 <UAvatar :alt="m.name" size="md" tabindex="0" />
               </UTooltip>
+              <span v-if="members.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
+                +{{ members.length - AVATARS }}
+              </span>
             </div>
           </section>
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
