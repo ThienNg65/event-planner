@@ -95,6 +95,7 @@ describe('honorees', () => {
     assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: [hon, hon] } })).status, 200);
     assert.deepEqual((await api(base)).body.event.honorees, [hon]);
     assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: ['x'] } })).status, 400);
+    assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: [2 ** 31 - 1] } })).message, 'unknownMember');
     assert.equal((await api(base, { method: 'PATCH', me: hon, body: { honorees: [] } })).status, 403);
     assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: null } })).status, 200);
     assert.deepEqual((await api(base)).body.event.honorees, []);

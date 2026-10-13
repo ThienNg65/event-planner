@@ -294,7 +294,6 @@ export const pendingVoters = <M extends { id: number }>(roster: M[], responses: 
   return roster.filter((m) => !voted.has(m.id));
 };
 
-
 /** The i18n `stage.*` key for an event's badge: a poll past its deadline reads "waiting for the date", not "voting". */
 export const stageKey = (ev: { stage: string; voteDeadline?: string | Date | null }, now = Date.now()) =>
   ev.stage === 'poll' && !votingOpen(ev, now) ? 'pollClosed' : ev.stage;

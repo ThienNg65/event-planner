@@ -38,6 +38,7 @@ const add = () => signIn($fetch('/api/members', { method: 'POST', body: { name: 
 <template>
   <div class="space-y-2">
     <div v-if="!adding" class="space-y-2">
+      <p v-if="pickOnly && !unclaimed.length" class="text-sm text-muted">{{ t('me.noneToPick') }}</p>
       <div class="flex gap-2">
         <USelectMenu
           v-if="unclaimed.length"

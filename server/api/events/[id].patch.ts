@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
 
   const { reconfirmBy: wantedBy, ...f } = eventFields(b);
   if (!Object.keys(f).length && !ops) fail(400, 'invalid');
+  await requireMembers(f.honorees);
   if (frozen && ('startsAt' in f || 'venue' in f || 'venueLink' in f)) fail(409, 'planFrozen');
   if (f.pollDays && !f.pollDays.length && ev.stage === 'poll') fail(400, 'daysRequired');
   if (f.stage && f.stage !== ev.stage) {

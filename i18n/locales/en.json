@@ -57,7 +57,8 @@
     "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from the device you used before.",
     "signOut": "Sign out",
     "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself.",
-    "continue": "Continue"
+    "continue": "Continue",
+    "noneToPick": "No names left to pick. If you have used the app before, open your sign-in link."
   },
   "event": {
     "dateTbd": "Date not set yet",

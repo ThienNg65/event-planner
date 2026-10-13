@@ -57,7 +57,8 @@
     "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị bạn đã dùng.",
     "signOut": "Đăng xuất",
     "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại.",
-    "continue": "Tiếp tục"
+    "continue": "Tiếp tục",
+    "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập của bạn."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { compareDays } from '~~/shared/utils/event';
-
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
@@ -110,8 +108,9 @@ const voted = computed(() => props.data.responses.filter((r) => r.days.length ||
 const pending = computed(() => pendingVoters(members.value, props.data.responses));
 const lock = reactive({ day: '', time: '19:00', venueId: undefined as number | undefined });
 // Same order as the organizer's comparison: votes, then honorees who can come, then earliest, so the preselected day is the tie-broken one.
+const dayCompare = computed(() => compareDays(ev.value.pollDays, props.data.responses, ev.value.honorees));
 const dayRank = computed(() =>
-  compareDays(ev.value.pollDays, props.data.responses, ev.value.honorees).ranked.map((d) => ({ value: d.day, n: d.n, label: fmtDay(d.day, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
+  dayCompare.value.ranked.map((d) => ({ value: d.day, n: d.n, label: fmtDay(d.day, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
 );
 const bar = (n: number) => `${voted.value ? Math.round((n / voted.value) * 100) : 0}%`;
 const venueRank = computed(() =>
@@ -287,7 +286,10 @@ async function complete() {
                 </span>
               </template>
             </URadioGroup>
-            <p v-if="tied(dayRank)" class="text-sm text-warning">{{ t('next.tie') }}</p>
+            <!-- Same reason as the organizer's comparison panel, so the preselected day is explained. -->
+            <p v-if="dayCompare.tie" class="text-sm text-warning">
+              {{ t(dayCompare.tie === 'honorees' ? 'compare.tieHonorees' : 'compare.tieEarlier', { day: dayRank[0]!.label, n: dayRank[0]!.n }) }}
+            </p>
             <UInput v-model="lock.time" type="time" class="w-32" />
           </div>
         </UFormField>

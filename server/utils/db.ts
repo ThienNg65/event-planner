@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { eq, sql, type SQLWrapper } from 'drizzle-orm';
+import { eq, inArray, sql, type SQLWrapper } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from '../db/schema';
 
@@ -16,6 +16,13 @@ export async function findEvent(id: number) {
   const [ev] = await useDb().select().from(schema.events).where(eq(schema.events.id, id));
   if (!ev) fail(404, 'notFound');
   return ev;
+}
+
+/** Fails unless every id is a member (honorees are picked from the team). */
+export async function requireMembers(ids: number[] | undefined) {
+  if (!ids?.length) return;
+  const found = await useDb().select({ id: schema.members.id }).from(schema.members).where(inArray(schema.members.id, ids));
+  if (found.length !== ids.length) fail(400, 'unknownMember');
 }
 
 export async function requireMember(id: unknown) {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { parseDate, type DateValue } from '@internationalized/date';
-import { compareDays } from '~~/shared/utils/event';
 
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
@@ -31,10 +30,9 @@ const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x
 // My vote on a place (the server list, no optimistic draft for places).
 const myVote = (v: EventDetail['venues'][number]) => !!props.me && v.upvotes.includes(props.me.id);
 
-// Closed (deadline passed or cancelled): participants see the results, organizers can still fix votes.
-// Past the deadline or cancelled: the poll shows results (organizers can still fix votes).
+// Past the deadline or cancelled: the poll shows results; only organizers can still fix votes.
 const closed = computed(() => !!ev.value.cancelledAt || !votingOpen(ev.value));
-const readOnly = computed(() => !props.role && (!!ev.value.cancelledAt || !votingOpen(ev.value)));
+const readOnly = computed(() => !props.role && closed.value);
 const voted = computed(() => rows.value.filter((r) => r.days.length || r.venueIds.length).length);
 
 const days = computed(() => {
@@ -66,7 +64,8 @@ const compare = computed(() => {
   const { ranked, tie } = compareDays(ev.value.pollDays, rows.value, ev.value.honorees);
   const top = ranked.filter((d) => d.n > 0).slice(0, 3);
   if (top.length < 2) return null;
-  const answered = rows.value.filter((r) => r.days.length || r.status === 'no');
+  // Anyone who answered (days, places only, or can't join): not picking a day means they're out for it.
+  const answered = rows.value.filter((r) => r.days.length || r.venueIds.length || r.status === 'no');
   return {
     tie,
     pending: pendingVoters(members.value, rows.value).length,

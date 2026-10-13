@@ -5,6 +5,7 @@ export default defineEventHandler(async (event) => {
   const { stage: _ignored, reconfirmBy: _held, ...f } = eventFields({ title: '', ...b });
   const createdBy = await meOf(event);
   if (createdBy === null) fail(401, 'signInFirst');
+  await requireMembers(f.honorees);
   const pollDays = f.pollDays ?? [];
   if (!pollDays.length && !f.startsAt) fail(400, 'invalidDate');
 
