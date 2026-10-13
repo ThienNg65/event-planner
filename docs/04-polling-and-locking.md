@@ -1,0 +1,117 @@
+# 4. Polling and locking
+
+Stage `poll` collects **votes**: which candidate days each member can make and which suggested places they like.
+The organizer then **locks** the plan (`poll → rsvp`), and votes become attendance. After the lock, a changed plan *holds* seats instead of dropping people.
+
+Code: `shared/utils/event.ts` (`compareDays`, `planFor`, `matchesPlan`, `deriveAttendance`, `lockImpact`), `server/utils/attendance.ts`,
+`server/api/events/[id].patch.ts`, `.../response.put.ts`, `.../days.post.ts`, `.../venues.post.ts`.
+
+## 4.1 What is being polled
+
+| Poll | Set up by | Stored in | Notes |
+|---|---|---|---|
+| **Days** | Creator picks up to 20 days on the calendar | `events.pollDays` (`date[]`) | Plain `YYYY-MM-DD`, no time. The time of day is chosen at lock. |
+| **Places** | Anyone suggests (only when the event has no fixed venue) | `venues` rows | Upvotes live on the voter's row (`responses.venueIds`). |
+
+An event may poll days only, places only, or both. A fixed-date event with no venue polls places only.
+
+## 4.2 Voting
+
+All vote writes are `PUT /api/events/:id/response`, one row per member per event. Each write is filtered **inside the SQL statement**
+against the days and places that exist *right now*, so a vote can never reference a removed day or place.
+
+- **Days**: send the full list of days the member can make. A day that was removed meanwhile is dropped and the call returns `daysChanged` (409); the rest is saved and the client refreshes.
+- **Places**: send the full list of upvoted place ids. Unknown ids → `venuesChanged`.
+- **"Can't join"** while polling: `status:'no'` clears the member's days and places (so they no longer count toward anything) and removes them from the "not replied" list. `status:null` takes it back. It follows the same voting-window rules as a vote.
+- **First vote time**: `firstVotedAt` is set once, on the member's first write of days or places, and never moves, even if they later empty or change their votes. It decides their place in the queue at lock.
+- **Who is "pending"**: a roster member with no day, no place and not `no` (`pendingVoters`). When at least one member has voted and none is pending, organizers are nudged to lock.
+
+### Suggesting
+
+- **A day** (`POST /days {memberId, day}`): the day must be today or later in team time, the event must be a day poll (`stageClosed` for fixed-date events), and the poll holds at most 20 days (`tooManyDays`). Suggesting an existing day just adds the suggester's vote. A new day is added and the suggester's vote recorded in one batch.
+- **A place** (`POST /venues {addedBy, name, link?, note?}`): name ≤ 100 chars, link must be `http(s)://`, note ≤ 300. Refused (`stageClosed`) when the event already has a fixed venue. A name matching an existing one ignoring case and diacritics returns `venueExists` (409) with `data.id` of the existing place, and the client upvotes that one instead.
+- **Removing** a day (`removeDays`) or a place (`DELETE /venues/:id`) is organizer-only. Votes for it are removed in the same batch.
+
+## 4.3 Ranking and the tie-break
+
+`compareDays(days, responses, honorees)` orders days by:
+
+1. number of members who can make it (descending),
+2. then how many **honorees** can make it (descending),
+3. then the earlier date.
+
+`tie` reports why the first day beats an equal-vote second day: `'honorees'` or `'earlier'` (null when there is no tie or no votes).
+The lock dialog preselects the top-ranked day and the top-ranked place (places rank by upvotes). The event page shows the leading days side by side for organizers: who can come, who can't, who hasn't replied.
+
+**Honorees** (`events.honorees`, max 20 member ids) are chosen in Edit. They do not change who may vote; they only add the "can the honoree come?" mark on every day and feed rule 2 above.
+
+## 4.4 Closing and deadline
+
+See [02](02-event-lifecycle.md#voting-window-stage-poll-only). In short: after `voteDeadline` (or **Close voting**) participants cannot change votes; organizers can; the event stays in `poll` until someone locks.
+
+## 4.5 Locking
+
+`PATCH { stage:'rsvp', startsAt?, venue?, venueLink? }` by an organizer (`advance`).
+
+The UI sends:
+
+- `startsAt = teamTime(chosenDay, chosenTime)` when the event polls days. The time field defaults to **19:00** (it is not derived from the event type).
+- `venue` and `venueLink` copied from the chosen suggested place when the event has no fixed venue and places exist.
+
+The server requires the resulting event to have a `startsAt` (`invalidDate` otherwise), moves the stage, and **derives attendance from votes** in the same batch.
+
+### The plan
+
+```
+planFor(pollDays, startsAt, polledVenues, venueName) = {
+  day:          teamDay(startsAt)                 if the event polls days and has a startsAt, else null
+  venuePolled:  there is at least one suggested place
+  venueIds:     ids of suggested places whose name equals the chosen venue name exactly
+}
+```
+
+### Does a member's vote "fit" the plan? (`matchesPlan`)
+
+| Plan | A member fits when… |
+|---|---|
+| Day plan, no places polled | their `days` contain the locked day |
+| Day plan, places polled | their `days` contain the locked day **and** (they upvoted no place **or** upvoted the locked place) |
+| Place-only plan | they upvoted the locked place |
+
+A member who voted only for places on a day plan has no day, so they do not fit; they are asked to confirm instead.
+
+### What lock does to each member (`deriveAttendance`, mode `lock`)
+
+| Member's state at lock | Result |
+|---|---|
+| Already paid | Untouched |
+| Gave an explicit answer (`status` set), including "can't join" | **Untouched.** Answers a member gave themselves are never changed. |
+| No answer, votes fit the plan | Becomes `going` with `derived = 'going'`; queue time = `firstVotedAt` (or lock time if missing) |
+| No answer, voted but does not fit | Untouched; next-step says **Confirm** ("you voted for other days, are you coming?") |
+| Never voted | Untouched; next-step says **Answer** |
+
+Who actually gets a *seat* is then decided on read by the waitlist rule: strict first-come by queue time, `memberId` breaking ties.
+See [05](05-rsvp-and-seats.md). The lock dialog previews exactly this (`lockImpact`): who is marked Going, who waits, who is asked to confirm.
+
+All derived writes carry the guard "event still in `rsvp` with this date and place, member unpaid, member still unanswered" in SQL, so an answer a member gave a moment earlier always wins and a lost race writes nothing.
+
+## 4.6 Plan changes after the lock
+
+While the event is in `rsvp` and has not started, an organizer may move the date or place (`planMoved`). If the event ever had poll days or suggested places,
+attendance is re-derived in mode **`edit`**:
+
+| Member's state | Result |
+|---|---|
+| Explicit answer (`derived = null`) | Untouched |
+| Paid | Untouched |
+| Derived and still fits the new plan | Stays `going`, **keeps** their queue spot |
+| Derived and no longer fits | **Held**: `derived = 'reconfirm'`, seat kept until the confirm-by deadline |
+| Hold already expired | Released (status cleared); never revived by a later edit |
+
+- **Confirm-by deadline** (`events.reconfirmBy`): defaults to `min(now + 48 h, new start)`. The organizer may set another time that is in the future and not after the new start (`invalidDate`). If anyone would be held and the new start is already past, the edit is refused (`reconfirmTooLate`).
+- A held seat **expires on read**: every seat reader goes through `seated()`, which ignores `reconfirm` rows past the deadline. A cleanup (`releaseExpired`) also clears them when the next plan edit commits.
+- The holder **confirms** by answering Going: if the deadline is still ahead and guests did not increase, they keep their queue spot; otherwise they join the back. Declining or silence releases the seat; a later Going joins the back.
+- **Entering the bill, completing, or reopening to poll releases all holds** (`releaseHolds`, `clearDerived`).
+- An edit never marks anyone who wasn't already counted from votes.
+- A fixed-date event that never had a poll has no votes to derive from, so moving its date holds nobody.
+- The edit panel previews the effect (`lockImpact` with mode `edit`) before saving.

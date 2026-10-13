@@ -1,0 +1,106 @@
+# 7. Data model
+
+Postgres (Neon), accessed through Drizzle over the **HTTP driver**. Schema: `server/db/schema.ts`; migrations: `server/db/migrations/` (committed SQL + snapshot).
+Column names are `snake_case` in the database and `camelCase` in code (`casing: 'snake_case'`).
+
+```mermaid
+erDiagram
+    members ||--o{ events : "created_by"
+    members ||--o{ responses : "member_id"
+    members ||--o{ venues : "added_by"
+    members ||--o{ cohosts : "member_id"
+    events  ||--o{ responses : "event_id (cascade)"
+    events  ||--o{ venues : "event_id (cascade)"
+    events  ||--o{ cohosts : "event_id (cascade)"
+```
+
+Event deletion cascades to `responses`, `venues` and `cohosts`. Members are never deleted by the app.
+
+## `members`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | serial PK | |
+| `name` | text, **unique**, not null | Exact-string unique; fuzzy matching (`norm`) is done in the UI |
+| `token_hash` | text, unique | SHA-256 of the sign-in token; **null = unclaimed** |
+| `created_at` | timestamptz | |
+
+## `events`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | serial PK | |
+| `title` | text not null | ≤ 100 chars (validated) |
+| `note` | text not null, default `''` | ≤ 500; `@Name` shows as a chip |
+| `stage` | text not null | check: `poll`, `rsvp`, `bill`, `settled` |
+| `poll_days` | `date[]` not null, default `{}` | candidate days; empty for fixed-date events |
+| `starts_at` | timestamptz | null while a day poll is unlocked |
+| `venue`, `venue_link` | text | fixed place (or the locked place's name and link) |
+| `capacity` | integer | null = unlimited; 1 to 500 (validated) |
+| `bill_total` | integer | VND; null = no bill |
+| `bank_id`, `bank_account`, `bank_holder` | text | VietQR destination |
+| `cover` | text | a preset key (`aurora`, `sunset`, `ocean`, `forest`, `candy`, `slate`) or an `https://` image URL; null = gradient chosen from `id % 6` |
+| `honorees` | `integer[]` not null, default `{}` | member ids the event is for (max 20, validated; not a foreign key) |
+| `theme` | text not null, default `aurora` | one of `aurora, liquid, bento, brutal, acid, scrapbook, candy` |
+| `created_by` | integer FK → members, not null | the host by identity |
+| `manage_key_hash` | text not null | SHA-256 of the host key |
+| `co_host_key_hash` | text | legacy shared co-host key |
+| `vote_deadline` | timestamptz | null = voting stays open |
+| `cancelled_at`, `cancel_reason` | timestamptz, text | the Cancelled overlay |
+| `notice`, `notice_at` | text, timestamptz | the host's public announcement (≤ 280) |
+| `reconfirm_by` | timestamptz | confirm-by deadline for held seats |
+| `created_at` | timestamptz | |
+
+## `venues` (suggested places)
+
+`id`, `event_id` (FK, cascade), `name`, `link` (default `''`), `note` (default `''`), `added_by` (FK → members), `created_at`.
+No unique constraint: duplicates are prevented in the API by comparing normalized names (a rare race can still insert two).
+
+## `responses` (one row per member per event)
+
+Primary key `(event_id, member_id)`. **Each person writes only their own row** (organizers excepted); this is the heart of the concurrency model.
+
+| Column | Type | Notes |
+|---|---|---|
+| `days` | `date[]` not null, default `{}` | days the member can make |
+| `venue_ids` | `integer[]` not null, default `{}` | upvoted places (not a foreign key; the API prunes removed places) |
+| `status` | text | `going`, `maybe`, `no`, or null |
+| `guests` | integer not null, default 0 | check 0 to 10 |
+| `going_at` | timestamptz | queue time |
+| `paid_at` | timestamptz | set when any payment is recorded |
+| `paid_amount` | integer | check ≥ 0; **null with `paid_at` set means paid in full** |
+| `first_voted_at` | timestamptz | set once, on the first write of days or places |
+| `derived` | text | `going` or `reconfirm`; null = the member's own answer |
+
+Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `derived in (...)`, and **`derived is null or status = 'going'`**.
+
+## `cohosts`
+
+Primary key `(event_id, member_id)`.
+
+| Column | Notes |
+|---|---|
+| `status` | `invited` or `active` |
+| `invite_hash` | unique; SHA-256 of the single-use invite; present **iff** status is `invited` |
+| `key_hash` | unique; SHA-256 of the access key; present **iff** status is `active` |
+| `invited_at`, `accepted_at` | an invite older than 7 days is "expired" (computed, not stored) |
+
+## Enumerations and constants
+
+| Name | Values | Defined in |
+|---|---|---|
+| `STAGES` | `poll, rsvp, bill, settled` | `server/db/schema.ts` |
+| `STATUSES` | `going, maybe, no` | same |
+| `DERIVED` | `going, reconfirm` | same |
+| `COHOST_STATUSES` | `invited, active` | same |
+| `INVITE_TTL_MS` | 7 days | `shared/utils/roles.ts` |
+| `RECONFIRM_MS` | 48 hours | same |
+| `MAX_COHOSTS` | 5 | same |
+| Poll days max | 20 | `eventFields.ts`, `[id].patch.ts`, `days.post.ts` |
+| Guests max | 10 | schema check, `response.put.ts` |
+
+## Migrations
+
+`0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`.
+`netlify.toml` runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

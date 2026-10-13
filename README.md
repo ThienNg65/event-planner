@@ -26,6 +26,10 @@ Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
 - **Payments** can be partial: a member reports what they transferred, the QR is for what is left, and organizers can correct anyone in the People list. After Completed, participants can only add a payment, not change amounts.
 - **Editing** is split by how a change takes effect. **Edit** opens a panel for the details (saved with Save, previews what a seat-limit, place or bill change does to people first). **Post an update** publishes a notice at once. **Organizers** shows your role, what each role may do, and (host only) the manage link and co-host link. The host-only **⋯** menu holds reopen an earlier stage, cancel/restore and delete, each behind its own confirm. The bill is entered from the next step; the panel only corrects it once the cost is being split.
 
+## Documentation
+
+How the app works in depth (event lifecycle, identity and roles, polling, seats and waitlist, bill and payments, data model, API, known behaviours) is in [`docs/`](docs/README.md). Start there if you are new to the codebase.
+
 ## Requirements
 
 - Node **24.11 or newer**. On this machine, put `C:\devtools\node-v24.14.1-win-x64` first on `PATH`.

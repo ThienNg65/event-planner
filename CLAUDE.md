@@ -2,7 +2,30 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Team Events: a Nuxt 4 + Nuxt UI app for planning team events (date/venue polls, RSVPs with a seat limit, bill split with VietQR, payment tracking). Postgres (Neon) via Drizzle, deployed on Netlify. UI is Vietnamese by default with an English toggle. `README.md` has the product rules in detail; read it before changing behaviour.
+Team Events: a Nuxt 4 + Nuxt UI app for planning team events (date/venue polls, RSVPs with a seat limit, bill split with VietQR, payment tracking). Postgres (Neon) via Drizzle, deployed on Netlify. UI is Vietnamese by default with an English toggle.
+
+## Understand the app first: read `docs/`
+
+Before changing behaviour, or answering a question about how the app works, **read the relevant chapters in `docs/` instead of inferring the rules from code or guessing**. Start at `docs/README.md` (index and "if you change X, start at Y" table). `README.md` is the short product sheet.
+
+| Task | Read first |
+|---|---|
+| Anything new to you | `docs/README.md`, `01-overview-and-glossary.md`, `02-event-lifecycle.md` |
+| Stages, locking, reopen, cancel | `02-event-lifecycle.md`, `04-polling-and-locking.md` |
+| Sign-in, host/co-host, permissions | `03-identity-and-roles.md` |
+| RSVP, guests, seat limit, waitlist | `05-rsvp-and-seats.md` |
+| Bill, share, payments, VietQR | `06-bill-and-payments.md` |
+| Schema or migrations | `07-data-model.md` |
+| Adding or changing an endpoint | `08-api-reference.md`, `10-concurrency-and-invariants.md` |
+| Pages, components, i18n, time, themes | `09-frontend-map.md` |
+| Planning or reviewing a change | `11-known-behaviours.md` (surprising or undecided behaviours) |
+| Recipes (add a field, rule, string, release) | `12-development-guide.md` |
+
+Rules for keeping them true:
+
+- **The code wins.** If a doc and the code disagree, fix the doc in the same change (and tell the user if the code looks wrong).
+- Update the matching chapter whenever a rule, transition, permission, endpoint, column or user-visible behaviour changes. If a change settles an item in `11-known-behaviours.md`, update or remove that line.
+- Do not restate a rule in a second place; link to the chapter.
 
 Note: `C:\toys\CLAUDE.md` (parent folder) holds Java/banking rules for a different project. They do not apply here (no Java, no checkstyle, no `cb`).
 
