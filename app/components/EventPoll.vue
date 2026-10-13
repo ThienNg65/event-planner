@@ -124,7 +124,7 @@ async function remove() {
 </script>
 
 <template>
-  <section id="poll" class="scroll-mt-4 space-y-8">
+  <section id="poll" class="scroll-mt-4 space-y-6">
     <div class="space-y-1">
       <p v-if="readOnly" class="flex items-center gap-1.5 text-sm text-warning">
         <UIcon name="i-lucide-lock" class="size-4" />{{ t(ev.cancelledAt ? 'poll.closedCancelled' : 'poll.closedDeadline') }}
@@ -144,10 +144,10 @@ async function remove() {
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <UBadge v-if="me" color="primary" variant="soft" class="rounded-full px-2.5 tabular-nums" :label="t('poll.picked', { n: myDays.length, total: ev.pollDays.length })" />
+          <UBadge v-if="me" :color="myDays.length ? 'primary' : 'neutral'" variant="soft" class="rounded-full px-2.5 tabular-nums" :label="t('poll.picked', { n: myDays.length, total: ev.pollDays.length })" />
           <UButton v-if="can(role, 'edit')" size="sm" variant="outline" color="neutral" icon="i-lucide-calendar-cog" @click="daysOpen = true">{{ t('days.edit') }}</UButton>
           <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
-            <UButton size="sm" variant="soft" icon="i-lucide-plus" :loading="busy">{{ t('poll.suggestDay') }}</UButton>
+            <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-plus" :loading="busy">{{ t('poll.suggestDay') }}</UButton>
             <template #content>
               <UCalendar :min-value="today" :week-starts-on="1" :aria-label="t('poll.suggestDay')" class="p-2" @update:model-value="suggestDay" />
             </template>
@@ -163,21 +163,26 @@ async function remove() {
             :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : 'poll.notSelected') })"
             class="themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
             :data-on="myDays.includes(d.day)"
-            :data-top="d.top"
             @click="act(() => tapDay(d.day))"
           >
-            <span class="absolute top-3 right-3 flex items-center gap-1.5">
-              <UIcon v-if="d.top" name="i-lucide-crown" class="size-5 text-secondary" :title="t('poll.top')" />
-              <span v-if="myDays.includes(d.day)" class="grid size-5 place-items-center rounded-full bg-primary text-inverted"><UIcon name="i-lucide-check" class="size-3.5" /></span>
+            <!-- Purple means "my pick" only; everyone's totals stay neutral. -->
+            <span
+              class="absolute top-3 right-3 grid size-5 place-items-center rounded-full transition"
+              :class="myDays.includes(d.day) ? 'bg-primary text-inverted' : 'ring-1 ring-accented ring-inset'"
+              aria-hidden="true"
+            >
+              <UIcon v-if="myDays.includes(d.day)" name="i-lucide-check" class="size-3.5" />
             </span>
-            <span class="text-xs text-muted">{{ d.weekday }}</span>
+            <span class="text-xs font-medium text-muted">{{ d.weekday }}</span>
             <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
             <span class="mt-1 flex items-center gap-1.5 text-xs text-muted tabular-nums">
-              <UIcon name="i-lucide-users-round" class="size-3.5" :class="d.names.length ? 'text-primary' : 'text-dimmed'" />{{ t('poll.chosen', { n: d.names.length }) }}
+              <UIcon v-if="d.top" name="i-lucide-crown" class="size-3.5 text-warning" />
+              <UIcon v-else name="i-lucide-users-round" class="size-3.5 text-dimmed" />
+              {{ t('poll.chosen', { n: d.names.length }) }}<template v-if="d.top"> · {{ t('poll.top') }}</template>
             </span>
             <span class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
-              <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated">
-                <span class="block h-full rounded-full bg-primary" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
+              <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
+                <span class="block h-full rounded-full bg-inverted/50" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
               </span>
               <span class="w-8 text-right text-xs text-muted tabular-nums">{{ voted ? Math.round((d.names.length / voted) * 100) : 0 }}%</span>
             </span>
@@ -195,11 +200,11 @@ async function remove() {
             <p class="text-sm text-muted">{{ t('poll.venuesHint') }}</p>
           </div>
         </div>
-        <UButton v-if="!readOnly && me && data.venues.length" size="sm" variant="soft" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
+        <UButton v-if="!readOnly && me && data.venues.length" size="sm" color="neutral" variant="outline" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
       </div>
 
       <div v-if="!data.venues.length" class="flex flex-col gap-3 themed-tile p-4 sm:flex-row sm:items-center">
-        <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><UIcon name="i-lucide-map-pin" class="size-5" /></span>
+        <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-elevated text-muted"><UIcon name="i-lucide-map-pin" class="size-5" /></span>
         <div class="min-w-0 flex-1">
           <p class="font-medium text-highlighted">{{ t('poll.noVenuesTitle') }}</p>
           <p class="text-sm text-muted">{{ t('poll.noVenues') }}</p>
@@ -213,7 +218,7 @@ async function remove() {
         :data-on="!!me && v.upvotes.includes(me.id)"
       >
         <div class="min-w-0 flex-1">
-          <p class="truncate font-medium">
+          <p class="font-medium break-words">
             <ULink v-if="v.link" :to="v.link" target="_blank" rel="noopener noreferrer">{{ v.name }}</ULink>
             <template v-else>{{ v.name }}</template>
           </p>
@@ -240,11 +245,16 @@ async function remove() {
           :aria-label="t('poll.remove')"
           @click="removing = v"
         />
+        <span class="flex shrink-0 items-center gap-1 text-sm text-muted tabular-nums" :title="t('poll.votes', v.upvotes.length)">
+          <UIcon name="i-lucide-users-round" class="size-4 text-dimmed" />{{ v.upvotes.length }}
+        </span>
         <UButton
           :disabled="busy || readOnly"
+          :color="me && v.upvotes.includes(me.id) ? 'primary' : 'neutral'"
           :variant="me && v.upvotes.includes(me.id) ? 'solid' : 'outline'"
-          :icon="me && v.upvotes.includes(me.id) ? 'i-lucide-circle-check' : 'i-lucide-thumbs-up'"
-          :label="String(v.upvotes.length)"
+          :icon="me && v.upvotes.includes(me.id) ? 'i-lucide-check' : 'i-lucide-plus'"
+          :label="t(me && v.upvotes.includes(me.id) ? 'poll.myVote' : 'poll.vote')"
+          class="shrink-0"
           :aria-pressed="!!me && v.upvotes.includes(me.id)"
           :aria-label="t('poll.voteFor', { name: v.name })"
           @click="act(() => save({ venueIds: toggle(mine?.venueIds ?? [], v.id) }))"

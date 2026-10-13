@@ -16,6 +16,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ### Changed
 - Dates and deadlines are now picked with a calendar and a 24-hour time field instead of the browser's built-in picker. This covers the event start, the voting deadline, the confirm-by deadline and the reopen date.
 
+- The event page looks calmer: neutral cards and borders, with violet kept for buttons and your own picks. On the voting tiles, your picked days now stand out with a check, while vote totals are shown in gray, and the leading day is marked "Leading" instead of with a second outline. Each place shows its vote count apart from your own Vote / Voted button. The overview shows one bar with who voted, who can't join and who hasn't replied yet, and the side panel is more compact (large teams show the first faces and "+N").
 ## [0.4.0] - 2026-10-12
 
 ### Added

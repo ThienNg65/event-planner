@@ -186,6 +186,8 @@ useSeoMeta({
   ogImageType: 'image/png',
   ogImageWidth: 1200,
   ogImageHeight: 630,
+// The sticky sidebar stays short: a big team shows its first faces and a "+N".
+const AVATARS = 20;
   ogImageAlt: () => ev.value.title,
   twitterCard: 'summary_large_image',
   twitterTitle: () => ev.value.title,
@@ -215,7 +217,7 @@ const share = () => (sharing.value = true);
     </template>
 
     <template #body>
-      <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
         <div class="rise min-w-0 space-y-6 lg:col-start-1">
           <header class="space-y-3">
             <div class="relative overflow-hidden rounded-xl" :class="['image' in cover ? 'h-44 sm:h-52' : 'h-28', 'gradient' in cover && cover.gradient]">
@@ -303,16 +305,19 @@ const share = () => (sharing.value = true);
           <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>
 
-        <aside class="rise grid content-start gap-4 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
+        <aside class="rise grid content-start gap-3 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
           <EventOverview :data="data" :role="role" @invite="share" />
-          <section v-if="members.length" class="space-y-3 rounded-2xl p-5 shadow-xs ring ring-default" :aria-label="t('members.title')">
-            <h2 class="flex items-center gap-2 font-semibold text-highlighted">
-              <UIcon name="i-lucide-users-round" class="size-5" />{{ t('members.title') }}
+          <section v-if="members.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
+            <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
+              <span v-if="members.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
+                +{{ members.length - AVATARS }}
+              </span>
+              <UIcon name="i-lucide-users-round" class="size-4 text-muted" />{{ t('members.title') }}
               <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <UTooltip v-for="m in members" :key="m.id" :delay-duration="0" :text="m.name">
-                <UAvatar :alt="m.name" size="lg" tabindex="0" />
+              <UTooltip v-for="m in members.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="m.name">
+                <UAvatar :alt="m.name" size="md" tabindex="0" />
               </UTooltip>
             </div>
           </section>

@@ -63,7 +63,7 @@ html[data-theme] body::after {
   color: var(--ui-text);
 }
 
-/* Smaller panels: day tiles, venue rows, to-do cards. data-on = picked, data-top = leading. */
+/* Smaller panels: day tiles, venue rows, to-do cards. data-on = picked. */
 .themed-tile {
   background: var(--theme-card-bg);
   border: var(--theme-tile-border, var(--theme-card-border));
@@ -73,18 +73,15 @@ html[data-theme] body::after {
   backdrop-filter: blur(var(--theme-blur)) saturate(1.6);
   color: var(--ui-text);
 }
-.themed-tile[data-top='true'] {
-  outline: 2px solid var(--ui-secondary);
-  outline-offset: -2px;
-}
+/* Leading is marked by its crown only; the outline is reserved for "my pick" so the two never look alike. */
 .themed-tile[data-on='true'] {
-  background: color-mix(in oklab, var(--ui-primary) 14%, var(--theme-card-bg));
+  background: color-mix(in oklab, var(--ui-primary) 9%, var(--theme-card-bg));
   outline: 2px solid var(--ui-primary);
   outline-offset: -2px;
 }
-button.themed-tile:not([aria-disabled='true']):hover,
+button.themed-tile:not([aria-disabled='true'], [data-on='true']):hover,
 a.themed-tile:hover {
-  background: color-mix(in oklab, var(--ui-primary) 8%, var(--theme-card-bg));
+  background: color-mix(in oklab, var(--ui-text) 4%, var(--theme-card-bg));
 }
 
 /* ---------- shared component hooks (values come from each theme's tokens) ---------- */
@@ -174,8 +171,8 @@ a.themed-tile:hover {
 }
 
 /* ======================================================================
-   AURORA (default): ink-and-paper surfaces, hairline borders, an aurora band at the top of the
-   page, film grain, tight corners, Sora headings. Light = warm paper, dark = deep ink.
+   AURORA (default): calm neutral surfaces, hairline borders, a faint aurora glow at the top of the
+   page, Sora headings. Violet is kept for primary actions and selected states only.
    ====================================================================== */
 [data-theme='aurora'] {
   --theme-font: 'Inter';
@@ -183,105 +180,80 @@ a.themed-tile:hover {
   --theme-head-weight: 600;
   --theme-head-spacing: -0.035em;
   --theme-title-size: 1.25rem;
-  --theme-wall: radial-gradient(70rem 34rem at 10% -12%, rgb(109 74 255 / 0.36), transparent 72%), radial-gradient(56rem 30rem at 66% -16%, rgb(34 211 238 / 0.3), transparent 72%),
-    radial-gradient(44rem 26rem at 104% -6%, rgb(244 63 158 / 0.26), transparent 72%), #f7f6fb;
+  --theme-wall: radial-gradient(70rem 30rem at 10% -14%, rgb(109 74 255 / 0.12), transparent 70%), radial-gradient(56rem 26rem at 70% -18%, rgb(34 211 238 / 0.08), transparent 70%), #f6f6f8;
   --theme-card-bg: #fff;
-  --theme-card-border: 1px solid #e6e3f1;
-  --theme-card-radius: 0.75rem;
-  --theme-card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 1px 2px rgb(30 20 80 / 0.06), 0 12px 28px -14px rgb(60 40 160 / 0.22);
-  --theme-tile-shadow: 0 1px 2px rgb(30 20 80 / 0.05);
+  --theme-card-border: 1px solid #e7e7ea;
+  --theme-card-radius: 0.875rem;
+  --theme-card-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -16px rgb(0 0 0 / 0.12);
+  --theme-tile-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
   --theme-blur: 0px;
   --ui-bg: #fff;
-  --ui-bg-muted: #f1effa;
-  --ui-bg-elevated: #eceaf7;
-  --ui-bg-accented: #e2dff2;
-  --ui-border: #e6e3f1;
-  --ui-border-accented: #cfcae6;
-  --ui-text-highlighted: #14112b;
-  --ui-text: #2a2547;
-  --ui-text-toned: #3f3a63;
-  --ui-text-muted: #5b5680;
-  --ui-text-dimmed: #6e6993;
+  --ui-bg-muted: #f6f6f8;
+  --ui-bg-elevated: #f1f1f4;
+  --ui-bg-accented: #e7e7eb;
+  --ui-border: #e7e7ea;
+  --ui-border-accented: #d4d4d8;
+  --ui-text-highlighted: #111114;
+  --ui-text: #27272a;
+  --ui-text-toned: #3f3f46;
+  --ui-text-muted: #52525b;
+  --ui-text-dimmed: #6b6b74;
   --ui-text-inverted: #fff;
   --ui-primary: #6d4aff;
   --ui-secondary: #e11d74;
   --ui-radius: 0.25rem;
-  --side-bg: rgb(255 255 255 / 0.7);
+  --side-bg: rgb(255 255 255 / 0.72);
   --side-border: 0;
   --bar-bg: transparent;
-  --bar-border: 1px solid #e6e3f1;
+  --bar-border: 1px solid #e7e7ea;
   --nav-radius: 0.5rem;
   --nav-weight: 500;
-  --nav-on-bg: rgb(109 74 255 / 0.1);
-  --nav-on-shadow: inset 2px 0 0 #6d4aff;
+  --nav-on-bg: rgb(109 74 255 / 0.08);
+  --nav-on-shadow: none;
   --nav-on-fg: #4a2fd0;
   --tb-radius: 0.5rem;
   --tb-weight: 600;
-  --tb-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28), 0 1px 2px rgb(40 20 120 / 0.3);
-  --tb-border-soft: 1px solid #cfcae6;
+  --tb-shadow: 0 1px 2px rgb(40 20 120 / 0.2);
+  --tb-border-soft: 1px solid #e4e4e7;
   --tf-radius: 0.5rem;
-  --tf-border: 1px solid #d8d4ec;
-  --tf-focus: 0 0 0 3px rgb(109 74 255 / 0.25);
+  --tf-border: 1px solid #d4d4d8;
+  --tf-focus: 0 0 0 3px rgb(109 74 255 / 0.22);
   --badge-radius: 0.375rem;
   --badge-weight: 600;
   color-scheme: light;
 }
 .dark[data-theme='aurora'],
 .dark [data-theme='aurora'] {
-  --theme-wall: radial-gradient(70rem 36rem at 10% -12%, rgb(109 74 255 / 0.62), transparent 72%), radial-gradient(56rem 32rem at 66% -16%, rgb(34 211 238 / 0.4), transparent 72%),
-    radial-gradient(44rem 28rem at 104% -6%, rgb(244 63 158 / 0.42), transparent 72%), #0a0912;
-  --theme-card-bg: #13111f;
+  --theme-wall: radial-gradient(70rem 32rem at 10% -14%, rgb(109 74 255 / 0.22), transparent 70%), radial-gradient(56rem 28rem at 70% -18%, rgb(34 211 238 / 0.1), transparent 70%), #0c0c0f;
+  --theme-card-bg: #16161a;
   --theme-card-border: 1px solid rgb(255 255 255 / 0.08);
-  --theme-card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 16px 36px -18px rgb(0 0 0 / 0.8);
+  --theme-card-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -18px rgb(0 0 0 / 0.7);
   --theme-tile-shadow: none;
-  --ui-bg: #13111f;
-  --ui-bg-muted: #0f0d1a;
-  --ui-bg-elevated: #1c1930;
-  --ui-bg-accented: #262240;
-  --ui-border: rgb(255 255 255 / 0.09);
-  --ui-border-accented: rgb(255 255 255 / 0.2);
-  --ui-text-highlighted: #fff;
-  --ui-text: #e7e4fa;
-  --ui-text-toned: #cfcaee;
-  --ui-text-muted: #a9a3d1;
-  --ui-text-dimmed: #9892c4;
+  --ui-bg: #16161a;
+  --ui-bg-muted: #111114;
+  --ui-bg-elevated: #1f1f24;
+  --ui-bg-accented: #2a2a30;
+  --ui-border: rgb(255 255 255 / 0.08);
+  --ui-border-accented: rgb(255 255 255 / 0.18);
+  --ui-text-highlighted: #fafafa;
+  --ui-text: #e4e4e7;
+  --ui-text-toned: #d4d4d8;
+  --ui-text-muted: #a8a8b0;
+  --ui-text-dimmed: #8e8e98;
   --ui-text-inverted: #fff;
   --ui-primary: #8f7bff;
   --ui-secondary: #f472b6;
-  --side-bg: rgb(255 255 255 / 0.025);
+  --side-bg: rgb(255 255 255 / 0.02);
   --bar-bg: transparent;
   --bar-border: 1px solid rgb(255 255 255 / 0.08);
   --nav-on-bg: rgb(143 123 255 / 0.14);
-  --nav-on-shadow: inset 2px 0 0 #8f7bff;
+  --nav-on-shadow: none;
   --nav-on-fg: #fff;
-  --tb-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(0 0 0 / 0.5);
-  --tb-border-soft: 1px solid rgb(255 255 255 / 0.18);
+  --tb-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+  --tb-border-soft: 1px solid rgb(255 255 255 / 0.12);
   --tf-border: 1px solid rgb(255 255 255 / 0.14);
   --tf-focus: 0 0 0 3px rgb(143 123 255 / 0.3);
   color-scheme: dark;
-}
-/* Film grain over the whole page (Aurora only): a fixed, click-through noise layer. */
-html[data-theme='aurora'] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-.dark html[data-theme='aurora'] body::before,
-html.dark[data-theme='aurora'] body::before {
-  opacity: 0.09;
-  mix-blend-mode: screen;
-}
-/* Solid primary buttons get a violet-to-indigo sheen; the progress fill carries the aurora gradient. */
-[data-theme='aurora'] .tb-solid.bg-primary {
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0));
-}
-[data-theme='aurora'] [role='progressbar'] > div,
-[data-theme='aurora'] [data-slot='indicator'] {
-  background-image: linear-gradient(90deg, #6d4aff, #22d3ee);
 }
 [data-theme='aurora'] .themed-side {
   border-right: 1px solid var(--ui-border);

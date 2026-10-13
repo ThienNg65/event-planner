@@ -86,10 +86,10 @@ async function saveAmount() {
         <UBadge v-if="row.r.derived === 'going'" color="neutral" variant="outline" size="sm" :label="t('people.fromVote')" />
         <UBadge v-else-if="row.r.derived === 'reconfirm' && row.kind !== 'voted'" color="warning" variant="outline" size="sm" :label="t('people.heldUntil', { time: heldUntil })" />
         <template v-if="ev.stage === 'poll' && row.kind !== 'no'">
-          <UBadge v-if="row.r.days.length" color="primary" variant="subtle" icon="i-lucide-calendar-days" :label="t('people.days', row.r.days.length)" />
+          <UBadge v-if="row.r.days.length" color="neutral" variant="subtle" icon="i-lucide-calendar-days" :label="t('people.days', row.r.days.length)" />
           <UBadge
             v-if="row.r.venueIds.length"
-            color="secondary"
+            color="neutral"
             variant="subtle"
             icon="i-lucide-map-pin"
             :label="t('people.places', row.r.venueIds.length)"

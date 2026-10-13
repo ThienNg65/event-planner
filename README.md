@@ -8,7 +8,7 @@ Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
 
 - **Who are you?** Everyone picks their name from one shared team list (on the event page, or any time from the sidebar), or taps **I'm new** to add themselves. A similar existing name (Thien / Thiên / THIEN) triggers "Is that you?". There are no passwords: the link is trusted.
 - **Events** move through stages:
-  1. **Polling**: tap the days you can make, suggest venues and upvote them, or say **Can't join** up front (this withdraws your votes, so locking never marks you Going, and you drop off the "not answered" list; voting again takes it back). The organizer picks the days on a calendar when creating the event.
+  1. **Polling**: tap the days you can make, suggest venues and upvote them, or say **Can't join** up front (this withdraws your votes, so locking never marks you Going, and you drop off the "no reply yet" list; voting again takes it back). The organizer picks the days on a calendar when creating the event.
   2. **RSVP open**: Going / Maybe / Can't, plus guests. With a seat limit, it's strictly first come: a party that doesn't fit waits, and so does everyone after it. Adding guests puts you at the back of the queue.
   3. **Splitting the bill**: the organizer enters the total. Each seat pays `ceil(total / seats / 1000) × 1000` ₫. People see their amount and a VietQR code and tap "I've paid".
   4. **Settled**.

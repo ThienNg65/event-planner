@@ -187,10 +187,10 @@
   },
   "poll": {
     "days": "Which days work for you?",
-    "top": "Most votes",
+    "top": "Leading",
     "venues": "Where to?",
-    "noVenues": "No restaurants yet. Suggest one!",
-    "suggestedBy": "suggested by {name}",
+    "noVenues": "Suggest the first one for everyone to vote on.",
+    "suggestedBy": "Suggested by {name}",
     "suggest": "Suggest a venue",
     "add": "Add suggestion",
     "tapHint": "Tap the days you can make",
@@ -211,10 +211,13 @@
     "closedDeadline": "Voting closed: the deadline passed",
     "closedCancelled": "Voting closed: the event was cancelled",
     "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going.",
-    "picked": "{n}/{total} days picked",
+    "picked": "You picked {n} of {total}",
     "chosen": "{n} picked",
     "venuesHint": "Vote for the places you like, or suggest another.",
-    "noVenuesTitle": "No places yet"
+    "noVenuesTitle": "No places yet",
+    "vote": "Vote",
+    "myVote": "Voted",
+    "votes": "{n} vote | {n} votes"
   },
   "bill": {
     "title": "Bill",
@@ -592,7 +595,7 @@
     "closed": "Voting closed, date not locked",
     "voted": "{n} of {total} in the team voted",
     "closes": "Closes {when}",
-    "notVoted": "Not voted yet: {names}",
+    "notVoted": "No reply yet: {names}",
     "more": "+{n} more",
     "locked": "Date locked: {when}",
     "seatsOf": "{n} of {cap} seats taken",
@@ -606,11 +609,13 @@
     "settled": "All settled · {n} seats",
     "completedPaid": "Everyone paid",
     "completedOwed": "{n} still owe",
-    "votedN": "{n} voted",
-    "pendingN": "{n} not answered",
-    "declinedN": "{n} can't join",
     "deadline": "Voting deadline",
-    "invite": "Invite people"
+    "invite": "Invite people",
+    "answered": "Responded",
+    "answeredOf": "{n} of {total}",
+    "votedL": "Voted",
+    "declinedL": "Can't join",
+    "pendingL": "No reply yet"
   },
   "invite": {
     "title": "You are invited to co-host as {name}",
