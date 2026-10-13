@@ -37,6 +37,13 @@ export async function startServer() {
 /** Deletes the events this process created, then stops the server. Call in `after`. */
 export async function stopServer() {
   await cleanup();
+  // The members this process made; one still referenced (an event that failed to delete) is left for inspection.
+  await query(
+    `DELETE FROM members m WHERE m.id = ANY($1::int[])
+       AND NOT EXISTS (SELECT 1 FROM events WHERE created_by = m.id) AND NOT EXISTS (SELECT 1 FROM responses WHERE member_id = m.id)
+       AND NOT EXISTS (SELECT 1 FROM venues WHERE added_by = m.id) AND NOT EXISTS (SELECT 1 FROM cohosts WHERE member_id = m.id)`,
+    [[...tokens.keys()]]
+  );
   server?.kill();
   await pool?.end();
 }
