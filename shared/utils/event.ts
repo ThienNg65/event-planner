@@ -294,12 +294,24 @@ export const pendingVoters = <M extends { id: number }>(roster: M[], responses: 
   return roster.filter((m) => !voted.has(m.id));
 };
 
-/** Poll days ranked by the number of voters, most first; equal counts keep date order. */
-export const rankDays = (days: string[], responses: { days: string[] }[]) =>
-  days
-    .map((day) => ({ day, n: responses.filter((r) => r.days.includes(day)).length }))
-    .sort((a, b) => b.n - a.n || a.day.localeCompare(b.day));
 
 /** The i18n `stage.*` key for an event's badge: a poll past its deadline reads "waiting for the date", not "voting". */
 export const stageKey = (ev: { stage: string; voteDeadline?: string | Date | null }, now = Date.now()) =>
   ev.stage === 'poll' && !votingOpen(ev, now) ? 'pollClosed' : ev.stage;
+
+/**
+ * Poll days for the organizer to compare: who can make each day, how many honorees can, ranked by voters, then by honorees
+ * who can come, then earliest first. `tie` says what put the first day ahead of an equal-vote second: 'honorees', 'earlier', or null (no tie).
+ */
+export function compareDays(days: string[], responses: { memberId: number; days: string[] }[], honorees: number[] = []) {
+  const ranked = days
+    .map((day) => {
+      const yes = responses.filter((r) => r.days.includes(day)).map((r) => r.memberId);
+      return { day, n: yes.length, yes, honoreesIn: honorees.filter((h) => yes.includes(h)) };
+    })
+    .sort((a, b) => b.n - a.n || b.honoreesIn.length - a.honoreesIn.length || a.day.localeCompare(b.day));
+  const [a, b] = ranked;
+  let tie: 'honorees' | 'earlier' | null = null;
+  if (a && b && a.n > 0 && a.n === b.n) tie = a.honoreesIn.length > b.honoreesIn.length ? 'honorees' : 'earlier';
+  return { ranked, tie };
+}

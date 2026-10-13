@@ -32,6 +32,8 @@ export const events = pgTable(
     bankHolder: text(),
     // A COVERS preset key or an https image URL; null → gradient picked from the id.
     cover: text(),
+    // Members the event is for (birthday people, the guest of honour): the poll shows which days they can make.
+    honorees: integer().array().notNull().default(sql`'{}'`),
     // A THEMES key (shared/utils/theme.ts): how the event page and its card look.
     theme: text().notNull().default('aurora'),
     createdBy: integer()

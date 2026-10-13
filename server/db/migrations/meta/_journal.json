@@ -50,6 +50,13 @@
       "when": 1791858176849,
       "tag": "0006_member_token",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791874794525,
+      "tag": "0007_event_honorees",
+      "breakpoints": true
     }
   ]
 }

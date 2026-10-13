@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "honorees" integer[] DEFAULT '{}' NOT NULL;

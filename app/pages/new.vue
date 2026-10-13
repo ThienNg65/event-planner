@@ -193,11 +193,13 @@ async function create() {
 
     <!-- In the panel footer: always in reach, never over the form. The button submits the form by id. -->
     <template #footer>
-      <div class="flex items-center justify-end gap-3 border-t border-default px-4 py-3 sm:px-6">
-        <p v-if="!meId" class="text-sm text-muted">{{ t('create.pickFirst') }}</p>
-        <UButton type="submit" form="create-form" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!meId || !form.title.trim()">
-          {{ t('create.submit') }}
-        </UButton>
+      <div class="border-t border-default px-4 py-3 sm:px-6">
+        <div class="mx-auto flex w-full max-w-5xl items-center justify-end gap-3">
+          <p v-if="!meId" class="text-sm text-muted">{{ t('create.pickFirst') }}</p>
+          <UButton type="submit" form="create-form" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!meId || !form.title.trim()">
+            {{ t('create.submit') }}
+          </UButton>
+        </div>
       </div>
     </template>
   </UDashboardPanel>

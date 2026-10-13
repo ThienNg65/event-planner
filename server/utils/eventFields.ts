@@ -70,6 +70,12 @@ export function eventFields(b: Record<string, unknown>) {
     if (v && !isCoverKey(v) && !isHttpUrl(v)) fail(400, 'invalidCover');
     out.cover = v || null;
   }
+  if ('honorees' in b) {
+    // The edit panel sends null for an emptied list.
+    const ids = b.honorees ?? [];
+    if (!Array.isArray(ids) || ids.length > 20 || !ids.every((id) => intIn(id, 1, 2 ** 31 - 1))) fail(400, 'invalid');
+    out.honorees = [...new Set(ids as number[])];
+  }
   if ('theme' in b) {
     if (!isThemeKey(b.theme)) fail(400, 'invalid');
     out.theme = b.theme;

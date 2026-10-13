@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, rankDays, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
 import { cardSvg } from '../shared/utils/card.ts';
@@ -239,16 +239,6 @@ test('pendingVoters: members with no day and no place picked, in roster order', 
   assert.deepEqual(pendingVoters([], rs), []);
 });
 
-test('rankDays: most votes first, ties and unvoted days in date order', () => {
-  const rs = [{ days: ['2026-10-03', '2026-10-01'] }, { days: ['2026-10-03', '2026-10-02'] }, { days: ['2026-10-02'] }];
-  assert.deepEqual(rankDays(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'], rs), [
-    { day: '2026-10-02', n: 2 },
-    { day: '2026-10-03', n: 2 },
-    { day: '2026-10-01', n: 1 },
-    { day: '2026-10-04', n: 0 },
-  ]);
-  assert.deepEqual(rankDays(['2026-10-02', '2026-10-01'], []), [{ day: '2026-10-01', n: 0 }, { day: '2026-10-02', n: 0 }]);
-});
 
 const plan = (day: string | null, venueIds: number[] = [], venuePolled = venueIds.length > 0) => ({ day, venuePolled, venueIds });
 const vote = (days: string[], venueIds: number[] = []) => ({ days, venueIds });
@@ -408,4 +398,20 @@ test('stageKey: a poll past its deadline reads as waiting for the date', () => {
   assert.equal(stageKey({ stage: 'poll', voteDeadline: '2026-10-14T05:00:00Z' }, now), 'poll');
   assert.equal(stageKey({ stage: 'poll', voteDeadline: null }, now), 'poll');
   assert.equal(stageKey({ stage: 'rsvp', voteDeadline: '2026-10-13T05:00:00Z' }, now), 'rsvp');
+});
+
+test('compareDays: ties go to the day more honorees can make, then the earlier day', () => {
+  const rs = [
+    { memberId: 1, days: ['2026-10-19', '2026-10-22'] },
+    { memberId: 2, days: ['2026-10-22'] },
+    { memberId: 3, days: ['2026-10-19'] },
+  ];
+  const byHonoree = compareDays(['2026-10-19', '2026-10-22', '2026-10-23'], rs, [2]);
+  assert.deepEqual(byHonoree.ranked.map((d) => d.day), ['2026-10-22', '2026-10-19', '2026-10-23']);
+  assert.equal(byHonoree.tie, 'honorees');
+  assert.deepEqual(byHonoree.ranked[0]!.honoreesIn, [2]);
+  assert.equal(compareDays(['2026-10-22', '2026-10-19'], rs).ranked[0]!.day, '2026-10-19');
+  assert.equal(compareDays(['2026-10-22', '2026-10-19'], rs).tie, 'earlier');
+  assert.equal(compareDays(['2026-10-19', '2026-10-23'], rs).tie, null);
+  assert.equal(compareDays(['2026-10-24', '2026-10-25'], rs).tie, null);
 });

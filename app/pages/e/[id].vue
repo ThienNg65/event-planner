@@ -199,7 +199,8 @@ const share = () => (sharing.value = true);
 <template>
   <UDashboardPanel :id="`event-${id}`">
     <template #header>
-      <UDashboardNavbar :title="ev.title">
+      <!-- No navbar title here: the event title below is the page heading, and a second h1 would repeat it. -->
+      <UDashboardNavbar>
         <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
@@ -269,7 +270,7 @@ const share = () => (sharing.value = true);
             :description="ev.cancelReason ?? undefined"
             :actions="restoreActions"
           />
-          <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions" :ui="{ description: 'text-default' }">
+          <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions" :ui="{ title: 'text-highlighted', description: 'text-default' }">
             <template #title>
               {{ t('event.noticeTitle') }}
               <UBadge v-if="unseen" color="secondary" variant="solid" size="sm" :label="t('event.new')" class="ml-1" />

@@ -2,7 +2,8 @@
   "app": {
     "name": "Sự kiện của team",
     "language": "Ngôn ngữ",
-    "colorMode": "Chế độ sáng / tối"
+    "colorMode": "Chế độ sáng / tối",
+    "home": "Trang chủ"
   },
   "cancel": "Huỷ",
   "close": "Đóng",
@@ -52,10 +53,11 @@
     "copyLink": "Sao chép liên kết đăng nhập",
     "linkCopied": "Đã sao chép liên kết đăng nhập",
     "linkHint": "Mở liên kết này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có liên kết là dùng được tên bạn.",
-    "otherDevice": "Đã tham gia trên thiết bị khác? Hãy mở liên kết đăng nhập từ thiết bị đó.",
+    "otherDevice": "Đã dùng app trên thiết bị khác? Hãy mở liên kết đăng nhập từ thiết bị đó.",
     "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị bạn đã dùng.",
     "signOut": "Đăng xuất",
-    "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại."
+    "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại.",
+    "continue": "Tiếp tục"
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
@@ -142,7 +144,6 @@
     "linkCopied": "Đã sao chép liên kết quản lý",
     "linkHint": "Ai có liên kết này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
     "lock": "Chốt kết quả",
-    "lockButton": "Chốt ngày",
     "bill": "Tổng hoá đơn (₫)",
     "schedule": "Ngày giờ"
   },
@@ -234,7 +235,11 @@
     "myVote": "Đã chọn",
     "votes": "{n} phiếu | {n} phiếu",
     "removePlace": "Xoá địa điểm",
-    "placeActions": "Thao tác cho {name}"
+    "placeActions": "Thao tác cho {name}",
+    "daysResult": "Kết quả bình chọn ngày",
+    "venuesResult": "Kết quả bình chọn địa điểm",
+    "honoreeIn": "đi được",
+    "honoreeOut": "không đi được"
   },
   "bill": {
     "title": "Chia tiền",
@@ -385,11 +390,12 @@
       "lock": "Chốt ngày",
       "bill": "Nhập hoá đơn",
       "settle": "Đánh dấu đã xong",
-      "pick": "Chọn kết quả",
       "close": "Đóng bình chọn",
       "reopen": "Mở lại bình chọn",
       "completeFree": "Hoàn tất, không có hoá đơn",
-      "completeAnyway": "Vẫn hoàn tất"
+      "completeAnyway": "Vẫn hoàn tất",
+      "lockBoth": "Chốt ngày & địa điểm",
+      "lockPlace": "Chốt địa điểm"
     },
     "lockDay": "Ngày và giờ",
     "lockHint": "Ai đã chọn ngày này được tính là tham gia, theo thứ tự bình chọn; hết chỗ thì vào danh sách chờ. Những người khác trả lời Tham gia, Có thể hoặc Không tham gia.",
@@ -452,7 +458,10 @@
     "completeFreeBody": "Sẽ không ai phải thanh toán.",
     "completeAnywayTitle": "Hoàn tất khi còn khoản chưa trả?",
     "completeAnywayBody": "Những người này vẫn còn nợ. Họ có thể tiếp tục thanh toán sau khi sự kiện hoàn tất.",
-    "hostTitle": "Dành cho ban tổ chức"
+    "hostTitle": "Dành cho ban tổ chức",
+    "allAnswered": "Mọi người đã phản hồi. Chốt luôn?",
+    "closeVsLock": "Đóng bình chọn: ngừng nhận phiếu, chưa chốt gì. Chốt: chọn ngày (và địa điểm), ai đã chọn sẽ được tính tham gia. Đến hạn, bình chọn tự đóng và chờ bạn chốt.",
+    "lockOnly": "Bình chọn đã đóng. Chốt để chọn ngày (và địa điểm); ai đã chọn sẽ được tính tham gia."
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -486,7 +495,10 @@
     "rederive": "{n} người vẫn đi · {m} chỗ được giữ chờ xác nhận",
     "reconfirmBy": "Xác nhận trước",
     "released": "{n} chỗ giữ đã hết hạn và vẫn bị nhả | {n} chỗ giữ đã hết hạn và vẫn bị nhả",
-    "planFrozen": "Sự kiện đã bắt đầu nên ngày và địa điểm đã cố định."
+    "planFrozen": "Sự kiện đã bắt đầu nên ngày và địa điểm đã cố định.",
+    "honorees": "Người được chúc mừng",
+    "honoreesHint": "Mỗi ngày sẽ hiện họ có đi được không",
+    "honoreesPick": "Chọn thành viên"
   },
   "share": {
     "poll": "Bình chọn ngày cho: {title}",
@@ -657,5 +669,14 @@
   "members": {
     "title": "Thành viên",
     "count": "{n} người"
+  },
+  "compare": {
+    "title": "So sánh các ngày dẫn đầu",
+    "suggested": "Gợi ý chốt",
+    "in": "Đi được ({n}):",
+    "out": "Không đi được ({n}):",
+    "pending": "{n} người chưa phản hồi.",
+    "tieHonorees": "Đang hoà {n} phiếu. {day} được gợi ý vì nhiều người được chúc mừng đi được hơn.",
+    "tieEarlier": "Đang hoà {n} phiếu. {day} được gợi ý vì sớm hơn; hãy cân nhắc ai đi được ngày nào bên dưới."
   }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { parseDate, type DateValue } from '@internationalized/date';
+import { compareDays } from '~~/shared/utils/event';
 
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
@@ -31,6 +32,8 @@ const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x
 const myVote = (v: EventDetail['venues'][number]) => !!props.me && v.upvotes.includes(props.me.id);
 
 // Closed (deadline passed or cancelled): participants see the results, organizers can still fix votes.
+// Past the deadline or cancelled: the poll shows results (organizers can still fix votes).
+const closed = computed(() => !!ev.value.cancelledAt || !votingOpen(ev.value));
 const readOnly = computed(() => !props.role && (!!ev.value.cancelledAt || !votingOpen(ev.value)));
 const voted = computed(() => rows.value.filter((r) => r.days.length || r.venueIds.length).length);
 
@@ -52,8 +55,32 @@ function act(fn: () => unknown) {
   return fn();
 }
 
-// Places get the same leader badge and share bar as days: share of everyone who upvoted any place.
-const placeVoters = computed(() => props.data.responses.filter((r) => r.venueIds.length).length);
+// Honorees (who the event is for) and whether they can make a day: on every tile, so everyone sees it.
+const { members } = useMe();
+const nameOf = (id: number) => members.value.find((m) => m.id === id)?.name ?? props.data.responses.find((r) => r.memberId === id)?.name ?? '?';
+const honoreesOn = (day: string) => ev.value.honorees.map((id) => ({ id, name: nameOf(id), in: rows.value.some((r) => r.memberId === id && r.days.includes(day)) }));
+
+// Organizers compare the top days side by side: who is in, who answered but is out, and which honorees can come.
+const compare = computed(() => {
+  if (!can(props.role, 'edit')) return null;
+  const { ranked, tie } = compareDays(ev.value.pollDays, rows.value, ev.value.honorees);
+  const top = ranked.filter((d) => d.n > 0).slice(0, 3);
+  if (top.length < 2) return null;
+  const answered = rows.value.filter((r) => r.days.length || r.status === 'no');
+  return {
+    tie,
+    pending: pendingVoters(members.value, rows.value).length,
+    days: top.map((d) => ({
+      ...d,
+      label: fmtDay(d.day, locale.value),
+      inNames: answered.filter((r) => d.yes.includes(r.memberId)).map((r) => r.name),
+      outNames: answered.filter((r) => !d.yes.includes(r.memberId)).map((r) => r.name),
+      honorees: honoreesOn(d.day),
+    })),
+  };
+});
+
+// Places get the same leader badge and share bar as days, on the same base: everyone who voted.
 const placeBest = computed(() => Math.max(0, ...props.data.venues.map((v) => v.upvotes.length)));
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
 
@@ -139,10 +166,7 @@ async function remove() {
 <template>
   <section id="poll" class="scroll-mt-4 space-y-6">
     <div class="space-y-1">
-      <p v-if="readOnly" class="flex items-center gap-1.5 text-sm text-warning">
-        <UIcon name="i-lucide-lock" class="size-4" />{{ t(ev.cancelledAt ? 'poll.closedCancelled' : 'poll.closedDeadline') }}
-      </p>
-      <p v-else-if="!me" class="text-sm">
+      <p v-if="!me && !closed" class="text-sm">
         <button type="button" class="text-primary underline underline-offset-2" @click="act(() => {})">{{ t('poll.pickName') }}</button>
       </p>
     </div>
@@ -152,8 +176,8 @@ async function remove() {
         <div class="flex min-w-0 gap-3 sm:flex-1">
           <UIcon name="i-lucide-calendar-days" class="mt-1 size-5 shrink-0 text-highlighted" />
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold text-highlighted">{{ t('poll.days') }}</h2>
-            <p class="text-sm text-muted">{{ t('poll.daysHint') }}</p>
+            <h2 class="text-lg font-semibold text-highlighted">{{ t(closed ? 'poll.daysResult' : 'poll.days') }}</h2>
+            <p v-if="!closed" class="text-sm text-muted">{{ t('poll.daysHint') }}</p>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -194,6 +218,14 @@ async function remove() {
               <UIcon name="i-lucide-users-round" class="size-3.5 text-dimmed" />
               {{ t('poll.chosen', { n: d.names.length }) }}
             </span>
+            <span v-if="ev.honorees.length" class="mt-1 flex flex-wrap gap-1">
+              <span
+                v-for="h in honoreesOn(d.day)"
+                :key="h.id"
+                class="rounded-full px-1.5 text-xs"
+                :class="h.in ? 'bg-success/15 text-success' : 'bg-elevated text-dimmed line-through'"
+              >🎂 {{ h.name }}<span class="sr-only"> {{ t(h.in ? 'poll.honoreeIn' : 'poll.honoreeOut') }}</span></span>
+            </span>
             <span class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
               <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
                 <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
@@ -203,6 +235,26 @@ async function remove() {
           </button>
         </UTooltip>
       </div>
+
+      <section v-if="compare" class="space-y-3 rounded-xl border border-default p-4" :aria-label="t('compare.title')">
+        <h3 class="flex items-center gap-2 font-semibold text-highlighted"><UIcon name="i-lucide-columns-3" class="size-4 text-muted" />{{ t('compare.title') }}</h3>
+        <p v-if="compare.tie" class="text-sm text-warning">{{ t(compare.tie === 'honorees' ? 'compare.tieHonorees' : 'compare.tieEarlier', { day: compare.days[0]!.label, n: compare.days[0]!.n }) }}</p>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div v-for="(d, i) in compare.days" :key="d.day" class="space-y-2 rounded-lg bg-elevated/50 p-3 text-sm">
+            <p class="flex items-baseline justify-between gap-2">
+              <span class="font-semibold text-highlighted">{{ d.label }}</span>
+              <span class="text-muted tabular-nums">{{ t('poll.votes', d.n) }}</span>
+            </p>
+            <UBadge v-if="i === 0" color="primary" variant="subtle" size="sm" :label="t('compare.suggested')" />
+            <p v-if="d.honorees.length" class="flex flex-wrap gap-1">
+              <span v-for="h in d.honorees" :key="h.id" :class="h.in ? 'text-success' : 'text-dimmed line-through'">🎂 {{ h.name }}</span>
+            </p>
+            <p><span class="font-medium text-success">{{ t('compare.in', { n: d.inNames.length }) }}</span> <span class="text-muted">{{ d.inNames.join(', ') }}</span></p>
+            <p v-if="d.outNames.length"><span class="font-medium text-error">{{ t('compare.out', { n: d.outNames.length }) }}</span> <span class="text-muted">{{ d.outNames.join(', ') }}</span></p>
+          </div>
+        </div>
+        <p v-if="compare.pending" class="text-xs text-muted">{{ t('compare.pending', { n: compare.pending }) }}</p>
+      </section>
     </div>
 
     <div v-if="!ev.venue" class="space-y-3">
@@ -210,8 +262,8 @@ async function remove() {
         <div class="flex min-w-0 gap-3 sm:flex-1">
           <UIcon name="i-lucide-map-pin" class="mt-1 size-5 shrink-0 text-highlighted" />
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold text-highlighted">{{ ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}</h2>
-            <p class="text-sm text-muted">{{ t('poll.venuesHint') }}</p>
+            <h2 class="text-lg font-semibold text-highlighted">{{ closed ? t('poll.venuesResult') : ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}</h2>
+            <p v-if="!closed" class="text-sm text-muted">{{ t('poll.venuesHint') }}</p>
           </div>
         </div>
         <UButton v-if="!readOnly && me && data.venues.length" size="sm" color="neutral" variant="outline" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
@@ -250,16 +302,14 @@ async function remove() {
           </p>
           <p v-if="v.note" class="text-sm text-muted">{{ v.note }}</p>
           <p class="text-xs text-dimmed">{{ t('poll.suggestedBy', { name: v.addedByName }) }}</p>
-          <span class="mt-2 flex max-w-64 items-center gap-2" aria-hidden="true">
-            <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
-              <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${pct(v.upvotes.length, placeVoters)}%` }" />
+          <!-- Count and share sit together under the bar's start, as on the day tiles. -->
+          <span class="mt-2 flex items-center gap-2">
+            <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented" aria-hidden="true">
+              <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${pct(v.upvotes.length, voted)}%` }" />
             </span>
-            <span class="w-8 text-right text-xs text-muted tabular-nums">{{ pct(v.upvotes.length, placeVoters) }}%</span>
+            <span class="shrink-0 text-xs text-muted tabular-nums">{{ t('poll.votes', v.upvotes.length) }} · {{ pct(v.upvotes.length, voted) }}%</span>
           </span>
         </div>
-        <span class="flex shrink-0 items-center gap-1 text-sm text-muted tabular-nums" :title="t('poll.votes', v.upvotes.length)">
-          <UIcon name="i-lucide-users-round" class="size-4 text-dimmed" /><span aria-hidden="true">{{ v.upvotes.length }}</span><span class="sr-only">{{ t('poll.votes', v.upvotes.length) }}</span>
-        </span>
         <UButton
           v-if="!readOnly || myVote(v)"
           :disabled="busy || readOnly"

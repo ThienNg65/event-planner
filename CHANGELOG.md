@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.0] - 2026-10-13
+
+### Added
+- Organizers can mark who the event is for (birthday people, a guest of honour) in Edit. Every proposed day then shows whether each of them can come.
+- Organizers see the leading days side by side: who can come, who can't, which honorees can come and how many haven't replied yet.
+- When days are tied, the app suggests one (the day more honorees can make, then the earlier one), explains why, and preselects it when locking.
+- Once everyone has replied, organizers get a nudge to lock the date now.
+
+### Changed
+- One line under the organizer buttons explains the difference between closing voting and locking, and what happens at the deadline. The lock button says "Lock date & place" when places are being voted on too.
+- After voting closes, the sections read "Day results" and "Place results" without voting instructions, and the extra "voting closed: past deadline" line is gone. "Is this you?" only lets returning voters pick their name.
+- Place percentages use the same base as days (everyone who voted), and each place shows "3 votes · 30%" next to its bar.
+- On the Create page the name button says "Continue" and the Create button lines up with the form. The announcement title is easier to read, the event page has a single main heading, and the logo link is labelled for screen readers.
+
 ## [0.6.0] - 2026-10-13
 
 ### Added

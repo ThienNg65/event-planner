@@ -6,6 +6,7 @@ const { t, locale } = useI18n();
 const toast = useToast();
 
 const ev = computed(() => props.data.event);
+const { members } = useMe();
 // A running date poll has no fixed date to edit; its days change in the Edit days dialog.
 const editingDays = computed(() => ev.value.stage === 'poll' && ev.value.pollDays.length > 0);
 
@@ -25,6 +26,7 @@ const blank = () => {
     bankHolder: e.bankHolder ?? '',
     cover: e.cover,
     theme: themeOf(e.theme),
+    honorees: [...e.honorees],
   };
 };
 const form = ref(blank());
@@ -209,6 +211,9 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
           </UFormField>
           <UFormField :label="t('create.note')">
             <UTextarea v-model="form.note" :maxlength="500" :rows="3" class="w-full" />
+          </UFormField>
+          <UFormField :label="t('edit.honorees')" :hint="t('edit.honoreesHint')">
+            <USelectMenu v-model="form.honorees" :items="members" value-key="id" label-key="name" multiple :placeholder="t('edit.honoreesPick')" class="w-full" />
           </UFormField>
           <UFormField :label="t('create.where')" :error="errors.venueLink">
             <div class="space-y-2">

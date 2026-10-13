@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { compareDays } from '~~/shared/utils/event';
+
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
@@ -75,7 +77,15 @@ const params = computed(() => ({
 }));
 // One solid button per card: the visitor's own to-do comes first, otherwise the organizer's next move.
 const myTodo = computed(() => TODO_STEPS.includes(next.value.step) || next.value.step === 'declined');
-const hostMain = computed(() => (myTodo.value ? { color: 'neutral' as const, variant: 'outline' as const } : { color: 'primary' as const, variant: 'solid' as const }));
+const hostMain = computed(() => (myTodo.value && !allAnswered.value ? { color: 'neutral' as const, variant: 'outline' as const } : { color: 'primary' as const, variant: 'solid' as const }));
+// Everyone on the team has answered: nudge the organizer to lock now.
+const allAnswered = computed(() => ev.value.stage === 'poll' && voted.value > 0 && pending.value.length === 0);
+// The lock also settles the place when places are polled, so its button says so.
+const lockKey = computed(() => {
+  const places = !ev.value.venue && props.data.venues.length > 0;
+  if (!ev.value.pollDays.length) return 'next.action.lockPlace';
+  return places ? 'next.action.lockBoth' : 'next.action.lock';
+});
 const hostActions = computed(() => canAdvance.value && (!!next.value.action || ev.value.stage === 'bill'));
 
 function jump(id: string) {
@@ -99,8 +109,9 @@ const lockOpen = ref(false);
 const voted = computed(() => props.data.responses.filter((r) => r.days.length || r.venueIds.length).length);
 const pending = computed(() => pendingVoters(members.value, props.data.responses));
 const lock = reactive({ day: '', time: '19:00', venueId: undefined as number | undefined });
+// Same order as the organizer's comparison: votes, then honorees who can come, then earliest, so the preselected day is the tie-broken one.
 const dayRank = computed(() =>
-  rankDays(ev.value.pollDays, props.data.responses).map((d) => ({ value: d.day, n: d.n, label: fmtDay(d.day, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
+  compareDays(ev.value.pollDays, props.data.responses, ev.value.honorees).ranked.map((d) => ({ value: d.day, n: d.n, label: fmtDay(d.day, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
 );
 const bar = (n: number) => `${voted.value ? Math.round((n / voted.value) * 100) : 0}%`;
 const venueRank = computed(() =>
@@ -218,7 +229,7 @@ async function complete() {
           <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
           <template v-if="!me && votingClosed">
             <button v-if="!whoOpen" type="button" class="mt-1 text-sm text-primary underline underline-offset-2" @click="whoOpen = true">{{ t('next.who.link') }}</button>
-            <MemberPicker v-else class="mt-2" />
+            <MemberPicker v-else pick-only class="mt-2" />
           </template>
           <UAvatarGroup v-if="next.step === 'settled' && payers.length" :max="8" size="xs" class="mt-2">
             <MemberAvatar v-for="p in payers" :id="p.memberId" :key="p.memberId" :name="p.name" :title="p.name" size="xs" />
@@ -243,8 +254,11 @@ async function complete() {
         {{ t(votingClosed ? 'next.action.reopen' : 'next.action.close') }}
       </UButton>
       <UButton v-if="next.action === 'lock'" v-bind="hostMain" icon="i-lucide-calendar-check" @click="lockOpen = true">
-        {{ t(next.step === 'voteClosed' ? 'next.action.pick' : 'next.action.lock') }}
+        {{ t(lockKey) }}
       </UButton>
+      <p v-if="next.action === 'lock' && allAnswered" class="basis-full text-sm font-medium text-success">{{ t('next.allAnswered') }}</p>
+      <!-- Close and lock look alike; one line says what each does and what the deadline does on its own. -->
+      <p v-if="next.action === 'lock'" class="basis-full text-xs text-muted">{{ t(votingClosed ? 'next.lockOnly' : 'next.closeVsLock') }}</p>
       <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
       <UButton v-if="next.action === 'bill'" v-bind="hostMain" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
       <UButton v-if="ev.stage === 'bill' && next.action !== 'settle'" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'anyway'">
@@ -299,7 +313,7 @@ async function complete() {
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton color="neutral" variant="ghost" @click="lockOpen = false">{{ t('cancel') }}</UButton>
-        <UButton icon="i-lucide-lock" :loading="busy" :disabled="!!ev.pollDays.length && !lock.day" @click="lockEvent">{{ t('manage.lockButton') }}</UButton>
+        <UButton icon="i-lucide-lock" :loading="busy" :disabled="!!ev.pollDays.length && !lock.day" @click="lockEvent">{{ t(lockKey) }}</UButton>
       </div>
     </template>
   </UModal>

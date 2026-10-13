@@ -2,7 +2,8 @@
   "app": {
     "name": "Team Events",
     "language": "Language",
-    "colorMode": "Light / dark mode"
+    "colorMode": "Light / dark mode",
+    "home": "Home"
   },
   "cancel": "Cancel",
   "close": "Close",
@@ -52,10 +53,11 @@
     "copyLink": "Copy my sign-in link",
     "linkCopied": "Sign-in link copied",
     "linkHint": "Open this link on your other phone or computer to be you there too. Keep it to yourself: anyone with it can act as you.",
-    "otherDevice": "Already joined on another device? Open your sign-in link from there instead.",
+    "otherDevice": "Used the app on another device? Open your sign-in link from there instead.",
     "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from the device you used before.",
     "signOut": "Sign out",
-    "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself."
+    "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself.",
+    "continue": "Continue"
   },
   "event": {
     "dateTbd": "Date not set yet",
@@ -142,7 +144,6 @@
     "linkCopied": "Manage link copied",
     "linkHint": "Anyone with this link can manage the event. Only share it with co-organizers.",
     "lock": "Lock the result",
-    "lockButton": "Lock the date",
     "bill": "Bill total (₫)",
     "schedule": "Date & time"
   },
@@ -234,7 +235,11 @@
     "myVote": "Voted",
     "votes": "{n} vote | {n} votes",
     "removePlace": "Remove place",
-    "placeActions": "Actions for {name}"
+    "placeActions": "Actions for {name}",
+    "daysResult": "Day results",
+    "venuesResult": "Place results",
+    "honoreeIn": "can come",
+    "honoreeOut": "can't come"
   },
   "bill": {
     "title": "Bill",
@@ -385,11 +390,12 @@
       "lock": "Lock the date",
       "bill": "Enter the bill",
       "settle": "Mark as settled",
-      "pick": "Pick the winner",
       "close": "Close voting",
       "reopen": "Reopen voting",
       "completeFree": "Complete, no bill",
-      "completeAnyway": "Complete anyway"
+      "completeAnyway": "Complete anyway",
+      "lockBoth": "Lock date & place",
+      "lockPlace": "Lock the place"
     },
     "lockDay": "Day and time",
     "lockHint": "Everyone who voted for this day counts as going, in the order they voted; past the seat limit they wait. Everyone else can reply Going, Maybe or Can't make it.",
@@ -452,7 +458,10 @@
     "completeFreeBody": "Nobody will be asked to pay.",
     "completeAnywayTitle": "Complete with open payments?",
     "completeAnywayBody": "These people still owe. They can keep paying after the event is completed.",
-    "hostTitle": "For organizers"
+    "hostTitle": "For organizers",
+    "allAnswered": "Everyone has replied. Lock it now?",
+    "closeVsLock": "Close voting: stop taking votes, nothing is decided. Lock: pick the day (and place); everyone who voted for it counts as going. At the deadline, voting closes by itself and waits for you to lock.",
+    "lockOnly": "Voting is closed. Lock to pick the day (and place); everyone who voted for it counts as going."
   },
   "edit": {
     "open": "Edit",
@@ -486,7 +495,10 @@
     "rederive": "{n} stay going · {m} seats held until they confirm",
     "reconfirmBy": "Confirm by",
     "released": "{n} hold already expired and stays released | {n} holds already expired and stay released",
-    "planFrozen": "The event has started, so the date and place are fixed."
+    "planFrozen": "The event has started, so the date and place are fixed.",
+    "honorees": "Honorees",
+    "honoreesHint": "Each day shows whether they can come",
+    "honoreesPick": "Pick members"
   },
   "share": {
     "poll": "Vote for a day: {title}",
@@ -657,5 +669,14 @@
   "members": {
     "title": "Members",
     "count": "{n} people"
+  },
+  "compare": {
+    "title": "Compare the leading days",
+    "suggested": "Suggested",
+    "in": "Can come ({n}):",
+    "out": "Can't ({n}):",
+    "pending": "{n} haven't replied yet.",
+    "tieHonorees": "Tied at {n} votes. {day} is suggested because more honorees can come.",
+    "tieEarlier": "Tied at {n} votes. {day} is suggested because it is earlier; check who can make each day below."
   }
 }

@@ -72,7 +72,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
   <UDashboardGroup unit="rem">
     <UDashboardSidebar collapsible resizable :ui="{ footer: 'border-t border-default' }">
       <template #header="{ collapsed }">
-        <NuxtLink to="/" class="flex items-center gap-2 font-semibold text-highlighted">
+        <NuxtLink to="/" :aria-label="t('app.home')" class="flex items-center gap-2 font-semibold text-highlighted">
           <img src="/logo.svg" alt="" class="size-8 shrink-0" />
           <span v-if="!collapsed" class="truncate">{{ t('app.name') }}</span>
         </NuxtLink>

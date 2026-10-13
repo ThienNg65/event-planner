@@ -86,3 +86,17 @@ describe('venues', () => {
     assert.deepEqual(body.responses.find((r: { memberId: number }) => r.memberId === voter).venueIds, []);
   });
 });
+
+describe('honorees', () => {
+  it('organizers set and clear them; bad ids and participants are refused', async () => {
+    const ev = await event();
+    const base = `/api/events/${ev.id}`;
+    const hon = await member();
+    assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: [hon, hon] } })).status, 200);
+    assert.deepEqual((await api(base)).body.event.honorees, [hon]);
+    assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: ['x'] } })).status, 400);
+    assert.equal((await api(base, { method: 'PATCH', me: hon, body: { honorees: [] } })).status, 403);
+    assert.equal((await api(base, { method: 'PATCH', key: ev.key, body: { honorees: null } })).status, 200);
+    assert.deepEqual((await api(base)).body.event.honorees, []);
+  });
+});
