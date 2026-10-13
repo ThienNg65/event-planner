@@ -59,7 +59,6 @@ const relative = computed(() => {
     </template>
 
     <template v-else-if="ev.stage === 'poll'">
-      <UBadge v-if="!open" color="warning" variant="subtle" icon="i-lucide-lock" :label="t('overview.closed')" />
       <div class="space-y-2">
         <p class="flex items-baseline justify-between gap-2 text-sm">
           <span class="font-medium text-highlighted">{{ t('overview.answered') }}</span>

@@ -9,7 +9,7 @@
   "home": {
     "title": "Sự kiện",
     "new": "Tạo sự kiện",
-    "empty": "Tạo sự kiện, chia sẻ link và để mọi người bình chọn ngày.",
+    "empty": "Tạo sự kiện, chia sẻ liên kết và để mọi người bình chọn ngày.",
     "planning": "Đang lên kế hoạch",
     "upcoming": "Sắp diễn ra",
     "past": "Đã qua",
@@ -47,24 +47,24 @@
     "isThisYou": "Đã có \"{name}\" trong danh sách. Có phải bạn không?",
     "thatsMe": "Đúng, là tôi",
     "signedIn": "Là bạn",
-    "copyLink": "Sao chép link đăng nhập",
-    "linkCopied": "Đã sao chép link đăng nhập",
-    "linkHint": "Mở link này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có link là dùng được tên bạn.",
-    "otherDevice": "Đã tham gia trên thiết bị khác? Hãy mở link đăng nhập từ thiết bị đó.",
-    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở link đăng nhập từ thiết bị bạn đã dùng.",
+    "copyLink": "Sao chép liên kết đăng nhập",
+    "linkCopied": "Đã sao chép liên kết đăng nhập",
+    "linkHint": "Mở liên kết này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có liên kết là dùng được tên bạn.",
+    "otherDevice": "Đã tham gia trên thiết bị khác? Hãy mở liên kết đăng nhập từ thiết bị đó.",
+    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị bạn đã dùng.",
     "signOut": "Đăng xuất",
-    "signOutConfirm": "Hãy sao chép link đăng nhập trước: tên của bạn đã được khóa, nên chỉ link này mới giúp bạn đăng nhập lại."
+    "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
     "seats": "chỗ",
     "share": "Chia sẻ",
-    "linkCopied": "Đã sao chép link sự kiện",
+    "linkCopied": "Đã sao chép liên kết sự kiện",
     "details": "Thông tin",
     "attendees": "Người tham gia",
     "waitlist": "{n} người đang chờ",
     "nobody": "Chưa có ai",
-    "hostedBy": "Tạo bởi {name}",
+    "hostedBy": "Người tổ chức: {name}",
     "goingCount": "{n} người đi",
     "cancelledTitle": "Sự kiện đã bị huỷ",
     "restore": "Khôi phục sự kiện",
@@ -72,7 +72,8 @@
     "new": "Mới",
     "more": "Xem thêm",
     "less": "Thu gọn",
-    "changeCover": "Thay đổi ảnh bìa"
+    "changeCover": "Thay đổi ảnh bìa",
+    "dayOptions": "Chưa chốt ngày · {n} ngày đề xuất"
   },
   "create": {
     "title": "Tạo sự kiện",
@@ -86,7 +87,7 @@
     "fixedVenue": "Địa điểm cố định",
     "pollVenue": "Để mọi người đề xuất",
     "venue": "Tên địa điểm",
-    "venueLink": "Link (Google Maps, website…)",
+    "venueLink": "Liên kết (Google Maps, trang web…)",
     "pollVenueHint": "Mọi người sẽ đề xuất và bình chọn địa điểm.",
     "capacity": "Số chỗ tối đa",
     "capacityHint": "Bỏ trống nếu không giới hạn",
@@ -98,7 +99,7 @@
     "submit": "Tạo sự kiện",
     "pickFirst": "Chọn tên của bạn trước.",
     "done": "Đã tạo sự kiện",
-    "keyHint": "Trình duyệt này đã lưu quyền quản lý. Hãy sao chép link quản lý để dùng trên máy khác.",
+    "keyHint": "Trình duyệt này đã lưu quyền quản lý. Hãy sao chép liên kết quản lý để dùng trên máy khác.",
     "quickStart": "Bắt đầu nhanh:",
     "payment": "Thông tin thanh toán (không bắt buộc)",
     "paymentLater": "Bạn có thể thêm sau, khi có hoá đơn.",
@@ -133,9 +134,9 @@
     "guestsQueue": "Thêm khách sẽ đưa bạn xuống cuối hàng chờ."
   },
   "manage": {
-    "copyLink": "Link quản lý",
-    "linkCopied": "Đã sao chép link quản lý",
-    "linkHint": "Ai có link này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
+    "copyLink": "Liên kết quản lý",
+    "linkCopied": "Đã sao chép liên kết quản lý",
+    "linkHint": "Ai có liên kết này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
     "lock": "Chốt kết quả và mở đăng ký",
     "lockButton": "Chốt & mở đăng ký",
     "bill": "Tổng hoá đơn (₫)",
@@ -153,13 +154,13 @@
     "titleRequired": "Vui lòng nhập tên sự kiện.",
     "invalidDate": "Hãy chọn ngày giờ (hoặc các ngày để bình chọn).",
     "invalidDays": "Ngày không hợp lệ.",
-    "invalidLink": "Link phải bắt đầu bằng http:// hoặc https://",
+    "invalidLink": "Liên kết phải bắt đầu bằng http:// hoặc https://",
     "invalidCapacity": "Số chỗ phải từ 1 đến 500.",
     "invalidBill": "Số tiền không hợp lệ.",
     "invalidBank": "Thông tin ngân hàng không hợp lệ.",
     "invalidGuests": "Số người đi cùng từ 0 đến 10.",
     "unknownVenue": "Địa điểm không tồn tại.",
-    "invalidCover": "Chọn một ảnh bìa hoặc dán link ảnh bắt đầu bằng https://",
+    "invalidCover": "Chọn một ảnh bìa hoặc dán liên kết ảnh bắt đầu bằng https://",
     "notYou": "Bạn chỉ có thể sửa câu trả lời của chính mình.",
     "hostOnly": "Chỉ người tổ chức chính mới làm được.",
     "cancelled": "Sự kiện đã bị huỷ.",
@@ -178,8 +179,8 @@
     "planFrozen": "Ngày và địa điểm đã cố định khi sự kiện bắt đầu. Hãy dùng \"Sửa ngày hoặc địa điểm\".",
     "reconfirmTooLate": "Mọi người cần xác nhận lại nhưng thời điểm mới đã qua. Hãy chọn thời điểm trong tương lai.",
     "signInFirst": "Hãy cho biết bạn là ai trước.",
-    "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng link đăng nhập của bạn.",
-    "signInInvalid": "Link đăng nhập không hợp lệ."
+    "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng liên kết đăng nhập của bạn.",
+    "signInInvalid": "Liên kết đăng nhập không hợp lệ."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -210,9 +211,8 @@
     "suggestPlace": "Gợi ý địa điểm",
     "dup": "Đã có trong danh sách. Mình đã thêm phiếu của bạn.",
     "remove": "Xoá",
-    "openLink": "Mở liên kết",
     "removeTitle": "Xoá “{name}”?",
-    "removeBody": "{n} phiếu cho chỗ này cũng sẽ bị xoá. | {n} phiếu cho chỗ này cũng sẽ bị xoá.",
+    "removeBody": "{n} phiếu cho địa điểm này cũng sẽ bị xoá. | {n} phiếu cho địa điểm này cũng sẽ bị xoá.",
     "voteFor": "Chọn {name}",
     "people": "{n} người | {n} người",
     "dayLabel": "{day}, {people}, {state}",
@@ -227,7 +227,9 @@
     "noVenuesTitle": "Chưa có địa điểm nào",
     "vote": "Bình chọn",
     "myVote": "Đã chọn",
-    "votes": "{n} phiếu | {n} phiếu"
+    "votes": "{n} phiếu | {n} phiếu",
+    "removePlace": "Xoá địa điểm",
+    "placeActions": "Thao tác cho {name}"
   },
   "bill": {
     "title": "Chia tiền",
@@ -300,7 +302,7 @@
   },
   "cover": {
     "label": "Ảnh bìa",
-    "url": "Hoặc dán link ảnh (https://…)",
+    "url": "Hoặc dán liên kết ảnh (https://…)",
     "preset": "Kiểu bìa {name}"
   },
   "card": {
@@ -321,18 +323,18 @@
       "body": "Chọn hoặc nhập tên của bạn để phiếu bầu được tính. Không cần đăng ký."
     },
     "vote": {
-      "title": "Ngày nào bạn đi được?",
-      "body": "Chạm vào tất cả những ngày bạn có thể tham gia.",
+      "title": "Bạn chưa bình chọn",
+      "body": "Chọn những ngày bạn đi được ở bên dưới.",
       "cta": "Bình chọn"
     },
     "voted": {
       "title": "Cảm ơn bạn đã bình chọn!",
-      "body": "Đã có {n} người bình chọn. Nếu ngày bạn chọn trúng, bạn được tính là đi. Người tổ chức sẽ chốt kết quả.",
+      "body": "Đã có {n} người bình chọn. Nếu một ngày bạn chọn được chốt, bạn được tính là tham gia.",
       "cta": "Sửa lựa chọn"
     },
     "declined": {
       "title": "Tiếc quá, lần này bạn không đi được",
-      "body": "Bạn sẽ không được tính là đi. Nếu đổi ý, cứ chọn lại ngày bất cứ lúc nào trước khi đóng bình chọn.",
+      "body": "Bạn sẽ không được tính là tham gia. Nếu đổi ý, cứ chọn lại ngày bất cứ lúc nào trước khi đóng bình chọn.",
       "cta": "Đổi ý, mình đi được",
       "cannot": "Không tham gia được"
     },
@@ -342,7 +344,7 @@
       "cta": "Trả lời"
     },
     "going": {
-      "title": "Bạn đã có tên 🎉",
+      "title": "Bạn đã có chỗ 🎉",
       "body": "Hẹn gặp bạn {when}."
     },
     "waitlist": {
@@ -351,7 +353,7 @@
     },
     "replied": {
       "title": "Cảm ơn bạn đã trả lời",
-      "body": "Bạn có thể đổi câu trả lời cho đến khi người tổ chức đóng đăng ký.",
+      "body": "Bạn có thể đổi câu trả lời cho đến khi ban tổ chức đóng đăng ký.",
       "cta": "Đổi"
     },
     "pay": {
@@ -382,40 +384,39 @@
       "completeAnyway": "Vẫn hoàn tất"
     },
     "lockDay": "Ngày và giờ",
-    "lockHint": "Sau đó mọi người có thể trả lời Đi, Có thể hoặc Không.",
+    "lockHint": "Sau đó mọi người có thể trả lời Tham gia, Có thể hoặc Bận.",
     "billHint": "Chia cho {n} chỗ",
     "billSave": "Lưu & chia tiền",
     "voteVenue": {
-      "title": "Bạn thích chỗ nào?",
-      "body": "Chạm vào các chỗ bạn thích, hoặc gợi ý thêm.",
+      "title": "Bạn chưa bình chọn",
+      "body": "Chọn những địa điểm bạn thích ở bên dưới, hoặc gợi ý thêm.",
       "cta": "Bình chọn"
     },
     "voteClosed": {
       "title": "Đã đóng bình chọn",
-      "body": "Người tổ chức đang chọn ngày.",
-      "bodyHost": "Chọn ngày và địa điểm thắng cuộc."
+      "body": "Ban tổ chức đang chốt ngày.",
+      "bodyHost": "Chọn ngày và địa điểm được nhiều phiếu nhất."
     },
     "cancelled": {
       "title": "Sự kiện đã bị huỷ",
       "body": "{reason}"
     },
-    "closes": "Bình chọn đóng lúc {when}",
     "tie": "Đang hoà ở vị trí đầu. Hãy chọn một.",
     "votes": "{n} phiếu | {n} phiếu",
     "closeTitle": "Đóng bình chọn ngay?",
-    "closeBody": "Người tham gia không đổi được phiếu nữa. Người tổ chức vẫn đổi được, mọi phiếu đều được giữ, và bạn có thể mở lại sau.",
+    "closeBody": "Người tham gia sẽ không đổi được phiếu nữa. Ban tổ chức vẫn sửa được, mọi phiếu đều được giữ và bạn có thể mở lại sau.",
     "reopenTitle": "Mở lại bình chọn",
     "reopenBody": "Mọi phiếu đều được giữ. Hạn cũ sẽ được thay bằng lựa chọn bên dưới.",
     "reopenNone": "Không có hạn",
     "reopenDate": "Hạn mới",
     "consequences": {
       "end": "Bình chọn kết thúc",
-      "rsvp": "Những người còn lại có thể trả lời Đi, Có thể hoặc Không đi",
-      "kept": "Phiếu vẫn được giữ nếu người tổ chức mở lại bình chọn"
+      "rsvp": "Những người còn lại có thể trả lời Tham gia, Có thể hoặc Bận",
+      "kept": "Phiếu vẫn được giữ nếu ban tổ chức mở lại bình chọn"
     },
-    "lockGoing": "Tự động tính là Đi theo phiếu bầu: {names}",
+    "lockGoing": "Tự động tính là tham gia theo phiếu bình chọn: {names}",
     "lockWaiting": "{n} người chờ chỗ | {n} người chờ chỗ",
-    "lockConfirm": "{n} người đã bầu được hỏi xác nhận | {n} người đã bầu được hỏi xác nhận",
+    "lockConfirm": "{n} người đã bình chọn sẽ được hỏi xác nhận | {n} người đã bình chọn sẽ được hỏi xác nhận",
     "confirm": {
       "title": "Bạn đi được không?",
       "body": "Kế hoạch đã chốt: {when}. Cho mọi người biết bạn có đi không nhé.",
@@ -432,7 +433,7 @@
       "cta": "Trả lời"
     },
     "goingAuto": {
-      "title": "Bạn đã có tên theo phiếu bầu 🎉",
+      "title": "Bạn đã có chỗ theo phiếu bình chọn 🎉",
       "body": "Hẹn gặp bạn {when}. Đổi câu trả lời bên dưới nếu bạn không đi được."
     },
     "completedOpen": {
@@ -442,7 +443,8 @@
     "completeFreeTitle": "Sự kiện đã kết thúc chưa?",
     "completeFreeBody": "Sẽ không ai phải thanh toán.",
     "completeAnywayTitle": "Hoàn tất khi còn khoản chưa trả?",
-    "completeAnywayBody": "Những người này vẫn còn nợ. Họ có thể tiếp tục thanh toán sau khi sự kiện hoàn tất."
+    "completeAnywayBody": "Những người này vẫn còn nợ. Họ có thể tiếp tục thanh toán sau khi sự kiện hoàn tất.",
+    "hostTitle": "Dành cho ban tổ chức"
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -452,7 +454,7 @@
     "reopen": "Quay lại bước…",
     "deadline": "Hạn bình chọn",
     "deadlineHint": "Tuỳ chọn. Sau hạn này chỉ người tổ chức mới sửa được phiếu.",
-    "cohostRotateConfirm": "Link đồng tổ chức hiện tại sẽ ngừng hoạt động. Tiếp tục?",
+    "cohostRotateConfirm": "Liên kết đồng tổ chức hiện tại sẽ ngừng hoạt động. Tiếp tục?",
     "cancelReason": "Lý do (không bắt buộc)",
     "cancelledNote": "Sự kiện đã huỷ. Hãy khôi phục để chỉnh sửa.",
     "restore": "Khôi phục sự kiện",
@@ -561,11 +563,11 @@
       "setOthers": "Sửa đăng ký và thanh toán của người khác",
       "reopen": "Mở lại một bước trước",
       "cancel": "Huỷ, khôi phục hoặc xoá sự kiện",
-      "cohost": "Quản lý link quản lý và link đồng tổ chức"
+      "cohost": "Quản lý liên kết quản lý và liên kết đồng tổ chức"
     },
-    "legacyActive": "Đang có link đồng tổ chức",
+    "legacyActive": "Đang có liên kết đồng tổ chức",
     "manage": "Quản lý ban tổ chức",
-    "trust": "Tên chỉ là nhãn do người tổ chức chọn, không phải danh tính đã xác minh: ứng dụng không có đăng nhập. Ai mở link mời trước đều có thể nhận lời, nên hãy gửi riêng tư. Đừng dùng quyền đồng tổ chức trên máy dùng chung.",
+    "trust": "Tên chỉ là nhãn do người tổ chức chọn, không phải danh tính đã xác minh: ứng dụng không có đăng nhập. Ai mở liên kết mời trước đều có thể nhận lời, nên hãy gửi riêng tư. Đừng dùng quyền đồng tổ chức trên máy dùng chung.",
     "cohosts": "Đồng tổ chức",
     "noCohosts": "Chưa có đồng tổ chức",
     "cohostNames": "Đồng tổ chức: {names}",
@@ -575,8 +577,8 @@
       "expired": "Hết hạn"
     },
     "reissue": "Cấp lại quyền",
-    "reissueConfirm": "Quyền hiện tại của họ dừng ngay, cho đến khi họ nhận link mới.",
-    "newInvite": "Link mời mới",
+    "reissueConfirm": "Quyền hiện tại của họ dừng ngay, cho đến khi họ nhận liên kết mới.",
+    "newInvite": "Liên kết mời mới",
     "revoke": "Thu hồi",
     "revokeConfirm": "Họ mất quyền đồng tổ chức ngay lập tức.",
     "leave": "Rời vai trò đồng tổ chức",
@@ -584,12 +586,12 @@
     "invite": "Mời đồng tổ chức",
     "pick": "Chọn một thành viên",
     "createInvite": "Tạo lời mời",
-    "inviteFor": "Link mời cho {name}",
-    "copyInvite": "Sao chép link mời",
-    "inviteCopied": "Đã sao chép link mời",
-    "inviteHint": "Chỉ hiện một lần. Hãy gửi riêng tư; ai mở trước có thể nhận lời. Link dùng được một lần và hết hạn sau 7 ngày.",
-    "legacy": "Link đồng tổ chức chung (không có tên)",
-    "legacyHint": "Link cũ ai cũng dùng được. Có thể thu hồi ở đây nhưng không tạo lại được; hãy mời đồng tổ chức theo tên."
+    "inviteFor": "Liên kết mời cho {name}",
+    "copyInvite": "Sao chép liên kết mời",
+    "inviteCopied": "Đã sao chép liên kết mời",
+    "inviteHint": "Chỉ hiện một lần. Hãy gửi riêng tư; ai mở trước có thể nhận lời. Liên kết dùng được một lần và hết hạn sau 7 ngày.",
+    "legacy": "Liên kết đồng tổ chức chung (không có tên)",
+    "legacyHint": "Liên kết cũ ai cũng dùng được. Có thể thu hồi ở đây nhưng không tạo lại được; hãy mời đồng tổ chức theo tên."
   },
   "post": {
     "open": "Đăng thông báo",
@@ -601,8 +603,6 @@
   },
   "overview": {
     "title": "Tổng quan",
-    "open": "Đang bình chọn",
-    "closed": "Đã đóng bình chọn, chưa chốt ngày",
     "voted": "{n}/{total} người trong team đã chọn",
     "closes": "Đóng lúc {when}",
     "notVoted": "Chưa phản hồi: {names}",

@@ -220,40 +220,23 @@ async function remove() {
         :data-on="myVote(v)"
       >
         <div class="min-w-0 flex-1">
-          <p class="font-medium break-words">
-            <ULink v-if="v.link" :to="v.link" target="_blank" rel="noopener noreferrer">{{ v.name }}</ULink>
+          <!-- The name is the link; no separate button for it. -->
+          <p class="font-medium break-words text-highlighted">
+            <ULink v-if="v.link" :to="v.link" target="_blank" rel="noopener noreferrer" raw class="hover:underline">
+              {{ v.name }}<UIcon name="i-lucide-arrow-up-right" class="ml-0.5 size-3.5 align-[-2px] text-dimmed" />
+            </ULink>
             <template v-else>{{ v.name }}</template>
           </p>
           <p v-if="v.note" class="text-sm text-muted">{{ v.note }}</p>
           <p class="text-xs text-dimmed">{{ t('poll.suggestedBy', { name: v.addedByName }) }}</p>
         </div>
-        <UButton
-          v-if="v.link"
-          :to="v.link"
-          target="_blank"
-          rel="noopener noreferrer"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-external-link"
-          :aria-label="t('poll.openLink')"
-        />
-        <UButton
-          v-if="can(role, 'removeVenue')"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          icon="i-lucide-trash-2"
-          :aria-label="t('poll.remove')"
-          @click="removing = v"
-        />
         <span class="flex shrink-0 items-center gap-1 text-sm text-muted tabular-nums" :title="t('poll.votes', v.upvotes.length)">
           <UIcon name="i-lucide-users-round" class="size-4 text-dimmed" /><span aria-hidden="true">{{ v.upvotes.length }}</span><span class="sr-only">{{ t('poll.votes', v.upvotes.length) }}</span>
         </span>
         <UButton
           :disabled="busy || readOnly"
           :color="myVote(v) ? 'primary' : 'neutral'"
-          :variant="myVote(v) ? 'solid' : 'outline'"
+          :variant="myVote(v) ? 'soft' : 'outline'"
           :icon="myVote(v) ? 'i-lucide-check' : 'i-lucide-plus'"
           :label="t(myVote(v) ? 'poll.myVote' : 'poll.vote')"
           class="shrink-0"
@@ -261,6 +244,9 @@ async function remove() {
           :aria-label="t('poll.voteFor', { name: v.name })"
           @click="act(() => save({ venueIds: toggle(mine?.venueIds ?? [], v.id) }))"
         />
+        <UDropdownMenu v-if="can(role, 'removeVenue')" :items="[{ label: t('poll.removePlace'), icon: 'i-lucide-trash-2', color: 'error', onSelect: () => (removing = v) }]">
+          <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-ellipsis-vertical" class="-mr-2 shrink-0" :aria-label="t('poll.placeActions', { name: v.name })" />
+        </UDropdownMenu>
       </div>
     </div>
 

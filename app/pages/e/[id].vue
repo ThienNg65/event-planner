@@ -36,7 +36,7 @@ const role = computed<Role>(() => data.value!.role);
 watch(meId, () => refresh());
 const when = computed(() => {
   if (ev.value.startsAt) return fmtDateTime(ev.value.startsAt, locale.value);
-  return ev.value.pollDays.length ? t('card.voting', { n: ev.value.pollDays.length }) : t('event.dateTbd');
+  return ev.value.pollDays.length ? t('event.dayOptions', { n: ev.value.pollDays.length }) : t('event.dateTbd');
 });
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
 useEventTheme(() => ev.value.theme);

@@ -71,11 +71,10 @@ const params = computed(() => ({
   amount: fmtVnd(mine.value?.left ?? 0),
   reason: ev.value.cancelReason ?? '',
 }));
-const closes = computed(() =>
-  ev.value.voteDeadline && next.value.step !== 'voteClosed' && ev.value.stage === 'poll' && !ev.value.cancelledAt
-    ? t('next.closes', { when: fmtDateTime(ev.value.voteDeadline, locale.value) })
-    : ''
-);
+// One solid button per card: the visitor's own to-do comes first, otherwise the organizer's next move.
+const myTodo = computed(() => TODO_STEPS.includes(next.value.step) || next.value.step === 'declined');
+const hostMain = computed(() => (myTodo.value ? { color: 'neutral' as const, variant: 'outline' as const } : { color: 'primary' as const, variant: 'solid' as const }));
+const hostActions = computed(() => canAdvance.value && (!!next.value.action || ev.value.stage === 'bill'));
 
 function jump(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -206,47 +205,45 @@ async function complete() {
     <MemberPicker />
   </UCard>
 
-  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'flex flex-wrap items-center gap-4' }">
-    <div class="flex min-w-64 flex-1 items-start gap-3">
-      <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon v-if="ui.icon" :name="ui.icon" class="size-5" /><span v-else aria-hidden="true">😭</span></span>
-      <div class="min-w-0">
-        <UBadge
-          v-if="ev.stage === 'poll' && !ev.cancelledAt"
-          :color="votingClosed ? 'warning' : 'success'"
-          variant="subtle"
-          size="sm"
-          :icon="votingClosed ? 'i-lucide-lock' : 'i-lucide-vote'"
-          :label="t(votingClosed ? 'overview.closed' : 'overview.open')"
-          class="mb-1"
-        />
-        <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
-        <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
-        <p v-if="closes" class="mt-0.5 flex items-center gap-1 text-xs text-muted"><UIcon name="i-lucide-clock" class="size-3.5" />{{ closes }}</p>
-        <UAvatarGroup v-if="next.step === 'settled' && payers.length" :max="8" size="xs" class="mt-2">
-          <UAvatar v-for="p in payers" :key="p.memberId" :alt="p.name" :title="p.name" />
-        </UAvatarGroup>
+  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance)" :ui="{ body: 'space-y-4' }">
+    <!-- Your own answer -->
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="flex min-w-64 flex-1 items-start gap-3">
+        <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon v-if="ui.icon" :name="ui.icon" class="size-5" /><span v-else aria-hidden="true">😭</span></span>
+        <div class="min-w-0">
+          <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
+          <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
+          <UAvatarGroup v-if="next.step === 'settled' && payers.length" :max="8" size="xs" class="mt-2">
+            <UAvatar v-for="p in payers" :key="p.memberId" :alt="p.name" :title="p.name" />
+          </UAvatarGroup>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <UButton v-if="ui.jump" :variant="myTodo ? 'solid' : 'outline'" :color="myTodo ? 'primary' : 'neutral'" trailing-icon="i-lucide-arrow-down" @click="jump(ui.jump)">
+          {{ t(`next.${copy}.cta`) }}
+        </UButton>
+        <UButton v-if="me && (next.step === 'vote' || next.step === 'voted')" color="neutral" variant="ghost" icon="i-lucide-circle-x" :loading="busy" @click="decline('no')">
+          {{ t('next.declined.cannot') }}
+        </UButton>
+        <UButton v-if="next.step === 'declined'" color="primary" icon="i-lucide-undo-2" :loading="busy" @click="decline(null)">{{ t('next.declined.cta') }}</UButton>
       </div>
     </div>
-    <div class="flex flex-wrap gap-2">
-      <UButton v-if="ui.jump" :variant="next.action ? 'outline' : 'solid'" :color="next.action ? 'neutral' : 'primary'" trailing-icon="i-lucide-arrow-down" @click="jump(ui.jump)">
-        {{ t(`next.${copy}.cta`) }}
-      </UButton>
-      <UButton v-if="me && (next.step === 'vote' || next.step === 'voted')" color="neutral" variant="ghost" icon="i-lucide-circle-x" :loading="busy" @click="decline('no')">
-        {{ t('next.declined.cannot') }}
-      </UButton>
-      <UButton v-if="next.step === 'declined'" color="primary" icon="i-lucide-undo-2" :loading="busy" @click="decline(null)">{{ t('next.declined.cta') }}</UButton>
-      <UButton v-if="next.action === 'lock'" color="neutral" variant="outline" :icon="votingClosed ? 'i-lucide-lock-open' : 'i-lucide-lock'" @click="votingClosed ? (reopenOpen = true) : (closeOpen = true)">
+
+    <!-- Organizer moves, kept apart from the visitor's own answer -->
+    <div v-if="hostActions" class="flex flex-wrap items-center gap-2 border-t border-default pt-4">
+      <p class="mr-auto flex items-center gap-1.5 text-xs font-medium text-muted"><UIcon name="i-lucide-shield-check" class="size-4" />{{ t('next.hostTitle') }}</p>
+      <UButton v-if="next.action === 'lock'" color="neutral" variant="ghost" :icon="votingClosed ? 'i-lucide-lock-open' : 'i-lucide-lock'" @click="votingClosed ? (reopenOpen = true) : (closeOpen = true)">
         {{ t(votingClosed ? 'next.action.reopen' : 'next.action.close') }}
       </UButton>
-      <UButton v-if="next.action === 'lock'" icon="i-lucide-calendar-check" @click="lockOpen = true">
+      <UButton v-if="next.action === 'lock'" v-bind="hostMain" icon="i-lucide-calendar-check" @click="lockOpen = true">
         {{ t(next.step === 'voteClosed' ? 'next.action.pick' : 'next.action.lock') }}
       </UButton>
-      <UButton v-if="next.action === 'bill'" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
-      <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
-      <UButton v-if="next.action === 'settle'" icon="i-lucide-sparkles" color="secondary" :loading="busy" @click="settle">{{ t('next.action.settle') }}</UButton>
-      <UButton v-if="ev.stage === 'bill' && canAdvance && next.action !== 'settle'" color="neutral" variant="outline" icon="i-lucide-check" @click="completeOpen = 'anyway'">
+      <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
+      <UButton v-if="next.action === 'bill'" v-bind="hostMain" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
+      <UButton v-if="ev.stage === 'bill' && next.action !== 'settle'" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'anyway'">
         {{ t('next.action.completeAnyway') }}
       </UButton>
+      <UButton v-if="next.action === 'settle'" v-bind="hostMain" icon="i-lucide-sparkles" :loading="busy" @click="settle">{{ t('next.action.settle') }}</UButton>
     </div>
   </UCard>
 

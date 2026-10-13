@@ -72,7 +72,8 @@
     "new": "New",
     "more": "More",
     "less": "Less",
-    "changeCover": "Change cover"
+    "changeCover": "Change cover",
+    "dayOptions": "Date not set · {n} proposed days"
   },
   "create": {
     "title": "New event",
@@ -210,7 +211,6 @@
     "suggestPlace": "Suggest a place",
     "dup": "Already on the list. We added your vote.",
     "remove": "Remove",
-    "openLink": "Open link",
     "removeTitle": "Remove “{name}”?",
     "removeBody": "{n} vote for it will be removed too. | {n} votes for it will be removed too.",
     "voteFor": "Vote for {name}",
@@ -227,7 +227,9 @@
     "noVenuesTitle": "No places yet",
     "vote": "Vote",
     "myVote": "Voted",
-    "votes": "{n} vote | {n} votes"
+    "votes": "{n} vote | {n} votes",
+    "removePlace": "Remove place",
+    "placeActions": "Actions for {name}"
   },
   "bill": {
     "title": "Bill",
@@ -321,8 +323,8 @@
       "body": "Pick or enter your name so your votes count. No sign-up needed."
     },
     "vote": {
-      "title": "Which days work for you?",
-      "body": "Tap every day you could make it.",
+      "title": "You haven't voted yet",
+      "body": "Pick the days you can make below.",
       "cta": "Vote"
     },
     "voted": {
@@ -386,8 +388,8 @@
     "billHint": "Split across {n} seats",
     "billSave": "Save & split the bill",
     "voteVenue": {
-      "title": "Which place works for you?",
-      "body": "Tap the places you like, or suggest one.",
+      "title": "You haven't voted yet",
+      "body": "Pick the places you like below, or suggest another.",
       "cta": "Vote"
     },
     "voteClosed": {
@@ -399,7 +401,6 @@
       "title": "This event was cancelled",
       "body": "{reason}"
     },
-    "closes": "Voting closes {when}",
     "tie": "It's a tie for first. Pick one.",
     "votes": "{n} vote | {n} votes",
     "closeTitle": "Close voting now?",
@@ -442,7 +443,8 @@
     "completeFreeTitle": "Has the event finished?",
     "completeFreeBody": "Nobody will be asked to pay.",
     "completeAnywayTitle": "Complete with open payments?",
-    "completeAnywayBody": "These people still owe. They can keep paying after the event is completed."
+    "completeAnywayBody": "These people still owe. They can keep paying after the event is completed.",
+    "hostTitle": "For organizers"
   },
   "edit": {
     "open": "Edit",
@@ -601,8 +603,6 @@
   },
   "overview": {
     "title": "Overview",
-    "open": "Voting open",
-    "closed": "Voting closed, date not locked",
     "voted": "{n} of {total} in the team voted",
     "closes": "Closes {when}",
     "notVoted": "No reply yet: {names}",
