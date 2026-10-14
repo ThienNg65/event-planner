@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+- The app can also be deployed on Cloudflare Workers.
+
 ## [0.7.0] - 2026-10-13
 
 ### Added

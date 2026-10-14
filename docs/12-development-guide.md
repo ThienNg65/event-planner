@@ -34,7 +34,7 @@ There is no linter. **Check which database `DATABASE_URL` points at before `test
 2. Validate it in `server/utils/eventFields.ts` (the single validator for create and PATCH). New error code? Add `err.<code>` to **both** locale files.
 3. It is returned automatically by `GET /api/events/:id` (everything but the key hashes). Add it to `GET /api/events` only if the list needs it.
 4. UI: `new.vue` (create), `EventEdit.vue` (edit), and wherever it is displayed. `EventDetail` types follow from Nitro automatically.
-5. Migrations run on every Netlify deploy, so make them additive and compatible with the previous deploy.
+5. Migrations run on every deploy (Netlify or Cloudflare), so make them additive and compatible with the previous deploy.
 
 ### Add or change a permission
 
@@ -56,7 +56,7 @@ VND is an integer; the share rounds up to 1,000. Times are stored as `timestampt
 
 1. Bump `VERSION`.
 2. Add a section to `CHANGELOG.md` ([Keep a Changelog](https://keepachangelog.com/en/1.0.0/), newest first). Describe **user-visible effects in plain language**, not file or class names.
-3. Push; Netlify runs `db:migrate` then builds. A pushed migration reaches production on deploy.
+3. Push; the host (Netlify or Cloudflare) runs `db:migrate` then builds. A pushed migration reaches production on deploy.
 
 ## Gotchas
 

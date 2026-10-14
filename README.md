@@ -65,6 +65,13 @@ Open http://localhost:3000.
 4. Deploy. `netlify.toml` uses Node 24 and runs `db:migrate` before `nuxt build`, so the schema is always up to date. Nuxt picks the Netlify preset automatically.
 5. Optional: turn off deploy previews, since they would migrate the same database.
 
+## Deploy (Cloudflare Workers)
+
+1. Cloudflare → **Workers & Pages → Create → Import a repository** → pick the repo.
+2. **Build command:** `npm run db:migrate && npm run build` (the build alone does not migrate). **Deploy command:** `npx wrangler deploy` (the default).
+3. Add `DATABASE_URL` both as a **build variable** (for the migration) and as a **variable/secret** of the Worker (for the app).
+4. Deploy. Nuxt picks the `cloudflare-module` preset automatically and writes the Wrangler config (with `nodejs_compat`); the Worker name comes from the Git repo, e.g. `lhtuwrk-event-planner`.
+
 ## Code map
 
 | Piece | Where |

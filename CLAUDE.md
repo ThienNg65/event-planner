@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Team Events: a Nuxt 4 + Nuxt UI app for planning team events (date/venue polls, RSVPs with a seat limit, bill split with VietQR, payment tracking). Postgres (Neon) via Drizzle, deployed on Netlify. UI is Vietnamese by default with an English toggle.
+Team Events: a Nuxt 4 + Nuxt UI app for planning team events (date/venue polls, RSVPs with a seat limit, bill split with VietQR, payment tracking). Postgres (Neon) via Drizzle, deployed on Netlify or Cloudflare Workers. UI is Vietnamese by default with an English toggle.
 
 ## Understand the app first: read `docs/`
 
@@ -44,7 +44,7 @@ npm run db:generate    # after editing server/db/schema.ts; commit the generated
 
 Single test: `node --test --test-name-pattern="strict first-come" test/event.test.ts`
 
-There is no linter. `netlify.toml` runs `db:migrate` before `nuxt build`, so a pushed migration reaches the production database on deploy.
+There is no linter. `netlify.toml` (and the Cloudflare build command, see README) runs `db:migrate` before `nuxt build`, so a pushed migration reaches the production database on deploy.
 
 ## Architecture
 
@@ -66,5 +66,6 @@ There is no linter. `netlify.toml` runs `db:migrate` before `nuxt build`, so a p
 ## Gotchas
 
 - `package.json` pins `flat-cache` to 6.1.23 via `overrides` (6.1.24 depends on an unpublished `cacheable`). Do not remove it casually.
+- Server code must also run on Cloudflare Workers: no native Node addons (the share card uses `@resvg/resvg-wasm` via a `?module` wasm import). Check with `NITRO_PRESET=cloudflare-module npx nuxt build`.
 - Releases: bump `VERSION` and add a section to `CHANGELOG.md` (Keep a Changelog format). The changelog describes user-visible effects in plain language.
 - The user-facing README documents behaviour and a code map; update it when rules change.

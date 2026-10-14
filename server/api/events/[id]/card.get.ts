@@ -1,4 +1,8 @@
-import { Resvg } from '@resvg/resvg-js';
+import { initWasm, Resvg } from '@resvg/resvg-wasm';
+// A precompiled module: Cloudflare Workers cannot compile wasm from bytes at runtime.
+import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm?module';
+
+let ready: Promise<void> | undefined;
 
 /** The share card: the event's cover with its link as a QR code. Used as og:image, so it must never fail loudly. */
 export default defineEventHandler(async (event) => {
@@ -7,6 +11,11 @@ export default defineEventHandler(async (event) => {
   const cover = coverOf(ev.cover, ev.id);
 
   try {
+    ready ??= initWasm(resvgWasm).catch((e) => {
+      ready = undefined;
+      throw e;
+    });
+    await ready;
     const image = 'image' in cover ? await fetchCoverImage(cover.image) : null;
     const svg = cardSvg(`${origin}/e/${ev.id}`, image ? { image } : { stops: coverStops(ev.cover, ev.id) });
     const png = new Resvg(svg, { fitTo: { mode: 'width', value: CARD_W }, font: { loadSystemFonts: false } }).render().asPng();
