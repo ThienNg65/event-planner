@@ -11,7 +11,7 @@
   "home": {
     "title": "Sự kiện",
     "new": "Tạo sự kiện",
-    "empty": "Tạo sự kiện, chia sẻ liên kết và để mọi người bình chọn ngày.",
+    "empty": "Sự kiện bạn tạo hoặc tham gia sẽ hiện ở đây. Mở liên kết chủ sự kiện gửi, hoặc tạo sự kiện mới.",
     "planning": "Chưa chốt",
     "upcoming": "Sắp diễn ra",
     "past": "Đã qua",
@@ -71,6 +71,8 @@
     "seats": "chỗ",
     "share": "Chia sẻ",
     "linkCopied": "Đã sao chép liên kết sự kiện",
+    "joined": "Bạn đã tham gia \"{title}\"",
+    "private": "Không tìm thấy sự kiện hoặc sự kiện riêng tư. Hãy xin chủ sự kiện liên kết tham gia.",
     "details": "Thông tin",
     "attendees": "Người tham gia",
     "waitlist": "{n} người đang chờ",
@@ -531,7 +533,7 @@
     "bill": "Đến lúc chia tiền: {title}",
     "settled": "{title}",
     "dialogTitle": "Chia sẻ sự kiện",
-    "dialogHint": "Quét mã hoặc gửi đường dẫn.",
+    "dialogHint": "Chỉ ai có liên kết này mới xem và tham gia được. Quét mã hoặc gửi liên kết.",
     "qrAlt": "Mã QR của đường dẫn sự kiện",
     "link": "Đường dẫn sự kiện",
     "copy": "Sao chép",
@@ -693,7 +695,7 @@
     "button": "Lưu chỉnh sửa"
   },
   "members": {
-    "title": "Thành viên",
+    "title": "Người tham gia",
     "count": "{n} người"
   },
   "compare": {

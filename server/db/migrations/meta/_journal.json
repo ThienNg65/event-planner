@@ -71,6 +71,13 @@
       "when": 1791952230402,
       "tag": "0009_nasty_gressill",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791954258510,
+      "tag": "0010_lyrical_the_hunter",
+      "breakpoints": true
     }
   ]
 }

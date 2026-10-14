@@ -53,6 +53,7 @@ One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the
 | `created_by` | integer FK → members, not null | the host by identity |
 | `manage_key_hash` | text not null | SHA-256 of the host key |
 | `co_host_key_hash` | text | legacy shared co-host key |
+| `join_key` | text not null, default random 128-bit | secret in the joining link (`/e/:id?join=…`); stored readable so the link can be shared again |
 | `vote_deadline` | timestamptz | null = voting stays open |
 | `cancelled_at`, `cancel_reason` | timestamptz, text | the Cancelled overlay |
 | `notice`, `notice_at` | text, timestamptz | the host's public announcement (≤ 280) |
@@ -65,6 +66,9 @@ One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the
 No unique constraint: duplicates are prevented in the API by comparing normalized names (a rare race can still insert two).
 
 ## `responses` (one row per member per event)
+
+A row also means *participant*: the creator, active co-hosts and everyone who opened the joining link have one. An empty row (no days, no places, status null) is "no reply yet" and is inert in every bulk statement.
+
 
 Primary key `(event_id, member_id)`. **Each person writes only their own row** (organizers excepted); this is the heart of the concurrency model.
 

@@ -1,6 +1,6 @@
 # Team Events
 
-Plan team events in one place: anyone can create an event, poll dates and venues, collect RSVPs (with guests and a seat limit), then split the bill with a VietQR code per person and track who has paid. The home page lists what needs you (vote, reply, pay), a calendar shows dates and polled days, and each event can have a cover. Vietnamese by default, with an English toggle.
+Plan team events in one place: anyone can create an event (private: only people with its joining link can see and join it, and the home page lists only your events), poll dates and venues, collect RSVPs (with guests and a seat limit), then split the bill with a VietQR code per person and track who has paid. The home page lists what needs you (vote, reply, pay), a calendar shows dates and polled days, and each event can have a cover. Vietnamese by default, with an English toggle.
 
 Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
 

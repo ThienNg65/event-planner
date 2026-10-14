@@ -97,6 +97,31 @@ export function meOf(event: H3Event): Promise<number | null> {
   return (event.context.me ??= memberByToken(sessionToken(event)).then((m) => m?.id ?? null));
 }
 
+/** Constant-time comparison of a presented key with a stored plain one. */
+export const sameKey = (given: unknown, stored: string) =>
+  typeof given === 'string' && !!given && timingSafeEqual(Buffer.from(sha256(given), 'hex'), Buffer.from(sha256(stored), 'hex'));
+
+/** Whether the member has an answer row for the event (a participant). */
+export async function isParticipant(eventId: number, me: number | null) {
+  if (me === null) return false;
+  const { responses } = schema;
+  const [row] = await useDb()
+    .select({ m: responses.memberId })
+    .from(responses)
+    .where(and(eq(responses.eventId, eventId), eq(responses.memberId, me)));
+  return !!row;
+}
+
+/**
+ * Event access: an organizer, the joining link's key (x-join-key), or a participant (has an answer row).
+ * Anyone else gets notFound, so events can't be probed by id. `joined` skips the lookup when the caller already knows.
+ */
+export async function requireAccess(event: H3Event, ev: { id: number; joinKey: string }, role: Role, joined?: boolean) {
+  if (role !== null || sameKey(getHeader(event, 'x-join-key'), ev.joinKey)) return;
+  if (joined ?? (await isParticipant(ev.id, await meOf(event)))) return;
+  fail(404, 'notFound');
+}
+
 /** A participant may only write their own answers; hosts and co-hosts may write anyone's. */
 export async function requireSelf(event: H3Event, memberId: number, role: Role) {
   if (role === null && memberId !== (await meOf(event))) fail(403, 'notYou');

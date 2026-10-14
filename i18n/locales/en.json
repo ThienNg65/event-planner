@@ -11,7 +11,7 @@
   "home": {
     "title": "Events",
     "new": "New event",
-    "empty": "Create an event, share the link, and let everyone vote on the day.",
+    "empty": "Events you create or join show here. Open a link from the host, or create one.",
     "planning": "Undecided",
     "upcoming": "Upcoming",
     "past": "Past",
@@ -71,6 +71,8 @@
     "seats": "seats",
     "share": "Share",
     "linkCopied": "Event link copied",
+    "joined": "You joined \"{title}\"",
+    "private": "This event doesn't exist or is private. Ask the host for the joining link.",
     "details": "Details",
     "attendees": "Attendees",
     "waitlist": "{n} on waitlist",
@@ -531,7 +533,7 @@
     "bill": "Time to settle up: {title}",
     "settled": "{title}",
     "dialogTitle": "Share this event",
-    "dialogHint": "Scan the code or send the link.",
+    "dialogHint": "Only people with this link can see and join. Scan the code or send the link.",
     "qrAlt": "QR code for the event link",
     "link": "Event link",
     "copy": "Copy",
@@ -693,7 +695,7 @@
     "button": "Save correction"
   },
   "members": {
-    "title": "Members",
+    "title": "Participants",
     "count": "{n} people"
   },
   "compare": {

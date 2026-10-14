@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.9.0] - 2026-10-14
+
+### Changed
+- Events are private: only people with the joining link can see and join them; the home page lists only your events.
+- "No reply yet" and the people strip count only the people who joined.
+
 ## [0.8.0] - 2026-10-14
 
 ### Added

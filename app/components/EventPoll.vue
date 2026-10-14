@@ -69,7 +69,7 @@ const compare = computed(() => {
   return {
     tie,
     answered: answered.length,
-    pending: pendingVoters(members.value, rows.value).length,
+    pending: pendingVoters(props.data.participants, rows.value).length,
     days: top.map((d) => ({
       ...d,
       label: fmtDay(d.day, locale.value),

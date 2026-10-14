@@ -3,11 +3,11 @@ import { renderSVG } from 'uqr';
 
 // Share dialog: a QR code (always black on white so any phone camera reads it, whatever the theme), the link, and the system share sheet.
 const open = defineModel<boolean>('open', { required: true });
-const props = defineProps<{ id: number; title: string; stage: string }>();
+const props = defineProps<{ id: number; title: string; stage: string; joinKey: string }>();
 const { t } = useI18n();
 const toast = useToast();
 
-const url = computed(() => (import.meta.client ? `${location.origin}/e/${props.id}` : ''));
+const url = computed(() => (import.meta.client ? `${location.origin}/e/${props.id}?join=${props.joinKey}` : ''));
 // The QR is generated here from our own URL; there is no user-supplied markup in it.
 const qr = computed(() => (url.value ? renderSVG(url.value, { border: 2, ecc: 'M', whiteColor: '#ffffff', blackColor: '#111111' }) : ''));
 const canShare = import.meta.client && typeof navigator.share === 'function';

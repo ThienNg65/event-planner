@@ -53,6 +53,8 @@ Members are team-wide and never deleted. To hide leftover or test names, anyone 
 
 ## 3.2 What may I do on this event? (role)
 
+**Access comes first.** An event is private: `requireAccess` lets in an organizer, a holder of the joining key (`x-join-key`, from `?join=` in the link), or a participant (a member with a `responses` row). Anyone else gets `notFound`, so ids can't be probed. Opening the link signed in adds an empty answer row (`GET /api/events/:id`, `joinedNow`); the creator and accepted co-hosts get one too.
+
 ```
 role = host     if   x-manage-key matches events.manageKeyHash
               or   signed-in member is events.createdBy

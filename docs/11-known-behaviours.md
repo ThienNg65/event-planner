@@ -42,6 +42,17 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 23 | Completing with unpaid members is allowed (host or co-host); a confirm dialog lists debtors. They can keep reporting payments afterwards; only organizers set or clear amounts. | E2E | Deliberate. |
 | 24 | The bill dialog shows the raw number (`100000`) with no separators and no per-seat preview; amounts elsewhere use `vi-VN` grouping (`100.000 ₫`), also in English. | E2E | Undecided. |
 
+## Privacy
+
+| # | Behaviour | Evidence | Intent |
+|---|---|---|---|
+| 28 | The joining link can't be rotated or revoked. | Code | Undecided. |
+| 29 | Participants can't be removed. | Code | Undecided. |
+| 30 | Events created before private events need the new link; the home list shows the ones you created or answered. | Code | Deliberate. |
+| 31 | Archiving a member keeps their access to events they joined, but they no longer count in "no reply yet" or the people strip. | Code | Deliberate. |
+| 32 | An event opened only with a manage key (a legacy co-host key, or a host signed in as someone else or signed out) is not listed on home or the calendar: listing follows the signed-in member. Open it by its link. | Code | Undecided. |
+| 33 | An organizer answering for a team member (`PUT /response` with their `memberId`) also makes that member a participant, so the event shows on their home. | Code | Deliberate. |
+
 ## Data hygiene
 
 | # | Behaviour | Evidence | Intent |

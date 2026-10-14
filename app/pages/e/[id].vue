@@ -3,17 +3,22 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const id = Number(useRoute().params.id);
 const key = useManageKey(id);
-const { me, meId, members } = useMe();
+const { me, meId } = useMe();
+const route = useRoute();
 
 const { data, refresh, error } = await useFetch(`/api/events/${id}`, {
   key: `event-${id}`,
   onRequest({ options }) {
-    if (key.value) options.headers.set('x-manage-key', key.value);
+    // ?key= is read by useManageKey only after hydration, so SSR takes it from the URL too (else a forwarded manage link would 404).
+    const k = key.value ?? (typeof route.query.key === 'string' ? route.query.key : null);
+    if (k) options.headers.set('x-manage-key', k);
+    // ?join= stays in the address bar, so SSR, refresh() and the sign-in refresh all carry it.
+    if (typeof route.query.join === 'string') options.headers.set('x-join-key', route.query.join);
   },
 });
 if (error.value) {
   const notFound = error.value.statusCode === 404;
-  throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'err.notFound' : 'err.generic'), fatal: true });
+  throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'event.private' : 'err.generic'), fatal: true });
 }
 // A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos.
 function dropRejectedKey() {
@@ -168,13 +173,13 @@ const noticeActions = computed(() =>
 const origin = useRequestURL().origin;
 const blurb = computed(() => [when.value, ev.value.venue].filter(Boolean).join(' · '));
 // The card image is made on the server: the event's cover with the QR code of its link on top.
-const cardImage = computed(() => `${origin}/api/events/${id}/card?v=${coverTag(ev.value.cover)}`);
+const cardImage = computed(() => `${origin}/api/events/${id}/card?v=${coverTag(ev.value.cover)}&j=${ev.value.joinKey}`);
 useSeoMeta({
   title: () => ev.value.title,
   description: () => blurb.value,
   ogType: 'website',
   ogSiteName: () => t('app.name'),
-  ogUrl: `${origin}/e/${id}`,
+  ogUrl: () => `${origin}/e/${id}?join=${ev.value.joinKey}`,
   ogTitle: () => ev.value.title,
   ogDescription: () => blurb.value,
   ogImage: () => cardImage.value,
@@ -191,6 +196,15 @@ useSeoMeta({
 // The sticky sidebar stays short: a big team shows its first faces and a "+N".
 const AVATARS = 20;
 // Members who said they can't join get a mark on their avatar.
+const people = computed(() => data.value!.participants);
+// The server says when this visit made you a participant (SSR or after picking your name).
+watch(
+  () => data.value?.joinedNow,
+  (j) => {
+    if (import.meta.client && j) toast.add({ title: t('event.joined', { title: ev.value.title }), icon: 'i-lucide-party-popper' });
+  },
+  { immediate: true }
+);
 const declined = computed(() => new Set(data.value!.responses.filter((r) => r.status === 'no').map((r) => r.memberId)));
 const sharing = ref(false);
 const share = () => (sharing.value = true);
@@ -307,13 +321,13 @@ const share = () => (sharing.value = true);
 
         <aside class="rise grid content-start gap-3 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
           <EventOverview :data="data" :role="role" @invite="share" />
-          <section v-if="members.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
+          <section v-if="people.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
             <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
               <UIcon name="i-lucide-users-round" class="size-4 text-muted" />{{ t('members.title') }}
-              <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
+              <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: people.length }) }}</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <UTooltip v-for="m in members.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="declined.has(m.id) ? `${m.name} · ${t('people.no')}` : m.name">
+              <UTooltip v-for="m in people.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="declined.has(m.id) ? `${m.name} · ${t('people.no')}` : m.name">
                 <span class="relative" tabindex="0">
                   <MemberAvatar :id="m.id" :name="m.name" size="md" :class="declined.has(m.id) && 'opacity-50 grayscale'" />
                   <!-- The background sits on a wrapper: on the icon itself it would replace the masked glyph's color. -->
@@ -322,8 +336,8 @@ const share = () => (sharing.value = true);
                   </span>
                 </span>
               </UTooltip>
-              <span v-if="members.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
-                +{{ members.length - AVATARS }}
+              <span v-if="people.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
+                +{{ people.length - AVATARS }}
               </span>
             </div>
           </section>
@@ -363,7 +377,7 @@ const share = () => (sharing.value = true);
           </template>
         </UModal>
       </div>
-      <EventShareDialog v-model:open="sharing" :id="id" :title="ev.title" :stage="ev.stage" />
+      <EventShareDialog v-model:open="sharing" :id="id" :title="ev.title" :stage="ev.stage" :join-key="ev.joinKey" />
     </template>
   </UDashboardPanel>
 </template>

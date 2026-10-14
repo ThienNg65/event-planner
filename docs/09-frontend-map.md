@@ -25,7 +25,7 @@ Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with set/c
 | People | `EventPeople.vue` | Everyone with a vote or answer, ranked; organizer row menu |
 | Side rail | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
 | Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` | Edit panel, roles and links, reopen/cancel/delete, date/place correction, poll day editing |
-| Sharing | `EventShareDialog.vue` | Link and QR; the page's `og:image` is `GET /api/events/:id/card` |
+| Sharing | `EventShareDialog.vue` | Joining link (`?join=`) and QR; the page's `og:image` is `GET /api/events/:id/card?j=…`; co-host invite links carry `?join=` too |
 
 Finished stages collapse to one summary line each ("12 voted", "8 seats").
 "Edit" saves on request; "Post an update" (notice) publishes at once; stage moves are explicit buttons.

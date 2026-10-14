@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const { t, locale } = useI18n();
-const { data: events } = await useFetch('/api/events', { default: () => [] });
+const { meId } = useMe();
+const { data: events, refresh } = await useFetch('/api/events', { default: () => [] });
+watch(meId, () => refresh());
 
 const today = toTeamInput(new Date().toISOString()).slice(0, 10);
 const cursor = ref({ y: Number(today.slice(0, 4)), m: Number(today.slice(5, 7)) - 1 });
@@ -62,6 +64,10 @@ const agenda = computed(() => days.value.filter((d) => d.startsWith(monthKey.val
     </template>
 
     <template #body>
+      <UCard v-if="!meId" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
+        <p class="font-semibold text-highlighted">{{ t('home.todo.who') }}</p>
+        <MemberPicker />
+      </UCard>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="page-title capitalize">{{ title }}</h2>
         <span class="flex items-center gap-2 text-xs text-muted">

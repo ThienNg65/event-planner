@@ -26,14 +26,16 @@ Every handler validates its own input (there is no shared schema layer): `server
 
 | Method and path | Auth | Purpose | Notable errors |
 |---|---|---|---|
-| `GET /api/events` | none | All events with seats, answered count, `allPaid`, `manager`, and the visitor's `mine` (newest first) | |
+| `GET /api/events` | signed in (signed out → `[]`) | Only my events (I created it or have an answer row): seats, answered count, `allPaid`, `manager`, `mine` (newest first) | |
 | `POST /api/events` | signed in | Create; returns `{ id, key }` (201). Ignores `stage` and `reconfirmBy` in the body | `signInFirst`, `titleRequired`, `invalidDate`, `startsInPast`, `invalidDays`, `invalidLink`, `invalidCapacity`, `invalidBank`, `invalidCover`, `unknownMember` |
-| `GET /api/events/:id` | none (role from key/session) | Full detail (see below) | `notFound` |
+| `GET /api/events/:id` | `requireAccess`: a role, the joining key (`x-join-key`), or a participant | Full detail (see below). Signed in with the key, it joins you (`joinedNow`) | `notFound` |
 | `PATCH /api/events/:id` | organizer (some moves host) | Edit, stage moves, cancel/restore, close/reopen voting, day diffs, corrections | many, see below |
 | `DELETE /api/events/:id` | host | Delete with cascade | `hostOnly`, `forbidden` |
-| `GET /api/events/:id/card` | none | 1200×630 PNG: cover + QR of the event link (used as `og:image`); redirects to `/icon-512.png` on any failure | |
+| `GET /api/events/:id/card?j=<joinKey>` | the joining key in `j` | 1200×630 PNG: cover + QR of the joining link (used as `og:image`); redirects to `/icon-512.png` without the key or on any failure | |
 
 ### `GET /api/events/:id` response
+
+Also `joinedNow` (this visit made you a participant) and `participants` (`{ id, name }`, by name), which the UI uses for counts and the avatar strip. `PUT /response`, `POST /days` and `POST /venues` also go through `requireAccess`, and so do the organizer-only endpoints (PATCH, DELETE, cohost, venue delete) before their role check, so a stranger gets `notFound` rather than 403.
 
 `event` (all columns except the key hashes), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
 `hostName`, `votingOpen`, `responses` (every member's row plus `name`), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).

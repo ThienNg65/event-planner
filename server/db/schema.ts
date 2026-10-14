@@ -58,6 +58,8 @@ export const events = pgTable(
     manageKeyHash: text().notNull(),
     // Second, lower-privilege key: may edit and move the event forward, but not reopen, cancel or delete it.
     coHostKeyHash: text(),
+    // Secret in the joining link (/e/:id?join=…). Kept readable so organizers and participants can share the link again.
+    joinKey: text().notNull().default(sql`replace(gen_random_uuid()::text, '-', '')`),
     voteDeadline: timestamp({ withTimezone: true }),
     // Cancelled is an overlay, not a stage, so restoring returns to the exact stage it was in.
     cancelledAt: timestamp({ withTimezone: true }),
