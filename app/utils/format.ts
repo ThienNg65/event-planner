@@ -5,7 +5,7 @@ const TZ = 'Asia/Ho_Chi_Minh';
 export const teamTime = (day: string, time: string) => new Date(`${day}T${time}:00+07:00`).toISOString();
 
 // Node ICU renders vi weekdays as "Th 6", Chrome as "Thứ 6": use a fixed table so SSR and browser match.
-const VI_WEEKDAY: Record<string, string> = { Mon: 'T2', Tue: 'T3', Wed: 'T4', Thu: 'T5', Fri: 'T6', Sat: 'T7', Sun: 'CN' };
+const VI_WEEKDAY: Record<string, string> = { Mon: 'Thứ 2', Tue: 'Thứ 3', Wed: 'Thứ 4', Thu: 'Thứ 5', Fri: 'Thứ 6', Sat: 'Thứ 7', Sun: 'CN' };
 
 /** Like Intl.DateTimeFormat#format, but the vi weekday comes from VI_WEEKDAY; en is untouched. */
 export const fmtParts = (date: Date, locale: string, opts: Intl.DateTimeFormatOptions) => {

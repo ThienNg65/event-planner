@@ -5,6 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [0.9.0] - 2026-10-14
 
 ### Changed
+- Vietnamese weekdays now read "Thứ 2" … "Thứ 7" instead of "T2" … "T7".
 - Events are private: only people with the joining link can see and join them; the home page lists only your events.
 - "No reply yet" and the people strip count only the people who joined.
 

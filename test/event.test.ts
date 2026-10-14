@@ -114,9 +114,9 @@ test('nextStep: one step per stage and answer, organizer moves only when due', (
 });
 
 test('vi weekday is deterministic (fixed table), en unchanged', () => {
-  assert.equal(dayParts('2026-10-23', 'vi').weekday, 'T6');
+  assert.equal(dayParts('2026-10-23', 'vi').weekday, 'Thứ 6');
   assert.equal(dayParts('2026-10-25', 'vi').weekday, 'CN');
-  assert.match(fmtDateTime('2026-10-23T12:00:00Z', 'vi'), /^\d\d:\d\d T6|^T6/);
+  assert.match(fmtDateTime('2026-10-23T12:00:00Z', 'vi'), /^\d\d:\d\d Thứ 6|^Thứ 6/);
   assert.equal(dayParts('2026-10-23', 'en').weekday, 'Fri');
 });
 
