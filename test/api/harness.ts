@@ -103,17 +103,21 @@ export async function cleanup() {
   if (broken.length) throw new Error(broken.join(', '));
 }
 
-type Opts = { method?: string; body?: unknown; key?: string; me?: number };
+/** The PIN every test member gets. */
+export const PIN = '482916';
+
+type Opts = { method?: string; body?: unknown; key?: string; me?: number; sid?: string };
 
 // Each test member's sign-in token, from the cookie POST /api/members sets.
 const tokens = new Map<number, string>();
 
-/** A request against the built server: `key` becomes x-manage-key, `me` signs in as that member (see `member()`). */
-export async function api(path: string, { method = 'GET', body, key, me }: Opts = {}) {
+/** A request against the built server: `key` becomes x-manage-key, `me` signs in as that member (see `member()`), `sid` sends a raw session cookie. */
+export async function api(path: string, { method = 'GET', body, key, me, sid }: Opts = {}) {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['content-type'] = 'application/json';
   if (key) headers['x-manage-key'] = key;
   if (me) headers.cookie = `sid=${tokens.get(me)}`;
+  if (sid) headers.cookie = `sid=${sid}`;
   const res = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const text = await res.text();
   return { headers: res.headers, status: res.status, message: res.status >= 400 ? (JSON.parse(text).statusMessage as string) : '', body: text ? JSON.parse(text) : null };
@@ -121,7 +125,7 @@ export async function api(path: string, { method = 'GET', body, key, me }: Opts 
 
 /** A new member named zz-test-…; returns the id. */
 export async function member() {
-  const res = await api('/api/members', { method: 'POST', body: { name: `zz-test-${randomBytes(4).toString('hex')}` } });
+  const res = await api('/api/members', { method: 'POST', body: { name: `zz-test-${randomBytes(4).toString('hex')}`, pin: PIN } });
   if (res.status !== 201) throw new Error(`member() failed: ${res.status}`);
   const sid = /sid=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1];
   if (!sid) throw new Error('member() got no sid cookie');

@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
+import { pinProblem } from '../shared/utils/pin.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
 import { cardSvg } from '../shared/utils/card.ts';
 import { DEFAULT_THEME, THEMES, themeOf } from '../shared/utils/theme.ts';
@@ -415,4 +416,11 @@ test('compareDays: ties go to the day more honorees can make, then the earlier d
   assert.equal(compareDays(['2026-10-22', '2026-10-19'], rs).tie, 'earlier');
   assert.equal(compareDays(['2026-10-19', '2026-10-23'], rs).tie, null);
   assert.equal(compareDays(['2026-10-24', '2026-10-25'], rs).tie, null);
+});
+
+test('a PIN is six digits that are not all alike and not a run', () => {
+  assert.equal(pinProblem('482916'), null);
+  assert.equal(pinProblem('135790'), null);
+  for (const bad of ['', '12345', '1234567', '12a456', 482916 as unknown]) assert.equal(pinProblem(bad), 'format');
+  for (const weak of ['111111', '000000', '123456', '234567', '654321', '987654']) assert.equal(pinProblem(weak), 'weak');
 });

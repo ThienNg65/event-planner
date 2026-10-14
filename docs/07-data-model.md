@@ -22,9 +22,16 @@ Event deletion cascades to `responses`, `venues` and `cohosts`. Members are neve
 |---|---|---|
 | `id` | serial PK | |
 | `name` | text, **unique**, not null | Exact-string unique; fuzzy matching (`norm`) is done in the UI |
-| `token_hash` | text, unique | SHA-256 of the sign-in token; **null = unclaimed** |
+| `token_hash` | text, unique | SHA-256 of the first browser's sign-in token (and the sign-in link); null = never signed in this way |
+| `pin_hash` | text | `salt:hash` (hex, scrypt) of the 6-digit PIN; **token and PIN both null = unclaimed** |
+| `pin_fails` | integer, default 0 | Wrong PINs since the last good one |
+| `pin_locked_until` | timestamptz | Set when `pin_fails` reaches 5; sign-in is refused until then |
 | `created_at` | timestamptz | |
 | `archived_at` | timestamptz | null = on the roster; set = hidden from `GET /api/members`; cleared on sign-in or when the unclaimed name is added again |
+
+## `member_sessions`
+
+One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the cookie token), `member_id` (FK to members, cascade), `created_at`. The first browser's token stays in `members.token_hash`. A PIN reset deletes the member's rows.
 
 ## `events`
 
@@ -103,5 +110,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`.
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`).
 `netlify.toml` runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

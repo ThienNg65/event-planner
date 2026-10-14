@@ -31,9 +31,34 @@ async function copyLink() {
   }
 }
 
-// A claimed name can't be picked again, so signing out asks first: the sign-in link is the only way back.
+// Sign in again with the PIN, or (no PIN yet) with the sign-in link, so signing out asks first.
 const confirmSignOut = ref(false);
 watch(whoOpen, () => (confirmSignOut.value = false));
+
+// Set or change the PIN: being signed in is the proof, so only the new PIN is asked for.
+const pinEditing = ref(false);
+const newPin = ref('');
+const pinBusy = ref(false);
+watch(newPin, (v) => (newPin.value = v.replace(/\D/g, '')));
+watch(whoOpen, () => {
+  pinEditing.value = false;
+  newPin.value = '';
+});
+const pinProblemKey = computed(() => (newPin.value.length === PIN_LENGTH ? pinProblem(newPin.value) : null));
+async function savePin() {
+  pinBusy.value = true;
+  try {
+    await $fetch('/api/me/pin', { method: 'POST', body: { pin: newPin.value } });
+    pinEditing.value = false;
+    newPin.value = '';
+    await refreshMe();
+    toast.add({ title: t('pin.saved') });
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  } finally {
+    pinBusy.value = false;
+  }
+}
 async function signOut() {
   try {
     await $fetch('/api/me/signout', { method: 'POST' });
@@ -48,6 +73,22 @@ async function signOut() {
 // Organizers tidy the roster: an archived member drops out of the name list and "no reply yet" until they sign in again.
 const teamOpen = ref(false);
 const archiving = ref<number | null>(null);
+// An organizer hands a member who lost their PIN a new one; it is shown once, to pass on.
+const resetting = ref<number | null>(null);
+const resetResult = ref<{ name: string; pin: string } | null>(null);
+async function resetPin(m: { id: number; name: string }) {
+  resetting.value = m.id;
+  try {
+    const { pin } = await $fetch(`/api/members/${m.id}/pin-reset`, { method: 'POST' });
+    resetResult.value = { name: m.name, pin };
+    await refreshMembers();
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  } finally {
+    resetting.value = null;
+  }
+}
+watch(teamOpen, () => (resetResult.value = null));
 async function archive(id: number) {
   archiving.value = id;
   try {
@@ -115,12 +156,19 @@ const nav = computed<NavigationMenuItem[]>(() => [
                 <p class="text-sm font-semibold text-highlighted">{{ t('me.label') }}</p>
                 <div v-if="me" class="space-y-2">
                   <p class="text-sm">{{ me.name }}</p>
+                  <p v-if="!me.hasPin && !pinEditing" class="text-xs text-warning">{{ t('me.noPinNudge') }}</p>
+                  <form v-if="pinEditing" class="flex gap-2" @submit.prevent="savePin">
+                    <UInput v-model="newPin" type="password" inputmode="numeric" autocomplete="new-password" autofocus :maxlength="PIN_LENGTH" :placeholder="t('pin.choose')" :aria-label="t('pin.label')" class="flex-1" />
+                    <UButton type="submit" :loading="pinBusy" :disabled="newPin.length !== PIN_LENGTH || !!pinProblemKey">{{ t('pin.save') }}</UButton>
+                  </form>
+                  <p v-if="pinEditing" class="text-xs" :class="pinProblemKey ? 'text-error' : 'text-muted'">{{ pinProblemKey ? t('pin.weak') : t('pin.hintNew') }}</p>
+                  <UButton v-else color="neutral" variant="outline" icon="i-lucide-key-round" @click="pinEditing = true">{{ t(me.hasPin ? 'me.changePin' : 'me.setPin') }}</UButton>
                   <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
                   <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
                   <UButton v-if="me.organizer" color="neutral" variant="ghost" size="sm" icon="i-lucide-users" @click="teamOpen = true">{{ t('team.manage') }}</UButton>
                   <div class="border-t border-default pt-2">
                     <div v-if="confirmSignOut" class="space-y-2">
-                      <p class="text-xs text-warning">{{ t('me.signOutConfirm') }}</p>
+                      <p class="text-xs text-warning">{{ t(me.hasPin ? 'me.signOutConfirm' : 'me.signOutNoPin') }}</p>
                       <div class="flex gap-2">
                         <UButton color="warning" size="sm" @click="signOut">{{ t('me.signOut') }}</UButton>
                         <UButton color="neutral" variant="ghost" size="sm" @click="confirmSignOut = false">{{ t('cancel') }}</UButton>
@@ -161,10 +209,12 @@ const nav = computed<NavigationMenuItem[]>(() => [
 
     <UModal v-model:open="teamOpen" :title="t('team.manage')" :description="t('team.hint')">
       <template #body>
+        <UAlert v-if="resetResult" class="mb-3" color="success" variant="subtle" :title="t('pin.resetDone', resetResult)" />
         <ul class="divide-y divide-default">
           <li v-for="m in members.filter((x) => x.id !== me?.id)" :key="m.id" class="flex items-center gap-3 py-2">
             <MemberAvatar :id="m.id" :name="m.name" />
             <span class="min-w-0 flex-1 truncate text-sm">{{ m.name }}</span>
+            <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-key-round" :loading="resetting === m.id" :aria-label="t('pin.resetFor', { name: m.name })" @click="resetPin(m)">{{ t('pin.reset') }}</UButton>
             <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-archive" :loading="archiving === m.id" :aria-label="t('team.archiveName', { name: m.name })" @click="archive(m.id)">{{ t('team.archive') }}</UButton>
           </li>
         </ul>

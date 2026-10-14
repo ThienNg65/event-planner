@@ -10,11 +10,14 @@ Every handler validates its own input (there is no shared schema layer): `server
 
 | Method and path | Auth | Purpose | Notable errors |
 |---|---|---|---|
-| `GET /api/members` | none | Roster `[{ id, name, claimed }]`, sorted by name; archived members left out | |
-| `POST /api/members` `{name}` | none | Create a member and sign this browser in (201). An archived, never-claimed, non-organizer name is reused and un-archived | `nameRequired`, `nameTaken` |
-| `POST /api/members/:id/claim` | none | Sign in as an unclaimed, non-organizer member | `unknownMember`, `nameClaimed`, `nameOrganizer` |
+| `GET /api/members` | none | Roster `[{ id, name, claimed, hasPin }]`, sorted by name; archived members left out | |
+| `POST /api/members` `{name, pin}` | none | Create a member with a PIN and sign this browser in (201). An archived, never-claimed, non-organizer name is reused and un-archived | `nameRequired`, `nameTaken`, `pinFormat`, `pinWeak` |
+| `POST /api/members/:id/claim` `{pin}` | none | Sign in as an unclaimed, non-organizer member and set its PIN | `unknownMember`, `nameClaimed`, `nameOrganizer`, `pinFormat`, `pinWeak` |
+| `POST /api/members/:id/signin` `{pin}` | none | Sign in with the PIN; counts each guess, 5 wrong PINs lock the name for 15 minutes; un-archives | `pinWrong` (401), `pinLocked` (429) |
+| `POST /api/members/:id/pin-reset` | signed in, has created an event | New random PIN `{ pin }` for a member; signs them out everywhere | `signInFirst`, `organizersOnly`, `unknownMember`, `pinResetOrganizer` |
 | `POST /api/members/:id/archive` | signed in, has created an event | Hide a member from the roster ([03](03-identity-and-roles.md#archived-members)) | `signInFirst`, `organizersOnly`, `unknownMember` |
-| `GET /api/me` | none | The signed-in member `{ id, name, organizer }` or `null` | |
+| `GET /api/me` | none | The signed-in member `{ id, name, organizer, hasPin }` or `null` | |
+| `POST /api/me/pin` `{pin}` | signed in | Set or change this member's PIN | `signInFirst`, `pinFormat`, `pinWeak` |
 | `POST /api/me/link` | signed in | `{ token }` to build a sign-in link | `signInFirst` |
 | `POST /api/me/signin` `{token}` | none | Sign in from a link; un-archives the member | `signInInvalid` |
 | `POST /api/me/signout` | none | Clear this browser's cookie | |
@@ -86,6 +89,10 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `hostOnly` | 403 | Has a role but not enough (co-host on a host action) |
 | `notYou` | 403 | Participant writing another member's row |
 | `signInFirst` | 401 | Needs a signed-in member |
+| `pinWrong` | 401 | Wrong PIN, unknown name, or a name without a PIN (deliberately the same answer) |
+| `pinLocked` | 429 | 5 wrong PINs; the name is locked for 15 minutes |
+| `pinFormat`, `pinWeak` | 400 | A PIN being set is not 6 digits, or is all alike / a run like 123456 |
+| `pinResetOrganizer` | 403 | Resetting the PIN of a member who has created an event |
 | `cancelled` | 409 | The event is cancelled |
 | `stageClosed` | 409 | The step is not open in the event's current stage (also a lost batch race) |
 | `votingClosed` | 409 | Deadline passed (participants only) |

@@ -11,9 +11,11 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 
 | # | Behaviour | Evidence | Intent |
 |---|---|---|---|
-| 2 | Signing out asks first, because a claimed name can't be picked again; only the sign-in link brings it back. | E2E | Deliberate. |
+| 2 | Signing out asks first. With a PIN it only warns that organizer links are forgotten; without one it asks you to set a PIN or copy your sign-in link, because a claimed name without a PIN can't be picked again. | Code | Deliberate. |
 | 3 | The sign-in token is the cookie value, so a sign-in link is a permanent credential for that member until the member is deleted. There is no rotation or revoke. | Code | Deliberate simplicity ("no password by design"). |
-| 5 | A name that created an event cannot be claimed from the list, so such a member must use a sign-in or manage link to come back. | Code | Deliberate (prevents taking over host rights). |
+| 5 | A name that created an event cannot be claimed from the list, and another organizer cannot reset its PIN (it would hand over host rights). Such a member signs in with their PIN or sign-in link; with neither, only the manage link gets them back, and only as host. | Code | Deliberate (prevents taking over host rights). |
+| 6 | A PIN has only 10^6 values and the name list is public, so the lockout is the protection. Anyone can lock a colleague's name for 15 minutes by guessing; an organizer's reset clears it. | Code | Deliberate trade-off for an internal app. |
+| 7 | A member who signed in before PINs existed has no PIN and is not in the name list until they set one (from a device that is still signed in) or an organizer resets it. | Code | Transition. |
 
 ## Dates and stages
 

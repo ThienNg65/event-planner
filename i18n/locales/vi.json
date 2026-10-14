@@ -54,12 +54,17 @@
     "copyLink": "Sao chép liên kết đăng nhập",
     "linkCopied": "Đã sao chép liên kết đăng nhập",
     "linkHint": "Mở liên kết này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có liên kết là dùng được tên bạn.",
-    "otherDevice": "Đã dùng app trên thiết bị khác? Hãy mở liên kết đăng nhập từ thiết bị đó.",
-    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị bạn đã dùng.",
+    "otherDevice": "Đã dùng app trước đây? Hãy chọn tên của bạn trong danh sách và nhập mã PIN.",
+    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị cũ, hoặc nhờ người tổ chức đặt lại mã PIN.",
     "signOut": "Đăng xuất",
-    "signOutConfirm": "Hãy sao chép liên kết đăng nhập trước: tên của bạn đã được khóa, nên chỉ liên kết này mới giúp bạn đăng nhập lại. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
+    "signOutConfirm": "Bạn có thể đăng nhập lại bằng tên và mã PIN. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
     "continue": "Tiếp tục",
-    "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập của bạn."
+    "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập hoặc nhờ người tổ chức đặt lại mã PIN.",
+    "signOutNoPin": "Hãy đặt mã PIN trước, hoặc sao chép liên kết đăng nhập: nếu không bạn sẽ không đăng nhập lại được. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
+    "setPin": "Đặt mã PIN",
+    "changePin": "Đổi mã PIN",
+    "noPinNudge": "Đặt mã PIN 6 số để đăng nhập trên mọi điện thoại hoặc máy tính.",
+    "otherDeviceNew": "Đã có tên? Hãy đăng nhập từ menu tài khoản ở thanh bên bằng tên và mã PIN."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
@@ -192,7 +197,12 @@
     "signInFirst": "Hãy cho biết bạn là ai trước.",
     "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng liên kết đăng nhập của bạn.",
     "nameOrganizer": "Tên này đang tổ chức một sự kiện nên không thể chọn từ danh sách. Hãy mở liên kết đăng nhập hoặc liên kết quản lý của bạn.",
-    "signInInvalid": "Liên kết đăng nhập không hợp lệ."
+    "signInInvalid": "Liên kết đăng nhập không hợp lệ.",
+    "pinFormat": "Mã PIN gồm đúng 6 chữ số.",
+    "pinWeak": "Mã PIN quá dễ đoán. Tránh số lặp và dãy như 123456.",
+    "pinWrong": "Sai tên hoặc mã PIN.",
+    "pinLocked": "Nhập sai quá nhiều lần. Hãy thử lại sau 15 phút, hoặc nhờ người tổ chức đặt lại mã PIN.",
+    "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -695,5 +705,21 @@
     "pending": "{n} người chưa phản hồi.",
     "tieHonorees": "Đang hoà {n} phiếu. {day} được gợi ý vì nhiều người được chúc mừng đi được hơn.",
     "tieEarlier": "Đang hoà {n} phiếu. {day} chỉ được ưu tiên tạm thời vì sớm hơn, không phải vì nhiều người đi hơn; hãy cân nhắc ai đi được ngày nào bên dưới."
+  },
+  "pin": {
+    "label": "Mã PIN",
+    "enter": "Mã PIN 6 số của bạn",
+    "choose": "Chọn mã PIN 6 số",
+    "enterFor": "Nhập mã PIN của {name}.",
+    "chooseFor": "{name} chưa có mã PIN. Hãy chọn một mã để đăng nhập là {name}.",
+    "hintEnter": "Quên mã? Hãy nhờ người tổ chức đặt lại.",
+    "hintNew": "Bạn sẽ dùng mã này để đăng nhập trên mọi thiết bị. Tránh 123456 hoặc 111111.",
+    "weak": "Quá dễ đoán. Tránh số lặp và dãy như 123456.",
+    "go": "Đăng nhập",
+    "saved": "Đã lưu mã PIN",
+    "save": "Lưu mã PIN",
+    "resetFor": "Đặt lại mã PIN của {name}",
+    "reset": "Đặt lại PIN",
+    "resetDone": "Mã PIN mới của {name}: {pin}. Hãy gửi riêng cho họ: chỉ hiện một lần, và họ bị đăng xuất khỏi mọi thiết bị."
   }
 }

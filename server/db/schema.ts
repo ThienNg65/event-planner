@@ -14,6 +14,20 @@ export const members = pgTable('members', {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   // Set when someone hides a leftover member from the roster; cleared when the member signs in or is added again.
   archivedAt: timestamp({ withTimezone: true }),
+  // `salt:hash` (hex, scrypt) of the 6-digit sign-in PIN; null until the member sets one.
+  pinHash: text(),
+  // Wrong PINs since the last good one; at the limit the name is locked until `pinLockedUntil`.
+  pinFails: integer().notNull().default(0),
+  pinLockedUntil: timestamp({ withTimezone: true }),
+});
+
+// One row per extra browser signed in with a PIN. The first browser's token stays in `members.tokenHash`.
+export const memberSessions = pgTable('member_sessions', {
+  tokenHash: text().primaryKey(),
+  memberId: integer()
+    .notNull()
+    .references(() => members.id, { onDelete: 'cascade' }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
 export const events = pgTable(

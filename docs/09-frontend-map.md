@@ -11,7 +11,7 @@ Nuxt 4 + Nuxt UI (dashboard layout), Vue 3 `<script setup>` with TypeScript, Tai
 | `/e/:id` | `app/pages/e/[id].vue` | The event page (below). |
 | `/calendar` | `app/pages/calendar.vue` | Month grid and agenda: locked events solid on their day; an event still polling shows as a dashed "tentative" pill on its first candidate day of each month, with "· N days to vote on". |
 
-Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with sign-in link and sign-out (sign-out also forgets stored keys, see [03](03-identity-and-roles.md)), "Tidy the team list" for organizers (`me.organizer`: an archive dialog over the roster), language toggle, appearance settings, dark-mode toggle). A sign-in link `/#signin=<token>` is consumed there on mount.
+Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with set/change PIN, the sign-in link and sign-out (sign-out also forgets stored keys, see [03](03-identity-and-roles.md)), "Tidy the team list" for organizers (`me.organizer`: an archive dialog over the roster, with a per-member "Reset PIN" that shows the new PIN once), language toggle, appearance settings, dark-mode toggle). A sign-in link `/#signin=<token>` is consumed there on mount.
 
 ## The event page
 

@@ -1,4 +1,4 @@
-export type Member = { id: number; name: string; claimed?: boolean; organizer?: boolean };
+export type Member = { id: number; name: string; claimed?: boolean; hasPin?: boolean; organizer?: boolean };
 
 /** The roster plus the signed-in visitor (an httpOnly session cookie, so SSR knows it too). */
 export function useMe() {
