@@ -3,17 +3,22 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const id = Number(useRoute().params.id);
 const key = useManageKey(id);
-const { me, meId, members } = useMe();
+const { me, meId } = useMe();
+const route = useRoute();
 
 const { data, refresh, error } = await useFetch(`/api/events/${id}`, {
   key: `event-${id}`,
   onRequest({ options }) {
-    if (key.value) options.headers.set('x-manage-key', key.value);
+    // ?key= is read by useManageKey only after hydration, so SSR takes it from the URL too (else a forwarded manage link would 404).
+    const k = key.value ?? (typeof route.query.key === 'string' ? route.query.key : null);
+    if (k) options.headers.set('x-manage-key', k);
+    // ?join= stays in the address bar, so SSR, refresh() and the sign-in refresh all carry it.
+    if (typeof route.query.join === 'string') options.headers.set('x-join-key', route.query.join);
   },
 });
 if (error.value) {
   const notFound = error.value.statusCode === 404;
-  throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'err.notFound' : 'err.generic'), fatal: true });
+  throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'event.private' : 'err.generic'), fatal: true });
 }
 // A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos.
 function dropRejectedKey() {
@@ -38,6 +43,9 @@ const when = computed(() => {
   if (ev.value.startsAt) return fmtDateTime(ev.value.startsAt, locale.value);
   return ev.value.pollDays.length ? t('event.dayOptions', { n: ev.value.pollDays.length }) : t('event.dateTbd');
 });
+const dateTile = computed(() => ev.value.startsAt && dateBlock(ev.value.startsAt, locale.value));
+// Steps are named by what happens in them; the current one uses the badge wording ("Đã chốt", "Awaiting the date"...).
+const steps = computed(() => STAGES.map((s) => ({ title: s === ev.value.stage ? t(`stage.${stageKey(ev.value)}`) : t(`stages.${s}`) })));
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
 useEventTheme(() => ev.value.theme);
 const editing = ref(false);
@@ -168,13 +176,13 @@ const noticeActions = computed(() =>
 const origin = useRequestURL().origin;
 const blurb = computed(() => [when.value, ev.value.venue].filter(Boolean).join(' · '));
 // The card image is made on the server: the event's cover with the QR code of its link on top.
-const cardImage = computed(() => `${origin}/api/events/${id}/card?v=${coverTag(ev.value.cover)}`);
+const cardImage = computed(() => `${origin}/api/events/${id}/card?v=${coverTag(ev.value.cover)}&j=${ev.value.joinKey}`);
 useSeoMeta({
   title: () => ev.value.title,
   description: () => blurb.value,
   ogType: 'website',
   ogSiteName: () => t('app.name'),
-  ogUrl: `${origin}/e/${id}`,
+  ogUrl: () => `${origin}/e/${id}?join=${ev.value.joinKey}`,
   ogTitle: () => ev.value.title,
   ogDescription: () => blurb.value,
   ogImage: () => cardImage.value,
@@ -191,8 +199,16 @@ useSeoMeta({
 // The sticky sidebar stays short: a big team shows its first faces and a "+N".
 const AVATARS = 20;
 // Members who said they can't join get a mark on their avatar.
-const declined = computed(() => new Set(data.value!.responses.filter((r) => r.status === 'no').map((r) => r.memberId)));
-const sharing = ref(false);
+const people = computed(() => data.value!.participants);
+// The server says when this visit made you a participant (SSR or after picking your name).
+watch(
+  () => data.value?.joinedNow,
+  (j) => {
+    if (import.meta.client && j) toast.add({ title: t('event.joined', { title: ev.value.title }), icon: 'i-lucide-party-popper' });
+  },
+  { immediate: true }
+);
+const declined = computed(() => new Set(data.value!.responses.filter((r) => r.status === 'no').map((r) => r.memberId)));const sharing = ref(false);
 const share = () => (sharing.value = true);
 </script>
 
@@ -200,9 +216,23 @@ const share = () => (sharing.value = true);
   <UDashboardPanel :id="`event-${id}`">
     <template #header>
       <!-- No navbar title here: the event title below is the page heading, and a second h1 would repeat it. -->
-      <UDashboardNavbar>
+      <UDashboardNavbar :ui="{ center: 'flex-1 justify-center' }">
         <template #leading><UDashboardSidebarCollapse /></template>
+        <!-- The navbar centre shows only on lg+; smaller screens get the stage badge in the header instead. -->
+        <UStepper
+          v-if="data && !ev.cancelledAt"
+          :items="steps"
+          :model-value="STAGES.indexOf(ev.stage)"
+          :color="STAGE_COLOR[ev.stage]"
+          size="xs"
+          disabled
+          :aria-label="t('stages.label')"
+          class="w-full max-w-xl"
+        />
         <template #right>
+          <UButton v-if="data && canPost && !ev.notice" icon="i-lucide-megaphone" color="neutral" variant="outline" :aria-label="t('post.open')" @click="openNotice">
+            <span class="hidden sm:inline">{{ t('post.open') }}</span>
+          </UButton>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
             <span class="hidden sm:inline">{{ t('event.share') }}</span>
           </UButton>
@@ -217,33 +247,46 @@ const share = () => (sharing.value = true);
     <template #body>
       <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
         <div class="rise min-w-0 space-y-6 lg:col-start-1">
-          <header class="space-y-3">
-            <div class="relative overflow-hidden rounded-xl" :class="['image' in cover ? 'h-44 sm:h-52' : 'h-28', 'gradient' in cover && cover.gradient]">
+          <!-- Luma-style: on sm+ a square cover sits beside the title; on phones it is a strip on top. -->
+          <header class="space-y-3 sm:flex sm:items-start sm:gap-5 sm:space-y-0">
+            <div class="relative shrink-0 overflow-hidden rounded-xl sm:size-40" :class="['image' in cover ? 'h-44' : 'h-20', 'gradient' in cover && cover.gradient]">
               <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
               <UButton
                 v-if="can(role, 'edit')"
                 icon="i-lucide-camera"
                 size="sm"
-                class="absolute right-3 bottom-3 bg-black/50 text-white backdrop-blur hover:bg-black/70"
+                :aria-label="t('event.changeCover')"
+                class="absolute right-2 bottom-2 bg-black/50 text-white backdrop-blur hover:bg-black/70"
                 @click="editing = true"
               >
-                {{ t('event.changeCover') }}
+                <span class="sm:sr-only">{{ t('event.changeCover') }}</span>
               </UButton>
             </div>
-            <div class="space-y-1.5">
-              <div class="flex min-h-7 items-center justify-between gap-2">
+            <div class="min-w-0 flex-1 space-y-3">
+              <!-- lg+ shows the stage in the navbar stepper instead. -->
+              <div class="flex" :class="!ev.cancelledAt && 'lg:hidden'">
                 <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" class="rounded-full px-2.5" />
                 <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${stageKey(ev)}`)" class="rounded-full px-2.5" />
-                <UButton v-if="canPost && !ev.notice" icon="i-lucide-megaphone" color="neutral" variant="ghost" size="xs" @click="openNotice">{{ t('post.open') }}</UButton>
               </div>
               <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-4xl">{{ ev.title }}</h1>
-              <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-                <span class="flex items-center gap-1.5"><UIcon name="i-lucide-calendar" />{{ when }}</span>
-                <span v-if="ev.venue" class="flex items-center gap-1.5">
-                  <UIcon name="i-lucide-map-pin" />
+              <!-- One row per key fact: an icon tile (the date tile once the date is set), then the fact. -->
+              <div class="flex items-center gap-3">
+                <div v-if="dateTile" class="grid size-12 shrink-0 place-content-center rounded-lg text-center ring ring-default">
+                  <span class="text-[0.625rem] leading-tight font-semibold whitespace-nowrap text-primary uppercase">{{ dateTile.month }}</span>
+                  <span class="text-base leading-tight font-bold text-highlighted">{{ dateTile.day }}</span>
+                </div>
+                <span v-else class="grid size-12 shrink-0 place-items-center rounded-lg ring ring-default"><UIcon name="i-lucide-calendar" class="size-5 text-muted" /></span>
+                <p class="font-medium text-highlighted">{{ when }}</p>
+              </div>
+              <div v-if="ev.venue" class="flex items-center gap-3">
+                <span class="grid size-12 shrink-0 place-items-center rounded-lg ring ring-default"><UIcon name="i-lucide-map-pin" class="size-5 text-muted" /></span>
+                <p class="min-w-0 font-medium break-words text-highlighted">
                   <ULink v-if="ev.venueLink" :to="ev.venueLink" target="_blank" rel="noopener noreferrer" class="text-primary">{{ ev.venue }}</ULink>
                   <template v-else>{{ ev.venue }}</template>
-                </span>
+                  <VenueMap :name="ev.venue" :link="ev.venueLink" />
+                </p>
+              </div>
+              <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                 <span class="flex items-center gap-1.5"><UIcon name="i-lucide-user-round" />{{ t('event.hostedBy', { name: data.hostName }) }}</span>
                 <span v-if="ev.stage !== 'poll'" class="flex items-center gap-1.5">
                   <UIcon name="i-lucide-users" />{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}
@@ -305,15 +348,16 @@ const share = () => (sharing.value = true);
           <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>
 
-        <aside class="rise grid content-start gap-3 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
+        <!-- order-last: on phones the stats come after the stage section, so the action is first. -->
+        <aside class="rise order-last grid content-start gap-3 sm:grid-cols-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
           <EventOverview :data="data" :role="role" @invite="share" />
-          <section v-if="members.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
+          <section v-if="people.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
             <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
               <UIcon name="i-lucide-users-round" class="size-4 text-muted" />{{ t('members.title') }}
-              <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: members.length }) }}</span>
+              <span class="ml-auto text-xs font-normal text-muted tabular-nums">{{ t('members.count', { n: people.length }) }}</span>
             </h2>
             <div class="flex flex-wrap gap-1.5">
-              <UTooltip v-for="m in members.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="declined.has(m.id) ? `${m.name} · ${t('people.no')}` : m.name">
+              <UTooltip v-for="m in people.slice(0, AVATARS)" :key="m.id" :delay-duration="0" :text="declined.has(m.id) ? `${m.name} · ${t('people.no')}` : m.name">
                 <span class="relative" tabindex="0">
                   <MemberAvatar :id="m.id" :name="m.name" size="md" :class="declined.has(m.id) && 'opacity-50 grayscale'" />
                   <!-- The background sits on a wrapper: on the icon itself it would replace the masked glyph's color. -->
@@ -322,8 +366,8 @@ const share = () => (sharing.value = true);
                   </span>
                 </span>
               </UTooltip>
-              <span v-if="members.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
-                +{{ members.length - AVATARS }}
+              <span v-if="people.length > AVATARS" class="grid h-8 min-w-8 place-items-center rounded-lg bg-elevated px-1.5 text-xs font-medium text-muted tabular-nums">
+                +{{ people.length - AVATARS }}
               </span>
             </div>
           </section>
@@ -363,7 +407,7 @@ const share = () => (sharing.value = true);
           </template>
         </UModal>
       </div>
-      <EventShareDialog v-model:open="sharing" :id="id" :title="ev.title" :stage="ev.stage" />
+      <EventShareDialog v-model:open="sharing" :id="id" :title="ev.title" :stage="ev.stage" :join-key="ev.joinKey" />
     </template>
   </UDashboardPanel>
 </template>

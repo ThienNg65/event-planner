@@ -8,7 +8,7 @@ const { t, locale } = useI18n();
 
 const cover = computed(() => coverOf(props.event.cover, props.event.id));
 const block = computed(() => props.event.startsAt && dateBlock(props.event.startsAt, locale.value));
-// The span of proposed days while polling, e.g. "T3, 13 thg 10 – T6, 23 thg 10".
+// The span of proposed days while polling, e.g. "Thứ 3, 13 thg 10 – Thứ 6, 23 thg 10".
 const range = computed(() => {
   const days = [...props.event.pollDays].sort();
   if (!days.length) return '';

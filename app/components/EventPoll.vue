@@ -69,7 +69,7 @@ const compare = computed(() => {
   return {
     tie,
     answered: answered.length,
-    pending: pendingVoters(members.value, rows.value).length,
+    pending: pendingVoters(props.data.participants, rows.value).length,
     days: top.map((d) => ({
       ...d,
       label: fmtDay(d.day, locale.value),
@@ -135,6 +135,12 @@ async function suggestDay(v: unknown) {
 
 const showForm = ref(false);
 const form = reactive({ name: '', link: '', note: '' });
+usePlaceName(
+  () => form.link,
+  (name) => {
+    if (!form.name.trim()) form.name = name;
+  }
+);
 const voteFor = async (id: number) => {
   if (!mine.value?.venueIds.includes(id)) await save({ venueIds: [...(mine.value?.venueIds ?? []), id] });
 };
@@ -226,7 +232,7 @@ async function remove() {
                 :class="h.in ? 'bg-success/15 text-success' : 'bg-elevated text-dimmed line-through'"
               >🎂 {{ h.name }}<span class="sr-only"> {{ t(h.in ? 'poll.honoreeIn' : 'poll.honoreeOut') }}</span></span>
             </span>
-            <span class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
+            <span v-if="voted" class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
               <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
                 <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
               </span>
@@ -300,14 +306,15 @@ async function remove() {
           <!-- The name is the link; no separate button for it. -->
           <p class="font-medium break-words text-highlighted">
             <ULink v-if="v.link" :to="v.link" target="_blank" rel="noopener noreferrer" raw class="hover:underline">
-              {{ v.name }}<UIcon name="i-lucide-arrow-up-right" class="ml-0.5 size-3.5 align-[-2px] text-dimmed" />
+              {{ v.name }}<UIcon v-if="!mapEmbedUrl(v.name, v.link)" name="i-lucide-arrow-up-right" class="ml-0.5 size-3.5 align-[-2px] text-dimmed" />
             </ULink>
             <template v-else>{{ v.name }}</template>
+            <VenueMap :name="v.name" :link="v.link" />
           </p>
           <p v-if="v.note" class="text-sm text-muted">{{ v.note }}</p>
           <p class="text-xs text-dimmed">{{ t('poll.suggestedBy', { name: v.addedByName }) }}</p>
-          <!-- Count and share sit together under the bar's start, as on the day tiles. -->
-          <span class="mt-2 flex items-center gap-2">
+          <!-- Count and share sit together under the bar's start, as on the day tiles; hidden until anyone has voted (all zeros is noise). -->
+          <span v-if="voted" class="mt-2 flex items-center gap-2">
             <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented" aria-hidden="true">
               <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${pct(v.upvotes.length, voted)}%` }" />
             </span>

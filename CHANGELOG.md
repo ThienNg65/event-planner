@@ -7,6 +7,37 @@ All notable changes to this project are documented here, following [Keep a Chang
 ### Added
 - The app can also be deployed on Cloudflare Workers.
 
+## [0.10.0] - 2026-10-14
+
+### Added
+- Tap "Map" next to a Google Maps place to see it on a map without leaving the page.
+- The event page shows the event's progress: Vote, Confirm, Pay, Done.
+- Pasting a Google Maps link into a place fills in its name, if the name is still empty.
+
+### Changed
+- A cleaner event page: the cover sits beside the title, the date and place get their own rows, and on phones your next step comes before the statistics.
+- "Post an update" moved to the top bar.
+- Vote bars and percentages appear once someone has voted, and the overview is shorter.
+
+## [0.9.0] - 2026-10-14
+
+### Changed
+- Vietnamese weekdays now read "Thứ 2" … "Thứ 7" instead of "T2" … "T7".
+- Events are private: only people with the joining link can see and join them; the home page lists only your events.
+- "No reply yet" and the people strip count only the people who joined.
+
+## [0.8.0] - 2026-10-14
+
+### Added
+- You now sign in with your name and a 6-digit PIN. Pick your name and type the PIN on any phone or computer; no link to copy. Choosing 111111 or 123456 is refused.
+- People who already use the app are nudged to set a PIN from the sidebar menu (Set a PIN). Until they do, their sign-in link keeps working.
+- After 5 wrong PINs a name is locked for 15 minutes.
+- Organizers can reset a forgotten PIN in Tidy the team list. The new PIN is shown once to pass on, and that person is signed out everywhere. An organizer cannot reset another organizer.
+
+### Changed
+- Joining asks for a PIN after the name; picking an unclaimed name from the list asks you to choose its PIN.
+- Signing out no longer warns you to copy the link if you have a PIN.
+
 ## [0.7.0] - 2026-10-13
 
 ### Added

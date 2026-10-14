@@ -24,6 +24,8 @@ export default defineEventHandler(async (event) => {
       manageKeyHash: sha256(key),
     })
     .returning({ id: schema.events.id });
+  // The organizer is a participant from the start. If this fails, createdBy still grants host and still lists the event.
+  await useDb().insert(schema.responses).values({ eventId: ev!.id, memberId: createdBy }).onConflictDoNothing();
   setResponseStatus(event, 201);
   return { id: ev!.id, key };
 });

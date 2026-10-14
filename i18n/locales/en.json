@@ -11,7 +11,7 @@
   "home": {
     "title": "Events",
     "new": "New event",
-    "empty": "Create an event, share the link, and let everyone vote on the day.",
+    "empty": "Events you create or join show here. Open a link from the host, or create one.",
     "planning": "Undecided",
     "upcoming": "Upcoming",
     "past": "Past",
@@ -41,6 +41,17 @@
     "settled": "Completed",
     "cancelled": "Cancelled"
   },
+  "stages": {
+    "label": "Progress",
+    "poll": "Vote",
+    "rsvp": "Confirm",
+    "bill": "Pay",
+    "settled": "Done"
+  },
+  "map": {
+    "show": "Map",
+    "title": "Map of {name}"
+  },
   "me": {
     "label": "Who are you?",
     "pick": "Pick your name",
@@ -54,18 +65,25 @@
     "copyLink": "Copy my sign-in link",
     "linkCopied": "Sign-in link copied",
     "linkHint": "Open this link on your other phone or computer to be you there too. Keep it to yourself: anyone with it can act as you.",
-    "otherDevice": "Used the app on another device? Open your sign-in link from there instead.",
-    "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from the device you used before.",
+    "otherDevice": "Used the app before? Pick your name from the list and enter your PIN.",
+    "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from your old device, or ask an organizer to reset your PIN.",
     "signOut": "Sign out",
-    "signOutConfirm": "Copy your sign-in link first: your name is locked to you, so the link is the only way to sign back in as yourself. Organizer links opened on this device are forgotten too.",
+    "signOutConfirm": "You can sign back in with your name and PIN. Organizer links opened on this device are forgotten too.",
     "continue": "Continue",
-    "noneToPick": "No names left to pick. If you have used the app before, open your sign-in link."
+    "noneToPick": "No names left to pick. If you have used the app before, open your sign-in link or ask an organizer to reset your PIN.",
+    "signOutNoPin": "Set a PIN first, or copy your sign-in link: without one of them you cannot sign back in as yourself. Organizer links opened on this device are forgotten too.",
+    "setPin": "Set a PIN",
+    "changePin": "Change PIN",
+    "noPinNudge": "Set a 6-digit PIN so you can sign in on any phone or computer.",
+    "otherDeviceNew": "Already have a name? Sign in from the account menu in the sidebar with your name and PIN."
   },
   "event": {
     "dateTbd": "Date not set yet",
     "seats": "seats",
     "share": "Share",
     "linkCopied": "Event link copied",
+    "joined": "You joined \"{title}\"",
+    "private": "This event doesn't exist or is private. Ask the host for the joining link.",
     "details": "Details",
     "attendees": "Attendees",
     "waitlist": "{n} on waitlist",
@@ -192,7 +210,12 @@
     "signInFirst": "Tell us who you are first.",
     "nameClaimed": "Someone already signed in with that name. Use your sign-in link instead.",
     "nameOrganizer": "This name organizes an event, so it can't be picked from the list. Open your sign-in link or manage link instead.",
-    "signInInvalid": "This sign-in link is not valid."
+    "signInInvalid": "This sign-in link is not valid.",
+    "pinFormat": "A PIN is exactly 6 digits.",
+    "pinWeak": "That PIN is too easy to guess. Avoid repeated digits and runs like 123456.",
+    "pinWrong": "Wrong name or PIN.",
+    "pinLocked": "Too many wrong PINs. Try again in 15 minutes, or ask an organizer to reset your PIN.",
+    "pinResetOrganizer": "This member organizes events, so their PIN can only be changed by themselves."
   },
   "days": {
     "edit": "Edit days",
@@ -521,7 +544,7 @@
     "bill": "Time to settle up: {title}",
     "settled": "{title}",
     "dialogTitle": "Share this event",
-    "dialogHint": "Scan the code or send the link.",
+    "dialogHint": "Only people with this link can see and join. Scan the code or send the link.",
     "qrAlt": "QR code for the event link",
     "link": "Event link",
     "copy": "Copy",
@@ -643,7 +666,6 @@
     "closes": "Closes {when}",
     "notVoted": "No reply yet: {names}",
     "more": "+{n} more",
-    "locked": "Date locked: {when}",
     "seatsOf": "{n} of {cap} seats taken",
     "seats": "{n} seats taken",
     "seatLimit": "Seat limit: {cap}. Seats go first come, first served.",
@@ -683,7 +705,7 @@
     "button": "Save correction"
   },
   "members": {
-    "title": "Members",
+    "title": "Participants",
     "count": "{n} people"
   },
   "compare": {
@@ -695,5 +717,21 @@
     "pending": "{n} haven't replied yet.",
     "tieHonorees": "Tied at {n} votes. {day} is suggested because more honorees can come.",
     "tieEarlier": "Tied at {n} votes. {day} is only a tentative pick because it is earlier, not because more people can come; check who can make each day below."
+  },
+  "pin": {
+    "label": "PIN",
+    "enter": "Your 6-digit PIN",
+    "choose": "Choose a 6-digit PIN",
+    "enterFor": "Enter the PIN for {name}.",
+    "chooseFor": "{name} has no PIN yet. Choose one to sign in as {name}.",
+    "hintEnter": "Forgot it? Ask an organizer to reset it.",
+    "hintNew": "You will use it to sign in on any device. Avoid 123456 or 111111.",
+    "weak": "Too easy to guess. Avoid repeated digits and runs like 123456.",
+    "go": "Sign in",
+    "saved": "PIN saved",
+    "save": "Save PIN",
+    "resetFor": "Reset PIN for {name}",
+    "reset": "Reset PIN",
+    "resetDone": "New PIN for {name}: {pin}. Pass it on privately: it is shown only once, and they are signed out everywhere."
   }
 }

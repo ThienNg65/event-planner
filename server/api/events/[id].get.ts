@@ -4,14 +4,16 @@ export default defineEventHandler(async (event) => {
   const { events, responses, members, venues, cohosts } = schema;
   const id = routeId(event);
   // One round trip to the database: every list is keyed by the route id, so none waits for the event row.
-  const [{ manageKeyHash, coHostKeyHash, ...ev }, rs, vs, [host], co] = await Promise.all([
-    findEvent(id),
+  const answers = () =>
     useDb()
-      .select({ ...getTableColumns(responses), name: members.name })
+      .select({ ...getTableColumns(responses), name: members.name, archivedAt: members.archivedAt })
       .from(responses)
       .innerJoin(members, eq(members.id, responses.memberId))
       .where(eq(responses.eventId, id))
-      .orderBy(asc(members.name)),
+      .orderBy(asc(members.name));
+  let [{ manageKeyHash, coHostKeyHash, ...ev }, rs, vs, [host], co, me] = await Promise.all([
+    findEvent(id),
+    answers(),
     useDb()
       .select({ ...getTableColumns(venues), addedByName: members.name })
       .from(venues)
@@ -29,6 +31,14 @@ export default defineEventHandler(async (event) => {
     meOf(event),
   ]);
   const role = await roleOf(event, { id, createdBy: ev.createdBy, manageKeyHash, coHostKeyHash });
+  const joined = me !== null && rs.some((r) => r.memberId === me);
+  await requireAccess(event, ev, role, joined);
+  // Opening the joining link signed in makes you a participant: an empty answer row ("no reply yet"). Crawlers carry no session, so they never join.
+  let joinedNow = false;
+  if (me !== null && !joined && sameKey(getHeader(event, 'x-join-key'), ev.joinKey)) {
+    joinedNow = (await useDb().insert(responses).values({ eventId: id, memberId: me }).onConflictDoNothing().returning()).length > 0;
+    if (joinedNow) rs = await answers();
+  }
   const { confirmed, waitlist, seats } = rollCall(seated(rs, ev), ev.capacity);
   const venueList = vs
     .map((v) => ({ ...v, upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId) }))
@@ -49,6 +59,9 @@ export default defineEventHandler(async (event) => {
       })),
     hostName: host?.name ?? '',
     votingOpen: votingOpen(ev),
+    joinedNow,
+    // Archived members stay out of the roster counts, like the team list.
+    participants: rs.filter((r) => !r.archivedAt).map((r) => ({ id: r.memberId, name: r.name })),
     responses: rs,
     confirmed: confirmed.map((r) => r.memberId),
     waitlist: waitlist.map((r) => r.memberId),

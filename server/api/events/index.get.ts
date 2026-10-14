@@ -1,9 +1,14 @@
-import { and, count, desc, eq, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, or, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const { events, responses, cohosts } = schema;
-  // The signed-in member (looked up alongside the lists); not signed in → no personal status.
-  const [evs, going, answered, { meId, mine, cohosting }] = await Promise.all([
+  const meId = await meOf(event);
+  // Events are private: signed out, there is nothing to list (the home page shows the sign-in card).
+  if (!meId) return [];
+  // Mine = I have an answer row (joined, or organizer: rows are added on create and on co-host accept) or I created it.
+  // shortcut: sequential scan on responses.member_id, fine at team size; add an index on responses(member_id) if the table grows.
+  const myEventIds = useDb().select({ id: responses.eventId }).from(responses).where(eq(responses.memberId, meId));
+  const [evs, going, answered, { mine, cohosting }] = await Promise.all([
     useDb()
       .select({
         id: events.id,
@@ -22,6 +27,7 @@ export default defineEventHandler(async (event) => {
         createdBy: events.createdBy,
       })
       .from(events)
+      .where(or(eq(events.createdBy, meId), inArray(events.id, myEventIds)))
       .orderBy(desc(events.createdAt)),
     useDb()
       .select({
@@ -35,16 +41,19 @@ export default defineEventHandler(async (event) => {
         paidAmount: responses.paidAmount,
       })
       .from(responses)
-      .where(eq(responses.status, 'going')),
+      .where(and(eq(responses.status, 'going'), inArray(responses.eventId, myEventIds))),
     // Who has answered, per event: a day, a place, or can't join (the same rule as pendingVoters).
     useDb()
       .select({ eventId: responses.eventId, n: count() })
       .from(responses)
-      .where(or(sql`cardinality(${responses.days}) > 0`, sql`cardinality(${responses.venueIds}) > 0`, eq(responses.status, 'no')))
+      .where(
+        and(
+          or(sql`cardinality(${responses.days}) > 0`, sql`cardinality(${responses.venueIds}) > 0`, eq(responses.status, 'no')),
+          inArray(responses.eventId, myEventIds)
+        )
+      )
       .groupBy(responses.eventId),
     (async () => {
-      const meId = await meOf(event);
-      if (!meId) return { meId, mine: [], cohosting: [] };
       const [mine, cohosting] = await Promise.all([
         useDb().select().from(responses).where(eq(responses.memberId, meId)),
         useDb()
@@ -52,11 +61,11 @@ export default defineEventHandler(async (event) => {
           .from(cohosts)
           .where(and(eq(cohosts.memberId, meId), eq(cohosts.status, 'active'))),
       ]);
-      return { meId, mine, cohosting };
+      return { mine, cohosting };
     })(),
   ]);
   const answeredBy = new Map(answered.map((a) => [a.eventId, a.n]));
-  // ponytail: loads every "going" row to count seats; fine for a team, add a per-event SQL sum if it grows.
+  // ponytail: loads the "going" rows of my events to count seats; fine for a team, add a per-event SQL sum if it grows.
   return evs.map((e) => {
     const { confirmed, waitlist, seats } = rollCall(
       seated(
@@ -73,16 +82,14 @@ export default defineEventHandler(async (event) => {
       answered: answeredBy.get(e.id) ?? 0,
       allPaid: allPaid(confirmed, share),
       // Organizer by identity; the browser adds events whose manage key it holds.
-      manager: meId !== null && (e.createdBy === meId || cohosting.some((c) => c.eventId === e.id)),
-      mine: meId
-        ? mineOf(
-            row,
-            confirmed.some((r) => r.memberId === meId),
-            waitlist.some((r) => r.memberId === meId),
-            share,
-            row?.derived === 'reconfirm' && heldOk(e)
-          )
-        : null,
+      manager: e.createdBy === meId || cohosting.some((c) => c.eventId === e.id),
+      mine: mineOf(
+        row,
+        confirmed.some((r) => r.memberId === meId),
+        waitlist.some((r) => r.memberId === meId),
+        share,
+        row?.derived === 'reconfirm' && heldOk(e)
+      ),
     };
   });
 });

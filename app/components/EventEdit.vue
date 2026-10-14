@@ -30,6 +30,12 @@ const blank = () => {
   };
 };
 const form = ref(blank());
+usePlaceName(
+  () => form.value.venueLink,
+  (name) => {
+    if (!form.value.venue.trim()) form.value.venue = name;
+  }
+);
 // What the form held when the panel opened: the baseline for "unsaved" and for the fields a save sends.
 const snapshot = ref(blank());
 const changes = computed(() => changedFields(snapshot.value, form.value));

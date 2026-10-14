@@ -58,6 +58,8 @@ Valid range: 1 to 500 or unlimited (`invalidCapacity`).
 
 ## 5.4 What the page shows per person (People list)
 
+People join through the joining link (`/e/:id?join=<key>`, shown in Share). "No reply yet", the voted/total count and the avatar strip use the participants (`participants` in the event response), not the whole team.
+
 `EventPeople.vue` ranks rows `going → waitlist → maybe → voted → no`, then by name. In the poll stage a row appears for anyone with a vote or "can't join".
 
 A row's `kind`:

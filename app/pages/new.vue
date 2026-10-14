@@ -20,6 +20,12 @@ const form = reactive({
   cover: null as string | null,
   theme: useAppTheme().value as string,
 });
+usePlaceName(
+  () => form.venueLink,
+  (name) => {
+    if (!form.venue.trim()) form.venue = name;
+  }
+);
 // The whole page previews the picked theme.
 useEventTheme(() => form.theme);
 const busy = ref(false);

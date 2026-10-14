@@ -11,7 +11,7 @@ Nuxt 4 + Nuxt UI (dashboard layout), Vue 3 `<script setup>` with TypeScript, Tai
 | `/e/:id` | `app/pages/e/[id].vue` | The event page (below). |
 | `/calendar` | `app/pages/calendar.vue` | Month grid and agenda: locked events solid on their day; an event still polling shows as a dashed "tentative" pill on its first candidate day of each month, with "· N days to vote on". |
 
-Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with sign-in link and sign-out (sign-out also forgets stored keys, see [03](03-identity-and-roles.md)), "Tidy the team list" for organizers (`me.organizer`: an archive dialog over the roster), language toggle, appearance settings, dark-mode toggle). A sign-in link `/#signin=<token>` is consumed there on mount.
+Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with set/change PIN, the sign-in link and sign-out (sign-out also forgets stored keys, see [03](03-identity-and-roles.md)), "Tidy the team list" for organizers (`me.organizer`: an archive dialog over the roster, with a per-member "Reset PIN" that shows the new PIN once), language toggle, appearance settings, dark-mode toggle). A sign-in link `/#signin=<token>` is consumed there on mount.
 
 ## The event page
 
@@ -19,13 +19,13 @@ Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with sign-
 
 | Piece | Component | Shows |
 |---|---|---|
-| Header | in `[id].vue` | Cover, stage badge (`stageKey`), title, date, place, host, going count (hidden during `poll`), note with @mention chips, notice banner, cancelled banner, co-host invite banner |
+| Header | in `[id].vue` | Cover (a strip on phones, a square beside the title on `sm`+), When and Where rows with icon tiles (a month/day tile once the date is set), stage stepper in the navbar centre on `lg`+ (poll → rsvp → bill → settled; the current step is titled by `stageKey`), the stage badge below `lg` and the Cancelled badge on a cancelled event, title, date, place (a Google Maps link adds a map icon, `VenueMap.vue`, that opens a keyless embedded map; there is no CSP today, a future one needs `frame-src https://maps.google.com https://www.google.com`), host, going count (hidden during `poll`), note with @mention chips, notice banner, cancelled banner, co-host invite banner |
 | Next-step card | `EventNextStep.vue` | The visitor's one next thing (`nextStep()`), plus the organizer's controls: Lock, Close/Reopen voting, Enter bill (before the start: when it opens), Complete, Complete with open debts. Owns the lock, bill and complete dialogs. The Completed card shows "Who came" avatars. |
 | Stage section (one of) | `EventPoll.vue` / `EventRsvp.vue` / `EventBill.vue` | Day tiles and place list with voting; RSVP buttons and guests; bill, share, QR and payment form |
 | People | `EventPeople.vue` | Everyone with a vote or answer, ranked; organizer row menu |
-| Side rail | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
+| Side rail (after the stage section on phones) | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
 | Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` | Edit panel, roles and links, reopen/cancel/delete, date/place correction, poll day editing |
-| Sharing | `EventShareDialog.vue` | Link and QR; the page's `og:image` is `GET /api/events/:id/card` |
+| Sharing | `EventShareDialog.vue` | Joining link (`?join=`) and QR; the page's `og:image` is `GET /api/events/:id/card?j=…`; co-host invite links carry `?join=` too |
 
 Finished stages collapse to one summary line each ("12 voted", "8 seats").
 "Edit" saves on request; "Post an update" (notice) publishes at once; stage moves are explicit buttons.
