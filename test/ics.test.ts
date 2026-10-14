@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { googleCalendarUrl, icsOf } from '../shared/utils/ics.ts';
 
 const origin = 'https://events.example.com';
-const base = { id: 7, title: 'Tiệc', startsAt: '2026-10-20T11:30:00.000Z' };
+const base = { id: 7, joinKey: 'abc123', title: 'Tiệc', startsAt: '2026-10-20T11:30:00.000Z' };
 const now = new Date('2026-10-14T01:02:03.456Z');
 const octets = (s: string) => new TextEncoder().encode(s).length;
 const unfold = (s: string) => s.replace(/\r\n /g, '');
@@ -12,7 +12,7 @@ test('icsOf: UTC start, 2 h duration, stable UID, CRLF endings', () => {
   const ics = icsOf({ ...base, venue: 'Quán A' }, origin, now);
   assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n') && ics.endsWith('END:VCALENDAR\r\n'));
   assert.ok(!/[^\r]\n/.test(ics), 'no bare LF');
-  for (const l of ['UID:event-7@events.example.com', 'DTSTAMP:20261014T010203Z', 'DTSTART:20261020T113000Z', 'DURATION:PT2H', 'SUMMARY:Tiệc', 'LOCATION:Quán A', 'URL:https://events.example.com/e/7']) {
+  for (const l of ['UID:event-7@events.example.com', 'DTSTAMP:20261014T010203Z', 'DTSTART:20261020T113000Z', 'DURATION:PT2H', 'SUMMARY:Tiệc', 'LOCATION:Quán A', 'URL:https://events.example.com/e/7?join=abc123']) {
     assert.ok(ics.split('\r\n').includes(l), l);
   }
   assert.ok(!ics.includes('STATUS:') && !ics.includes('DESCRIPTION:') && icsOf(base, origin, now).includes('LOCATION') === false);
@@ -44,6 +44,6 @@ test('googleCalendarUrl: UTC start/end 2 h apart, title, place and link', () => 
   assert.equal(u.searchParams.get('text'), 'Tiệc');
   assert.equal(u.searchParams.get('dates'), '20261020T113000Z/20261020T133000Z');
   assert.equal(u.searchParams.get('location'), 'Quán A');
-  assert.equal(u.searchParams.get('details'), 'Mang ví\n\nhttps://events.example.com/e/7');
+  assert.equal(u.searchParams.get('details'), 'Mang ví\n\nhttps://events.example.com/e/7?join=abc123');
   assert.equal(new URL(googleCalendarUrl(base, origin)).searchParams.has('location'), false);
 });

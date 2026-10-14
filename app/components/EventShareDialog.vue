@@ -7,8 +7,8 @@ const props = defineProps<{ event: EventDetail['event'] }>();
 const { t } = useI18n();
 const toast = useToast();
 
-// `?s=<stage>` makes each stage a new URL, so chat apps refresh a stale link preview. It never carries a key.
-const url = computed(() => (import.meta.client ? `${location.origin}/e/${props.event.id}?s=${props.event.stage}` : ''));
+// The joining link (`?join=` lets people into a private event), never a manage key. `&s=<stage>` makes each stage a new URL, so chat apps refresh a stale link preview.
+const url = computed(() => (import.meta.client ? `${location.origin}/e/${props.event.id}?join=${props.event.joinKey}&s=${props.event.stage}` : ''));
 // The QR is generated here from our own URL; there is no user-supplied markup in it.
 const qr = computed(() => (url.value ? renderSVG(url.value, { border: 2, ecc: 'M', whiteColor: '#ffffff', blackColor: '#111111' }) : ''));
 const canShare = import.meta.client && typeof navigator.share === 'function';

@@ -3,15 +3,15 @@
 const props = defineProps<{ data: EventDetail }>();
 const { t } = useI18n();
 const toast = useToast();
-const { members } = useMe();
 
 const ev = computed(() => props.data.event);
-const reminder = computed(() => reminderOf(ev.value.stage, members.value, props.data.responses, props.data.confirmed, props.data.share, props.data.held));
+// Only people who joined the event are reminded (the same "no reply yet" roster the page shows), not the whole team.
+const reminder = computed(() => reminderOf(ev.value.stage, props.data.participants, props.data.responses, props.data.confirmed, props.data.share, props.data.held));
 const done = computed(() => !!reminder.value && !reminder.value.names.length && !reminder.value.confirm.length);
 
 const lang = ref<'vi' | 'en'>('vi');
 const countOnly = ref(false);
-const url = computed(() => (import.meta.client ? `${location.origin}/e/${ev.value.id}?s=${ev.value.stage}` : ''));
+const url = computed(() => (import.meta.client ? `${location.origin}/e/${ev.value.id}?join=${ev.value.joinKey}&s=${ev.value.stage}` : ''));
 const message = computed(() =>
   reminder.value && !done.value ? reminderMessage((key, params) => t(key, params ?? {}, { locale: lang.value }), lang.value, ev.value, reminder.value, url.value, countOnly.value) : ''
 );

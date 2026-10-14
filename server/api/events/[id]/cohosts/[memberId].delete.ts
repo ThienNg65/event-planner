@@ -5,6 +5,7 @@ export default defineEventHandler(async (event) => {
   const { cohosts } = schema;
   const ev = await findEvent(routeId(event));
   const role = await roleOf(event, ev);
+  await requireAccess(event, ev, role);
   const memberId = Number(getRouterParam(event, 'memberId'));
   if (!Number.isInteger(memberId)) fail(404, 'notFound');
   if (role === 'host') {

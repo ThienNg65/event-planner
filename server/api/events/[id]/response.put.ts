@@ -7,12 +7,14 @@ export default defineEventHandler(async (event) => {
   const b = await readJson(event);
   const paying = 'paidAmount' in b || 'addPaid' in b || b.paid === true;
   // Read together: each database round trip is the slow part of a vote. A payment also needs the rows, to check the payer's seat.
-  const [ev, member, rows] = await Promise.all([
+  const [ev, member, rows, joined] = await Promise.all([
     findEvent(id),
     requireMember(b.memberId),
     paying ? useDb().select().from(responses).where(eq(responses.eventId, id)) : Promise.resolve([]),
+    meOf(event).then((me) => isParticipant(id, me)),
   ]);
   const role = await roleOf(event, ev);
+  await requireAccess(event, ev, role, joined);
   await requireSelf(event, member.id, role);
   if (ev.cancelledAt) fail(409, 'cancelled');
   // The organizers may fix anyone's answer at any stage; everyone else only while that block is open.

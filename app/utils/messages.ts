@@ -6,7 +6,7 @@ export type Tr = (key: string, params?: Record<string, unknown>) => string;
 
 type MsgEvent = { title: string; stage: string; startsAt: string | null; voteDeadline: string | null; pollDays: string[]; cancelledAt?: string | null };
 
-/** The Zalo-ready invitation for the event's current stage. `url` carries `?s=<stage>` and never a key. */
+/** The Zalo-ready invitation for the event's current stage. `url` is the joining link plus `?s=<stage>`, and never a manage key. */
 export function shareMessage(tr: Tr, lang: string, ev: MsgEvent, url: string) {
   const when = ev.startsAt ? fmtDateTime(ev.startsAt, lang) : '';
   const base = { title: ev.title, when, url };

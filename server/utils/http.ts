@@ -1,5 +1,5 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
-import { and, eq, or } from 'drizzle-orm';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { and, eq, or, sql } from 'drizzle-orm';
 import type { H3Event } from 'h3';
 
 export function fail(statusCode: number, message: string): never {
@@ -67,17 +67,59 @@ export const sessionToken = (event: H3Event) => getCookie(event, SID) || null;
 /** Signs this browser out. The member's token stays valid, so their sign-in link still works. */
 export const clearSession = (event: H3Event) => deleteCookie(event, SID, { path: '/' });
 
+/** Matches the member a sign-in token belongs to: the first browser's `members.tokenHash`, or a PIN-signed-in browser's session row. */
+export const tokenMatches = (token: string) => {
+  const hash = sha256(token);
+  const { members, memberSessions } = schema;
+  return or(
+    eq(members.tokenHash, hash),
+    sql`exists (select 1 from ${memberSessions} where ${memberSessions.tokenHash} = ${hash} and ${memberSessions.memberId} = ${members.id})`
+  )!;
+};
+
 /** The member a sign-in token belongs to, or null. */
 export async function memberByToken(token: string | null) {
   if (!token) return null;
   const { members } = schema;
-  const [m] = await useDb().select({ id: members.id, name: members.name }).from(members).where(eq(members.tokenHash, sha256(token)));
+  const [m] = await useDb().select({ id: members.id, name: members.name }).from(members).where(tokenMatches(token));
   return m ?? null;
+}
+
+/** Signs this browser in as `memberId` with a fresh token (an extra session: the member's other browsers stay signed in). */
+export async function startSession(event: H3Event, memberId: number) {
+  const token = randomBytes(32).toString('base64url');
+  await useDb().insert(schema.memberSessions).values({ tokenHash: sha256(token), memberId });
+  setSession(event, token);
 }
 
 /** The signed-in member id from the `sid` cookie, or null. Looked up once per request. */
 export function meOf(event: H3Event): Promise<number | null> {
   return (event.context.me ??= memberByToken(sessionToken(event)).then((m) => m?.id ?? null));
+}
+
+/** Constant-time comparison of a presented key with a stored plain one. */
+export const sameKey = (given: unknown, stored: string) =>
+  typeof given === 'string' && !!given && timingSafeEqual(Buffer.from(sha256(given), 'hex'), Buffer.from(sha256(stored), 'hex'));
+
+/** Whether the member has an answer row for the event (a participant). */
+export async function isParticipant(eventId: number, me: number | null) {
+  if (me === null) return false;
+  const { responses } = schema;
+  const [row] = await useDb()
+    .select({ m: responses.memberId })
+    .from(responses)
+    .where(and(eq(responses.eventId, eventId), eq(responses.memberId, me)));
+  return !!row;
+}
+
+/**
+ * Event access: an organizer, the joining link's key (x-join-key), or a participant (has an answer row).
+ * Anyone else gets notFound, so events can't be probed by id. `joined` skips the lookup when the caller already knows.
+ */
+export async function requireAccess(event: H3Event, ev: { id: number; joinKey: string }, role: Role, joined?: boolean) {
+  if (role !== null || sameKey(getHeader(event, 'x-join-key'), ev.joinKey)) return;
+  if (joined ?? (await isParticipant(ev.id, await meOf(event)))) return;
+  fail(404, 'notFound');
 }
 
 /** A participant may only write their own answers; hosts and co-hosts may write anyone's. */

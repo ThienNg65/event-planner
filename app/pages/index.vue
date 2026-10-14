@@ -77,12 +77,12 @@ const tabs = computed(() =>
     </template>
 
     <template #body>
-      <section v-if="events.length" :aria-label="t('home.todo.title')">
-        <UCard v-if="!meId" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
-          <p class="font-semibold text-highlighted">{{ t('home.todo.who') }}</p>
-          <MemberPicker />
-        </UCard>
-        <div v-else-if="todos.length" class="space-y-2">
+      <UCard v-if="!meId" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
+        <p class="font-semibold text-highlighted">{{ t('home.todo.who') }}</p>
+        <MemberPicker />
+      </UCard>
+      <section v-if="meId && events.length" :aria-label="t('home.todo.title')">
+        <div v-if="todos.length" class="space-y-2">
           <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
             {{ t('home.todo.title') }}
             <UBadge color="secondary" variant="solid" size="sm" :label="String(todos.length)" />

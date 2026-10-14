@@ -45,6 +45,7 @@ The app is **team-internal and public inside the team**: every event is visible 
 | **Guest** | A plus-one a member brings (0 to 10). Takes a seat and shares the bill. |
 | **Share** | Per-seat amount: `ceil(billTotal / seats / 1000) × 1000` VND. |
 | **Manage key** | A random secret for an event, stored hashed on the server and in the host's browser `localStorage`. Sent as the `x-manage-key` header. |
+| **PIN** | A member's 6-digit code: pick your name and enter it to sign in on any device. |
 | **Sign-in link** | `/#signin=<token>`: opens the app as a specific member on another device. Works like a password. |
 | **Notice** | A short public announcement the organizer posts on an event (max 280 chars). |
 | **Correction** | A date or place change after the plan is frozen; needs a public notice and never touches attendance or payments. |

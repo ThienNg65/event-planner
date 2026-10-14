@@ -10,11 +10,11 @@ const lookup = (lang: string): Tr => (key, params = {}) => {
   return raw.replace(/\{(\w+)\}/g, (_, k) => String(params[k]));
 };
 
-const URL_ = 'https://x.test/e/7?s=poll';
+const URL_ = 'https://x.test/e/7?join=k&s=poll';
 const ev = { title: 'Tiệc', stage: 'poll', startsAt: null, voteDeadline: null, pollDays: ['2026-10-23'] };
 
 test('share message: stage-aware, in the chosen language, with the link and a Vietnam-time date', () => {
-  assert.match(shareMessage(lookup('vi'), 'vi', ev, URL_), /bình chọn.*\n?.*https:\/\/x\.test\/e\/7\?s=poll/s);
+  assert.match(shareMessage(lookup('vi'), 'vi', ev, URL_), /bình chọn.*\n?.*https:\/\/x\.test\/e\/7\?join=k&s=poll/s);
   assert.match(shareMessage(lookup('en'), 'en', ev, URL_), /Please vote/);
   const dl = shareMessage(lookup('en'), 'en', { ...ev, voteDeadline: '2099-10-23T12:00:00Z' }, URL_);
   assert.match(dl, /by .*07:00\sPM/);

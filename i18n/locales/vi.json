@@ -11,7 +11,7 @@
   "home": {
     "title": "Sự kiện",
     "new": "Tạo sự kiện",
-    "empty": "Tạo sự kiện, chia sẻ liên kết và để mọi người bình chọn ngày.",
+    "empty": "Sự kiện bạn tạo hoặc tham gia sẽ hiện ở đây. Mở liên kết chủ sự kiện gửi, hoặc tạo sự kiện mới.",
     "planning": "Chưa chốt",
     "upcoming": "Sắp diễn ra",
     "past": "Đã qua",
@@ -41,6 +41,17 @@
     "settled": "Hoàn tất",
     "cancelled": "Đã huỷ"
   },
+  "stages": {
+    "label": "Tiến trình",
+    "poll": "Bình chọn",
+    "rsvp": "Chốt",
+    "bill": "Thu tiền",
+    "settled": "Hoàn tất"
+  },
+  "map": {
+    "show": "Bản đồ",
+    "title": "Bản đồ {name}"
+  },
   "me": {
     "label": "Bạn là ai?",
     "pick": "Chọn tên của bạn",
@@ -54,23 +65,30 @@
     "copyLink": "Sao chép liên kết đăng nhập",
     "linkCopied": "Đã sao chép liên kết đăng nhập",
     "linkHint": "Mở liên kết này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có liên kết là dùng được tên bạn.",
-    "otherDevice": "Đã dùng app trên thiết bị khác? Hãy mở liên kết đăng nhập từ thiết bị đó.",
-    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị bạn đã dùng.",
+    "otherDevice": "Đã dùng app trước đây? Hãy chọn tên của bạn trong danh sách và nhập mã PIN.",
+    "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị cũ, hoặc nhờ người tổ chức đặt lại mã PIN.",
     "signOut": "Đăng xuất",
-    "signOutConfirm": "Đăng xuất cũng xóa các liên kết quản lý hoặc đồng tổ chức đã mở trên thiết bị này. Tên của bạn vẫn thuộc về bạn, chỉ liên kết đăng nhập mới đưa bạn quay lại: hãy sao chép nó trước.",
+    "signOutConfirm": "Bạn có thể đăng nhập lại bằng tên và mã PIN. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
     "continue": "Tiếp tục",
-    "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập của bạn.",
-    "rotate": "Đổi liên kết đăng nhập",
-    "rotateConfirm": "Liên kết mới thay thế liên kết cũ. Mọi thiết bị khác đang đăng nhập sẽ bị đăng xuất và liên kết cũ hết hiệu lực. Thiết bị này vẫn đăng nhập.",
-    "rotateDo": "Đổi liên kết",
-    "rotated": "Đã đổi liên kết đăng nhập",
-    "rotatedHint": "Các thiết bị khác đã bị đăng xuất. Hãy sao chép liên kết mới nếu cần."
+    "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập hoặc nhờ người tổ chức đặt lại mã PIN.",
+    "signOutNoPin": "Hãy đặt mã PIN trước, hoặc sao chép liên kết đăng nhập: nếu không bạn sẽ không đăng nhập lại được. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
+    "setPin": "Đặt mã PIN",
+    "changePin": "Đổi mã PIN",
+    "noPinNudge": "Đặt mã PIN 6 số để đăng nhập trên mọi điện thoại hoặc máy tính.",
+    "otherDeviceNew": "Đã có tên? Hãy đăng nhập từ menu tài khoản ở thanh bên bằng tên và mã PIN.",
+    "signOutOthers": "Đăng xuất các thiết bị khác",
+    "signOutOthersConfirm": "Mọi thiết bị khác đang đăng nhập sẽ bị đăng xuất và liên kết đăng nhập cũ hết hiệu lực. Thiết bị này vẫn đăng nhập. Mã PIN không đổi.",
+    "signOutOthersDo": "Đăng xuất các thiết bị đó",
+    "othersOut": "Đã đăng xuất các thiết bị khác",
+    "othersOutHint": "Liên kết đăng nhập cũ không còn dùng được. Hãy sao chép liên kết mới nếu cần."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
     "seats": "chỗ",
     "share": "Chia sẻ",
     "linkCopied": "Đã sao chép liên kết sự kiện",
+    "joined": "Bạn đã tham gia \"{title}\"",
+    "private": "Không tìm thấy sự kiện hoặc sự kiện riêng tư. Hãy xin chủ sự kiện liên kết tham gia.",
     "details": "Thông tin",
     "attendees": "Người tham gia",
     "waitlist": "{n} người đang chờ",
@@ -204,7 +222,12 @@
     "nameOrganizer": "Tên này đang tổ chức một sự kiện nên không thể chọn từ danh sách. Hãy mở liên kết đăng nhập hoặc liên kết quản lý của bạn.",
     "signInInvalid": "Liên kết đăng nhập không hợp lệ.",
     "keyChanged": "Liên kết quản lý vừa được đổi. Hãy tải lại trang rồi thử lại.",
-    "manageKeyRequired": "Cần mở bằng liên kết quản lý hiện tại để đổi liên kết quản lý."
+    "manageKeyRequired": "Cần mở bằng liên kết quản lý hiện tại để đổi liên kết quản lý.",
+    "pinFormat": "Mã PIN gồm đúng 6 chữ số.",
+    "pinWeak": "Mã PIN quá dễ đoán. Tránh số lặp và dãy như 123456.",
+    "pinWrong": "Sai tên hoặc mã PIN.",
+    "pinLocked": "Nhập sai quá nhiều lần. Hãy thử lại sau 15 phút, hoặc nhờ người tổ chức đặt lại mã PIN.",
+    "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -530,7 +553,7 @@
   },
   "share": {
     "dialogTitle": "Chia sẻ sự kiện",
-    "dialogHint": "Quét mã hoặc gửi đường dẫn.",
+    "dialogHint": "Chỉ ai có liên kết này mới xem và tham gia được. Quét mã hoặc gửi liên kết.",
     "qrAlt": "Mã QR của đường dẫn sự kiện",
     "link": "Đường dẫn sự kiện",
     "copy": "Sao chép liên kết",
@@ -661,7 +684,6 @@
     "closes": "Đóng lúc {when}",
     "notVoted": "Chưa phản hồi: {names}",
     "more": "+{n} người nữa",
-    "locked": "Đã chốt ngày: {when}",
     "seatsOf": "Đã có {n}/{cap} chỗ",
     "seats": "Đã có {n} chỗ",
     "seatLimit": "Giới hạn {cap} chỗ. Ai đến trước được chỗ trước.",
@@ -701,7 +723,7 @@
     "button": "Lưu chỉnh sửa"
   },
   "members": {
-    "title": "Thành viên",
+    "title": "Người tham gia",
     "count": "{n} người"
   },
   "compare": {
@@ -754,12 +776,28 @@
     "billNote": "Lời nhắc không bao giờ ghi số tiền."
   },
   "keep": {
-    "title": "Lưu liên kết đăng nhập của bạn",
-    "subtitle": "Chỉ gửi cho chính bạn, không gửi vào nhóm.",
-    "body": "Liên kết này giúp bạn đăng nhập lại với tên {name}, kèm quyền tổ chức, trên điện thoại hoặc máy tính khác. Hãy lưu riêng cho bạn (ví dụ “Cloud của tôi” trên Zalo), đừng gửi vào nhóm.",
-    "rotate": "Nếu bị lộ, hãy đổi ngay trong menu tài khoản: liên kết cũ sẽ hết hiệu lực.",
+    "title": "Đặt mã PIN để giữ quyền truy cập",
+    "subtitle": "Để bạn đăng nhập lại được trên mọi điện thoại hoặc máy tính.",
+    "body": "{name} chưa có mã PIN. Nếu không có, chỉ liên kết đăng nhập mới đưa bạn quay lại với quyền tổ chức. Hãy chọn mã PIN 6 số ngay bây giờ.",
+    "linkInstead": "Hoặc lưu liên kết đăng nhập riêng cho bạn (ví dụ “Cloud của tôi” trên Zalo), đừng gửi vào nhóm.",
     "copy": "Sao chép liên kết đăng nhập",
     "manual": "Không sao chép tự động được. Hãy chọn và sao chép liên kết bên dưới:",
     "later": "Để sau"
+  },
+  "pin": {
+    "label": "Mã PIN",
+    "enter": "Mã PIN 6 số của bạn",
+    "choose": "Chọn mã PIN 6 số",
+    "enterFor": "Nhập mã PIN của {name}.",
+    "chooseFor": "{name} chưa có mã PIN. Hãy chọn một mã để đăng nhập là {name}.",
+    "hintEnter": "Quên mã? Hãy nhờ người tổ chức đặt lại.",
+    "hintNew": "Bạn sẽ dùng mã này để đăng nhập trên mọi thiết bị. Tránh 123456 hoặc 111111.",
+    "weak": "Quá dễ đoán. Tránh số lặp và dãy như 123456.",
+    "go": "Đăng nhập",
+    "saved": "Đã lưu mã PIN",
+    "save": "Lưu mã PIN",
+    "resetFor": "Đặt lại mã PIN của {name}",
+    "reset": "Đặt lại PIN",
+    "resetDone": "Mã PIN mới của {name}: {pin}. Hãy gửi riêng cho họ: chỉ hiện một lần, và họ bị đăng xuất khỏi mọi thiết bị."
   }
 }

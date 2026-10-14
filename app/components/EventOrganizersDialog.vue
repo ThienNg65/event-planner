@@ -81,7 +81,7 @@ async function invite(memberId: number, reissue = false) {
       body: { memberId, reissue },
     });
     const name = members.value.find((m) => m.id === memberId)?.name ?? '';
-    link.value = { name, url: `${origin()}#invite=${secret}` };
+    link.value = { name, url: `${origin()}?join=${props.data.event.joinKey}#invite=${secret}` };
     confirming.value = null;
     picked.value = undefined;
     emit('changed');

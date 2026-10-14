@@ -2,7 +2,6 @@
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
 const { t, locale } = useI18n();
-const { members } = useMe();
 const { busy, call } = useEventApi(
   () => props.data.event.id,
   () => props.manageKey
@@ -105,7 +104,7 @@ async function patch(body: object) {
 // Finalize: days and places ranked by votes with the leader preselected, read when the dialog opens (votes keep coming in).
 const lockOpen = ref(false);
 const voted = computed(() => props.data.responses.filter((r) => r.days.length || r.venueIds.length).length);
-const pending = computed(() => pendingVoters(members.value, props.data.responses));
+const pending = computed(() => pendingVoters(props.data.participants, props.data.responses));
 const lock = reactive({ day: '', time: '19:00', venueId: undefined as number | undefined });
 // Same order as the organizer's comparison: votes, then honorees who can come, then earliest, so the preselected day is the tie-broken one.
 const dayCompare = computed(() => compareDays(ev.value.pollDays, props.data.responses, ev.value.honorees));
@@ -276,7 +275,7 @@ async function complete() {
     <template #body>
       <div class="space-y-4">
         <div class="space-y-1 rounded-lg bg-elevated/50 p-3 text-sm">
-          <p class="font-medium tabular-nums">{{ t('overview.voted', { n: voted, total: Math.max(members.length, voted) }) }}</p>
+          <p class="font-medium tabular-nums">{{ t('overview.voted', { n: voted, total: Math.max(data.participants.length, voted) }) }}</p>
           <p v-if="pending.length" class="text-muted">
             {{ t('overview.notVoted', { names: pending.slice(0, 5).map((m) => m.name).join(', ') }) }}<template v-if="pending.length > 5">{{ ' ' + t('overview.more', { n: pending.length - 5 }) }}</template>
           </p>

@@ -28,5 +28,7 @@ export default defineEventHandler(async (event) => {
     )
     .returning({ memberId: cohosts.memberId });
   if (!won.length) fail(404, 'inviteInvalid');
+  // A co-host is a participant too. Best effort: the role already grants access.
+  await useDb().insert(schema.responses).values({ eventId: ev.id, memberId: row.memberId }).onConflictDoNothing();
   return { key };
 });

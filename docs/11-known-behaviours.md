@@ -11,9 +11,11 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 
 | # | Behaviour | Evidence | Intent |
 |---|---|---|---|
-| 2 | Signing out asks first, because a claimed name can't be picked again; only the sign-in link brings it back. | E2E | Deliberate. |
-| 3 | The sign-in token is the cookie value, so a sign-in link is a credential for that member until rotated (`POST /api/me/rotate`). Rotating signs the member out on every device, because there is one token per member. | Code | Deliberate simplicity ("no password by design"). If a creator's link leaks, an attacker is host of the creator's events but cannot replace the manage key without holding it (`POST /api/events/:id/key` checks `x-manage-key`); rotate the sign-in link at once. A creator with no copy of the manage key anywhere cannot rotate it. |
-| 5 | A name that created an event cannot be claimed from the list, so such a member must use a sign-in or manage link to come back. | Code | Deliberate (prevents taking over host rights). |
+| 2 | Signing out asks first. With a PIN it only warns that organizer links are forgotten; without one it asks you to set a PIN or copy your sign-in link, because a claimed name without a PIN can't be picked again. | Code | Deliberate. |
+| 3 | The sign-in token is the cookie value, so a sign-in link is a credential for that member until it is cut off. **Sign out other devices** (`POST /api/me/signout-others`) swaps the member's token and deletes every other session, so it kills a leaked link as well as other browsers; an organizer's PIN reset does the same. | Code | Deliberate simplicity ("no password by design"). If a creator's link leaks, an attacker is host of the creator's events but cannot replace the manage key without holding it (`POST /api/events/:id/key` checks `x-manage-key`); sign the other devices out at once. A creator with no copy of the manage key anywhere cannot rotate it. |
+| 5 | A name that created an event cannot be claimed from the list, and another organizer cannot reset its PIN (it would hand over host rights). Such a member signs in with their PIN or sign-in link; with neither, only the manage link gets them back, and only as host. | Code | Deliberate (prevents taking over host rights). |
+| 6 | A PIN has only 10^6 values and the name list is public, so the lockout is the protection. Anyone can lock a colleague's name for 15 minutes by guessing; an organizer's reset clears it. | Code | Deliberate trade-off for an internal app. |
+| 7 | A member who signed in before PINs existed has no PIN and is not in the name list until they set one (from a device that is still signed in) or an organizer resets it. | Code | Transition. |
 
 ## Dates and stages
 
@@ -39,6 +41,17 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 22 | The host is also a payer (owes `share × (1 + guests)`). With no bank details, the host sees "the organizer hasn't entered a bank account, pay directly", addressed to themselves. | E2E | Undecided. |
 | 23 | Completing with unpaid members is allowed (host or co-host); a confirm dialog lists debtors. They can keep reporting payments afterwards; only organizers set or clear amounts. | E2E | Deliberate. |
 | 24 | The bill dialog shows the raw number (`100000`) with no separators and no per-seat preview; amounts elsewhere use `vi-VN` grouping (`100.000 ₫`), also in English. | E2E | Undecided. |
+
+## Privacy
+
+| # | Behaviour | Evidence | Intent |
+|---|---|---|---|
+| 28 | The joining link can't be rotated or revoked. | Code | Undecided. |
+| 29 | Participants can't be removed. | Code | Undecided. |
+| 30 | Events created before private events need the new link; the home list shows the ones you created or answered. | Code | Deliberate. |
+| 31 | Archiving a member keeps their access to events they joined, but they no longer count in "no reply yet" or the people strip. | Code | Deliberate. |
+| 32 | An event opened only with a manage key (a legacy co-host key, or a host signed in as someone else or signed out) is not listed on home or the calendar: listing follows the signed-in member. Open it by its link. | Code | Undecided. |
+| 33 | An organizer answering for a team member (`PUT /response` with their `memberId`) also makes that member a participant, so the event shows on their home. | Code | Deliberate. |
 
 ## Data hygiene
 

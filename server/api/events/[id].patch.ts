@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
   const { events, responses, venues } = schema;
   const ev = await findEvent(routeId(event));
   const role = await roleOf(event, ev);
+  await requireAccess(event, ev, role);
   requireCan(role, 'edit');
   const b = await readJson(event);
 

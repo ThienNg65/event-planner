@@ -3,6 +3,7 @@ const DURATION_HOURS = 2;
 
 export type IcsEvent = {
   id: number;
+  joinKey: string;
   title: string;
   note?: string | null;
   startsAt: Date | string;
@@ -39,8 +40,8 @@ const utc = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '
 
 const endOf = (start: Date) => new Date(start.getTime() + DURATION_HOURS * 3600_000);
 
-/** The event page link, the same one the share dialog hands out. */
-const pageUrl = (id: number, origin: string) => `${origin}/e/${id}`;
+/** The event page link, the same joining link the share dialog hands out (a private event opens only with it). */
+const pageUrl = (ev: IcsEvent, origin: string) => `${origin}/e/${ev.id}?join=${ev.joinKey}`;
 
 /** An iCalendar file (CRLF lines) with one VEVENT; the UID is stable, so re-importing updates the entry. */
 export function icsOf(ev: IcsEvent, origin: string, now = new Date()) {
@@ -56,7 +57,7 @@ export function icsOf(ev: IcsEvent, origin: string, now = new Date()) {
     `DURATION:PT${DURATION_HOURS}H`,
     `SUMMARY:${escapeText(ev.title)}`,
     ...(ev.venue ? [`LOCATION:${escapeText(ev.venue)}`] : []),
-    `URL:${pageUrl(ev.id, origin)}`,
+    `URL:${pageUrl(ev, origin)}`,
     ...(ev.note ? [`DESCRIPTION:${escapeText(ev.note)}`] : []),
     ...(ev.cancelledAt ? ['STATUS:CANCELLED'] : []),
     'END:VEVENT',
@@ -72,7 +73,7 @@ export function googleCalendarUrl(ev: IcsEvent, origin: string) {
     action: 'TEMPLATE',
     text: ev.title,
     dates: `${utc(start)}/${utc(endOf(start))}`,
-    details: [ev.note, pageUrl(ev.id, origin)].filter(Boolean).join('\n\n'),
+    details: [ev.note, pageUrl(ev, origin)].filter(Boolean).join('\n\n'),
   });
   if (ev.venue) q.set('location', ev.venue);
   return `https://calendar.google.com/calendar/render?${q}`;

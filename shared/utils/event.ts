@@ -1,3 +1,14 @@
+/** The place name in a full Google Maps link (`/maps/place/<name>/…`), or null. */
+export function placeName(link?: string | null) {
+  const m = link?.match(/\/maps\/place\/([^/?#]+)/);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]!.replace(/\+/g, ' ')).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Case/diacritic-insensitive form of a name: "THIÊN", "Thiên" and "thien" all become "thien". */
 export const norm = (s: string) =>
   s
@@ -296,7 +307,7 @@ export const pendingVoters = <M extends { id: number }>(roster: M[], responses: 
 
 export type Reminder = {
   kind: 'poll' | 'rsvp' | 'bill';
-  /** Roster names still to act: vote, answer RSVP, or pay. */
+  /** Participant names still to act: vote, answer RSVP, or pay. */
   names: string[];
   /** RSVP only: members whose seat is held and who must confirm it. */
   confirm: string[];
@@ -307,7 +318,7 @@ type RemindRow = { memberId: number; days: unknown[]; venueIds: unknown[]; statu
 /**
  * Who to nudge at the current stage, for the organizer's reminder: poll = not voted, rsvp = not answered (`names`) or
  * holding a seat to confirm (`confirm`; `held` = member ids whose hold is still live), bill = confirmed attendees who still owe.
- * Archived members are skipped; order is roster order. Null once settled, or in the bill stage before there is a share. Carries no amounts, so a payment reminder can't leak them.
+ * `roster` is the event's participants (people who joined it), not the whole team; archived members are skipped, order is roster order. Null once settled, or in the bill stage before there is a share. Carries no amounts, so a payment reminder can't leak them.
  */
 export function reminderOf(
   stage: string,

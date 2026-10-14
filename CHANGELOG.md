@@ -6,17 +6,45 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ### Added
 - The app can also be deployed on Cloudflare Workers.
-- After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The link changes with each stage so chat apps show a fresh preview.
-- Organizers see who has not voted, answered or paid, with a reminder message to copy. A payment reminder names the people who still owe or only counts them, and never shows amounts.
-- Right after you create an event you are offered your sign-in link once, with a warning to send it only to yourself.
-- You can change your sign-in link from the account menu if it leaks. The old link stops working and your other devices are signed out.
+- After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The message carries the joining link of your private event, and the link changes with each stage so chat apps show a fresh preview.
+- Organizers see who has not voted, answered or paid among the people who joined the event, with a reminder message to copy. A payment reminder names the people who still owe or only counts them, and never shows amounts.
+- Right after you create an event, if you have no PIN yet, you are offered to set one (or to save your sign-in link, with a warning to keep it to yourself).
+- You can sign out your other devices from the account menu if a link leaks or you lose a phone. The old sign-in link stops working, your PIN stays the same and this device stays signed in.
 - The host can make a new manage link if the old one leaks; the old one stops working. This works only on a device that already holds the manage link, so a leaked sign-in link alone cannot lock the host out. Copied manage links now keep the key out of link previews and server logs (the pasted text still contains it after the #, so only share it with co-hosts).
-- Events with a date have an Add to calendar option (a calendar file or Google Calendar), at any stage. Entries last 2 hours.
+- Events with a date have an Add to calendar option (a calendar file or Google Calendar), at any stage. Entries last 2 hours and open the event through its joining link; the calendar file is only given to people who can see the event.
 - After voting closes, participants see which day got the most votes while they wait for the date.
 - The create form says that bank details are visible to anyone with the event link, and that a fixed date without a place starts as a vote on the place.
 
+## [0.10.0] - 2026-10-14
+
+### Added
+- Tap "Map" next to a Google Maps place to see it on a map without leaving the page.
+- The event page shows the event's progress: Vote, Confirm, Pay, Done.
+- Pasting a Google Maps link into a place fills in its name, if the name is still empty.
+
 ### Changed
-- Signing out explains more clearly that your sign-in link is the only way back and that organizer links on this device are forgotten.
+- A cleaner event page: the cover sits beside the title, the date and place get their own rows, and on phones your next step comes before the statistics.
+- "Post an update" moved to the top bar.
+- Vote bars and percentages appear once someone has voted, and the overview is shorter.
+
+## [0.9.0] - 2026-10-14
+
+### Changed
+- Vietnamese weekdays now read "Thứ 2" … "Thứ 7" instead of "T2" … "T7".
+- Events are private: only people with the joining link can see and join them; the home page lists only your events.
+- "No reply yet" and the people strip count only the people who joined.
+
+## [0.8.0] - 2026-10-14
+
+### Added
+- You now sign in with your name and a 6-digit PIN. Pick your name and type the PIN on any phone or computer; no link to copy. Choosing 111111 or 123456 is refused.
+- People who already use the app are nudged to set a PIN from the sidebar menu (Set a PIN). Until they do, their sign-in link keeps working.
+- After 5 wrong PINs a name is locked for 15 minutes.
+- Organizers can reset a forgotten PIN in Tidy the team list. The new PIN is shown once to pass on, and that person is signed out everywhere. An organizer cannot reset another organizer.
+
+### Changed
+- Joining asks for a PIN after the name; picking an unclaimed name from the list asks you to choose its PIN.
+- Signing out no longer warns you to copy the link if you have a PIN.
 
 ## [0.7.0] - 2026-10-13
 

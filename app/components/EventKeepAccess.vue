@@ -1,9 +1,28 @@
 <script setup lang="ts">
-// Shown once after a new event's share dialog closes: the personal sign-in link, kept apart from sharing on purpose.
+// Shown once after a new event's share dialog closes, and only to a creator with no PIN: without one, the personal sign-in link is the only way back in as organizer.
 const open = defineModel<boolean>('open', { required: true });
 const { t } = useI18n();
 const toast = useToast();
-const { me } = useMe();
+const { me, refreshMe } = useMe();
+
+const pin = ref('');
+const busy = ref(false);
+watch(pin, (v) => (pin.value = v.replace(/\D/g, '')));
+const problem = computed(() => (pin.value.length === PIN_LENGTH ? pinProblem(pin.value) : null));
+async function savePin() {
+  busy.value = true;
+  try {
+    await $fetch('/api/me/pin', { method: 'POST', body: { pin: pin.value } });
+    pin.value = '';
+    await refreshMe();
+    toast.add({ title: t('pin.saved') });
+    open.value = false;
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  } finally {
+    busy.value = false;
+  }
+}
 
 // Fetched when the card opens: Safari rejects clipboard writes that follow an await.
 const link = ref('');
@@ -44,7 +63,12 @@ async function copy() {
   <UModal v-model:open="open" :title="t('keep.title')" :description="t('keep.subtitle')">
     <template #body>
       <UAlert color="warning" variant="subtle" icon="i-lucide-key-round" :description="t('keep.body', { name: me?.name ?? '' })" />
-      <p class="mt-3 text-sm text-muted">{{ t('keep.rotate') }}</p>
+      <form class="mt-3 flex gap-2" @submit.prevent="savePin">
+        <UInput v-model="pin" type="password" inputmode="numeric" autocomplete="new-password" :maxlength="PIN_LENGTH" :placeholder="t('pin.choose')" :aria-label="t('pin.label')" class="flex-1" />
+        <UButton type="submit" :loading="busy" :disabled="pin.length !== PIN_LENGTH || !!problem">{{ t('pin.save') }}</UButton>
+      </form>
+      <p class="mt-1 text-xs" :class="problem ? 'text-error' : 'text-muted'">{{ problem ? t('pin.weak') : t('pin.hintNew') }}</p>
+      <p class="mt-4 text-sm text-muted">{{ t('keep.linkInstead') }}</p>
       <div v-if="manual" class="mt-3">
         <p class="mb-1 text-sm">{{ t('keep.manual') }}</p>
         <UInput :model-value="link" readonly class="w-full" @focus="(e: FocusEvent) => (e.target as HTMLInputElement).select()" />
@@ -53,7 +77,7 @@ async function copy() {
     <template #footer>
       <div class="flex w-full justify-end gap-2">
         <UButton color="neutral" variant="ghost" @click="open = false">{{ t('keep.later') }}</UButton>
-        <UButton icon="i-lucide-link" :loading="loading" @click="copy">{{ t('keep.copy') }}</UButton>
+        <UButton color="neutral" variant="outline" icon="i-lucide-link" :loading="loading" @click="copy">{{ t('keep.copy') }}</UButton>
       </div>
     </template>
   </UModal>

@@ -103,17 +103,30 @@ export async function cleanup() {
   if (broken.length) throw new Error(broken.join(', '));
 }
 
-type Opts = { method?: string; body?: unknown; key?: string; me?: number };
+/** The PIN every test member gets. */
+export const PIN = '482916';
+
+type Opts = { method?: string; body?: unknown; key?: string; me?: number; sid?: string; join?: string | false };
+
+// The joining key of each event made through event(); api() sends it by default, so tests act as link holders.
+const joinKeys = new Map<number, string>();
 
 // Each test member's sign-in token, from the cookie POST /api/members sets.
 const tokens = new Map<number, string>();
 
-/** A request against the built server: `key` becomes x-manage-key, `me` signs in as that member (see `member()`). */
-export async function api(path: string, { method = 'GET', body, key, me }: Opts = {}) {
+/** The `sid` cookie header of a test member, for requests whose answer is not JSON. */
+export const cookieOf = (me: number) => ({ cookie: `sid=${tokens.get(me)}` });
+
+/** A request against the built server: `key` becomes x-manage-key, `me` signs in as that member (see `member()`), `sid` sends a raw session cookie, `join` overrides the x-join-key (false sends none). */
+export async function api(path: string, { method = 'GET', body, key, me, sid, join }: Opts = {}) {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['content-type'] = 'application/json';
   if (key) headers['x-manage-key'] = key;
   if (me) headers.cookie = `sid=${tokens.get(me)}`;
+  if (sid) headers.cookie = `sid=${sid}`;
+  const eventId = /^\/api\/events\/(\d+)/.exec(path)?.[1];
+  const joinKey = join === false ? undefined : (join ?? (eventId ? joinKeys.get(Number(eventId)) : undefined));
+  if (joinKey) headers['x-join-key'] = joinKey;
   const res = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const text = await res.text();
   return { headers: res.headers, status: res.status, message: res.status >= 400 ? (JSON.parse(text).statusMessage as string) : '', body: text ? JSON.parse(text) : null };
@@ -121,7 +134,7 @@ export async function api(path: string, { method = 'GET', body, key, me }: Opts 
 
 /** A new member named zz-test-…; returns the id. */
 export async function member() {
-  const res = await api('/api/members', { method: 'POST', body: { name: `zz-test-${randomBytes(4).toString('hex')}` } });
+  const res = await api('/api/members', { method: 'POST', body: { name: `zz-test-${randomBytes(4).toString('hex')}`, pin: PIN } });
   if (res.status !== 201) throw new Error(`member() failed: ${res.status}`);
   const sid = /sid=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1];
   if (!sid) throw new Error('member() got no sid cookie');
@@ -139,6 +152,7 @@ export async function event(extra: Record<string, unknown> = {}) {
   if (res.status !== 201) throw new Error(`event() failed: ${res.status} ${res.message}`);
   const made = { id: res.body.id as number, key: res.body.key as string };
   created.push({ ...made, dayPoll: !!(extra.pollDays ?? [1]).length });
+  joinKeys.set(made.id, (await api(`/api/events/${made.id}`, { me: createdBy })).body.event.joinKey);
   return { ...made, createdBy };
 }
 

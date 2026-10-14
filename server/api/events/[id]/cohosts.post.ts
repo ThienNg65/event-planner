@@ -8,7 +8,9 @@ import { and, eq, ne, sql } from 'drizzle-orm';
 export default defineEventHandler(async (event) => {
   const { cohosts } = schema;
   const ev = await findEvent(routeId(event));
-  requireCan(await roleOf(event, ev), 'cohost');
+  const role = await roleOf(event, ev);
+  await requireAccess(event, ev, role);
+  requireCan(role, 'cohost');
   const b = await readJson(event);
   const member = await requireMember(b.memberId);
   if (ev.cancelledAt) fail(409, 'cancelled');
