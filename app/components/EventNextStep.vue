@@ -383,6 +383,7 @@ async function complete() {
             <UInput v-model="bill.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />
             <UInput v-model="bill.bankHolder" :placeholder="t('create.bankHolder')" />
           </div>
+          <BankQrPreview :bank-id="bill.bankId" :bank-account="bill.bankAccount" :bank-holder="bill.bankHolder" class="mt-2" />
         </UFormField>
       </div>
     </template>

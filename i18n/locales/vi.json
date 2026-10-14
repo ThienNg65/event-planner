@@ -800,5 +800,12 @@
     "resetFor": "Đặt lại mã PIN của {name}",
     "reset": "Đặt lại PIN",
     "resetDone": "Mã PIN mới của {name}: {pin}. Hãy gửi riêng cho họ: chỉ hiện một lần, và họ bị đăng xuất khỏi mọi thiết bị."
+  },
+  "bank": {
+    "preview": "Xem thử mã QR",
+    "hide": "Ẩn mã QR",
+    "previewNote": "Chuyen khoan thu",
+    "failed": "VietQR không tạo được mã. Hãy kiểm tra mã ngân hàng và số tài khoản.",
+    "previewHint": "Quét bằng ứng dụng ngân hàng: phải hiện đúng tài khoản và chủ tài khoản. Không cần chuyển tiền."
   }
 }

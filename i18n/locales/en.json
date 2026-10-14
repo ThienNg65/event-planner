@@ -800,5 +800,12 @@
     "resetFor": "Reset PIN for {name}",
     "reset": "Reset PIN",
     "resetDone": "New PIN for {name}: {pin}. Pass it on privately: it is shown only once, and they are signed out everywhere."
+  },
+  "bank": {
+    "preview": "Preview QR",
+    "hide": "Hide QR",
+    "previewNote": "Test transfer",
+    "failed": "VietQR could not build a code. Check the bank code and account number.",
+    "previewHint": "Scan it with your banking app: it should show this account and holder. Do not complete the transfer."
   }
 }

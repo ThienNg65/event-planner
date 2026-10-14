@@ -295,6 +295,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
               <UInput v-model="form.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />
               <UInput v-model="form.bankHolder" :placeholder="t('create.bankHolder')" />
             </div>
+            <BankQrPreview :bank-id="form.bankId" :bank-account="form.bankAccount" :bank-holder="form.bankHolder" class="mt-2" />
           </UFormField>
         </section>
 
