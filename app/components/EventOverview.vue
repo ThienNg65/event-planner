@@ -68,10 +68,10 @@ const relative = computed(() => {
           <span v-for="s in stats.slice(0, 2)" :key="s.key" class="h-full" :class="s.dot" :style="{ width: `${(s.n / Math.max(roster, 1)) * 100}%` }" />
         </div>
       </div>
-      <ul class="space-y-1.5 text-sm">
-        <li v-for="s in stats" :key="s.key" class="flex items-center gap-2">
+      <ul class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+        <li v-for="s in stats" :key="s.key" class="flex items-center gap-1.5">
           <span class="size-2 shrink-0 rounded-full" :class="s.dot" aria-hidden="true" />
-          <span class="flex-1 text-muted">{{ t(`overview.${s.key}`) }}</span>
+          {{ t(`overview.${s.key}`) }}
           <span class="font-medium text-highlighted tabular-nums">{{ s.n }}</span>
         </li>
       </ul>
@@ -93,7 +93,6 @@ const relative = computed(() => {
     </template>
 
     <template v-else-if="ev.stage === 'rsvp'">
-      <UBadge v-if="ev.startsAt" color="primary" variant="subtle" icon="i-lucide-calendar-check" :label="t('overview.locked', { when: fmtDateTime(ev.startsAt, locale) })" />
       <div class="space-y-1.5">
         <p class="text-sm tabular-nums">{{ ev.capacity ? t('overview.seatsOf', { n: data.seats, cap: ev.capacity }) : t('overview.seats', { n: data.seats }) }}</p>
         <UProgress v-if="ev.capacity" :model-value="data.seats" :max="ev.capacity" size="sm" :aria-label="t('overview.seatsOf', { n: data.seats, cap: ev.capacity })" />

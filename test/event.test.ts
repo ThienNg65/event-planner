@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { pinProblem } from '../shared/utils/pin.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
 import { cardSvg } from '../shared/utils/card.ts';
 import { DEFAULT_THEME, THEMES, themeOf } from '../shared/utils/theme.ts';
-import { dayParts, fmtDateTime, initials, monthGrid, splitMentions } from '../app/utils/format.ts';
+import { dateBlock, dayParts, fmtDateTime, initials, mapEmbedUrl, monthGrid, splitMentions } from '../app/utils/format.ts';
 
 const at = (min: number) => new Date(Date.UTC(2026, 9, 1, 0, min));
 const going = (memberId: number, min: number, guests = 0) => ({ memberId, status: 'going', guests, goingAt: at(min) });
@@ -423,4 +423,21 @@ test('a PIN is six digits that are not all alike and not a run', () => {
   assert.equal(pinProblem('135790'), null);
   for (const bad of ['', '12345', '1234567', '12a456', 482916 as unknown]) assert.equal(pinProblem(bad), 'format');
   for (const weak of ['111111', '000000', '123456', '234567', '654321', '987654']) assert.equal(pinProblem(weak), 'weak');
+});
+
+test('mapEmbedUrl: coordinates, short links, non-Google and junk', () => {
+  assert.match(mapEmbedUrl('Foo', 'https://www.google.com/maps/place/Foo/@10.77,106.70,17z')!, /q=10\.77%2C106\.70&/);
+  assert.match(mapEmbedUrl('Quán Ụt Ụt', 'https://maps.app.goo.gl/abc')!, new RegExp(`q=${encodeURIComponent('Quán Ụt Ụt')}&`));
+  for (const link of ['https://pizza4ps.com', 'https://goo.gl/xyz', null, '', 'not a url']) assert.equal(mapEmbedUrl('Foo', link), null);
+});
+
+test('placeName: the name from a full Google Maps place link, else null', () => {
+  assert.equal(placeName("https://www.google.com/maps/place/Pizza+4P's+Ben+Thanh/@10.77,106.70,17z/data=!3m1"), "Pizza 4P's Ben Thanh");
+  assert.equal(placeName('https://www.google.com/maps/place/Qu%C3%A1n+%E1%BB%A4t+%E1%BB%A4t?entry=ttu'), 'Quán Ụt Ụt');
+  for (const link of ['https://maps.app.goo.gl/abc', 'https://www.google.com/maps/@10.77,106.70,17z', 'https://example.com', null, '']) assert.equal(placeName(link), null);
+});
+
+test('dateBlock: vi month reads "thg 10" on every runtime, en stays short', () => {
+  assert.deepEqual(dateBlock('2026-10-19T11:30:00Z', 'vi'), { day: '19', month: 'thg 10' });
+  assert.deepEqual(dateBlock('2026-10-18T18:00:00Z', 'en'), { day: '19', month: 'Oct' });
 });

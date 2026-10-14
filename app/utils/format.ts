@@ -32,11 +32,29 @@ export const fmtDay = (day: string, locale: string) =>
 /** Big day number + short month for a calendar-style date block, in team time. */
 export const dateBlock = (iso: string | Date, locale: string) => ({
   day: new Date(iso).toLocaleString(locale, { timeZone: TZ, day: 'numeric' }),
-  month: new Date(iso).toLocaleString(locale, { timeZone: TZ, month: 'short' }),
+  // Node renders a lone vi short month as "Tháng 10" (too wide, and unlike "thg 10" in full dates): build it from the number.
+  month: locale.startsWith('vi')
+    ? `thg ${new Date(iso).toLocaleString('en', { timeZone: TZ, month: 'numeric' })}`
+    : new Date(iso).toLocaleString(locale, { timeZone: TZ, month: 'short' }),
 });
 
 /** Badge/chip color per event stage. */
 export const STAGE_COLOR = { poll: 'warning', rsvp: 'primary', bill: 'success', settled: 'secondary' } as const;
+
+/** Keyless Google Maps embed for a Google Maps link, or null for any other link. */
+export function mapEmbedUrl(name: string, link?: string | null) {
+  let url: URL;
+  try {
+    url = new URL(link ?? '');
+  } catch {
+    return null;
+  }
+  const google = url.hostname === 'maps.app.goo.gl' || /^maps\.google\./.test(url.hostname) || (/(^|\.)google\./.test(url.hostname) && url.pathname.startsWith('/maps'));
+  if (!google) return null;
+  // shortcut: short links can't be resolved in the browser, so they map the venue name; upgrade = resolve server-side.
+  const q = url.pathname.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)?.slice(1).join(',') ?? name;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`;
+}
 
 export const fmtVnd =(n: number) => `${n.toLocaleString('vi-VN')} ₫`;
 

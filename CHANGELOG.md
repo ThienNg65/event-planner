@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.10.0] - 2026-10-14
+
+### Added
+- Tap "Map" next to a Google Maps place to see it on a map without leaving the page.
+- The event page shows the event's progress: Vote, Confirm, Pay, Done.
+- Pasting a Google Maps link into a place fills in its name, if the name is still empty.
+
+### Changed
+- A cleaner event page: the cover sits beside the title, the date and place get their own rows, and on phones your next step comes before the statistics.
+- "Post an update" moved to the top bar.
+- Vote bars and percentages appear once someone has voted, and the overview is shorter.
+
 ## [0.9.0] - 2026-10-14
 
 ### Changed

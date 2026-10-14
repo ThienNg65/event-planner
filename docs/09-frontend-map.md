@@ -19,11 +19,11 @@ Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with set/c
 
 | Piece | Component | Shows |
 |---|---|---|
-| Header | in `[id].vue` | Cover, stage badge (`stageKey`), title, date, place, host, going count (hidden during `poll`), note with @mention chips, notice banner, cancelled banner, co-host invite banner |
+| Header | in `[id].vue` | Cover (a strip on phones, a square beside the title on `sm`+), When and Where rows with icon tiles (a month/day tile once the date is set), stage stepper in the navbar centre on `lg`+ (poll → rsvp → bill → settled; the current step is titled by `stageKey`), the stage badge below `lg` and the Cancelled badge on a cancelled event, title, date, place (a Google Maps link adds a map icon, `VenueMap.vue`, that opens a keyless embedded map; there is no CSP today, a future one needs `frame-src https://maps.google.com https://www.google.com`), host, going count (hidden during `poll`), note with @mention chips, notice banner, cancelled banner, co-host invite banner |
 | Next-step card | `EventNextStep.vue` | The visitor's one next thing (`nextStep()`), plus the organizer's controls: Lock, Close/Reopen voting, Enter bill (before the start: when it opens), Complete, Complete with open debts. Owns the lock, bill and complete dialogs. The Completed card shows "Who came" avatars. |
 | Stage section (one of) | `EventPoll.vue` / `EventRsvp.vue` / `EventBill.vue` | Day tiles and place list with voting; RSVP buttons and guests; bill, share, QR and payment form |
 | People | `EventPeople.vue` | Everyone with a vote or answer, ranked; organizer row menu |
-| Side rail | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
+| Side rail (after the stage section on phones) | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
 | Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` | Edit panel, roles and links, reopen/cancel/delete, date/place correction, poll day editing |
 | Sharing | `EventShareDialog.vue` | Joining link (`?join=`) and QR; the page's `og:image` is `GET /api/events/:id/card?j=…`; co-host invite links carry `?join=` too |
 

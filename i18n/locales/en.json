@@ -41,6 +41,17 @@
     "settled": "Completed",
     "cancelled": "Cancelled"
   },
+  "stages": {
+    "label": "Progress",
+    "poll": "Vote",
+    "rsvp": "Confirm",
+    "bill": "Pay",
+    "settled": "Done"
+  },
+  "map": {
+    "show": "Map",
+    "title": "Map of {name}"
+  },
   "me": {
     "label": "Who are you?",
     "pick": "Pick your name",
@@ -655,7 +666,6 @@
     "closes": "Closes {when}",
     "notVoted": "No reply yet: {names}",
     "more": "+{n} more",
-    "locked": "Date locked: {when}",
     "seatsOf": "{n} of {cap} seats taken",
     "seats": "{n} seats taken",
     "seatLimit": "Seat limit: {cap}. Seats go first come, first served.",

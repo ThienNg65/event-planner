@@ -1,3 +1,14 @@
+/** The place name in a full Google Maps link (`/maps/place/<name>/…`), or null. */
+export function placeName(link?: string | null) {
+  const m = link?.match(/\/maps\/place\/([^/?#]+)/);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]!.replace(/\+/g, ' ')).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Case/diacritic-insensitive form of a name: "THIÊN", "Thiên" and "thien" all become "thien". */
 export const norm = (s: string) =>
   s

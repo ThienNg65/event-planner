@@ -68,6 +68,7 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `POST /api/events/:id/days` | self | `memberId`, `day` | Suggest (or vote for) a day | `invalidDays`, `tooManyDays`, `daysChanged`, `stageClosed`, `votingClosed` |
 | `POST /api/events/:id/venues` | self | `addedBy`, `name`, `link?`, `note?` | Suggest a place (201) | `nameRequired`, `invalidLink`, `venueExists` (with `data.id`), `stageClosed` |
 | `DELETE /api/events/:id/venues/:venueId` | organizer | | Remove a place and its upvotes | `cancelled`, `notFound` |
+| `GET /api/place-name?url=` | none | | The place name behind a `https://maps.app.goo.gl/…` short link (`{ name }`, `null` if unknown), to prefill a venue name. Fetches only that host, 3 s timeout. | none (always 200) |
 
 ## Co-hosts
 

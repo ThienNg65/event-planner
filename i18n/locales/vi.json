@@ -41,6 +41,17 @@
     "settled": "Hoàn tất",
     "cancelled": "Đã huỷ"
   },
+  "stages": {
+    "label": "Tiến trình",
+    "poll": "Bình chọn",
+    "rsvp": "Chốt",
+    "bill": "Thu tiền",
+    "settled": "Hoàn tất"
+  },
+  "map": {
+    "show": "Bản đồ",
+    "title": "Bản đồ {name}"
+  },
   "me": {
     "label": "Bạn là ai?",
     "pick": "Chọn tên của bạn",
@@ -655,7 +666,6 @@
     "closes": "Đóng lúc {when}",
     "notVoted": "Chưa phản hồi: {names}",
     "more": "+{n} người nữa",
-    "locked": "Đã chốt ngày: {when}",
     "seatsOf": "Đã có {n}/{cap} chỗ",
     "seats": "Đã có {n} chỗ",
     "seatLimit": "Giới hạn {cap} chỗ. Ai đến trước được chỗ trước.",
