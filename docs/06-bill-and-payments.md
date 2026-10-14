@@ -70,6 +70,7 @@ The server does **not** check the amount against what is owed: an overpayment is
 - `addInfo` is `"<event title> <member name>"` stripped to ASCII letters/digits and spaces (via `norm`) and cut to 50 characters (the bank limit).
 - The QR is shown only when the event has both `bankId` and `bankAccount` and the member is not yet done. Otherwise the page says the organizer has not entered a bank account and to pay directly.
 - If the image fails to load the component falls back (`qrFailed`).
+- Organizers can check the bank fields before anyone pays: the bank inputs (create page, Edit, Enter bill) have a **Preview QR** button (`BankQrPreview.vue`) that shows an open-amount code (amount 0) or an error if VietQR rejects the bank code or account. VietQR prints the holder name it is given; it does not verify it against the bank, so scanning the preview in a banking app is the real check.
 
 ## 6.5 Settling and "Completed"
 
