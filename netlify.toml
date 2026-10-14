@@ -4,3 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "24"
+
+# Nitro's single server function; Singapore, next to the Neon database.
+[functions.server]
+  region = "sin"
