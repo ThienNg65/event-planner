@@ -21,6 +21,19 @@ const pending = computed(() => (can(props.role, 'edit') ? pendingVoters(props.da
 const open = computed(() => votingOpen(ev.value));
 // "Going" counts seats and queue spots only: a held seat past its deadline is not an answer.
 const count = (status: string) => (status === 'going' ? props.data.confirmed.length + props.data.waitlist.length : rs.value.filter((r) => r.status === status).length);
+const maybeCount = computed(() => count('maybe'));
+// Going, Maybe, Can't and No reply add up to the team, so nobody drops out of the overview.
+const rsvpChips = computed(() => {
+  const going = count('going');
+  const no = count('no');
+  const pending = Math.max(props.data.participants.length - going - maybeCount.value - no, 0);
+  return [
+    { key: 'goingL', n: going, tone: 'bg-success/10 text-success' },
+    { key: 'maybeL', n: maybeCount.value, tone: 'bg-warning/10 text-warning' },
+    { key: 'noL', n: no, tone: 'bg-elevated text-muted' },
+    { key: 'pendingL', n: pending, tone: 'bg-elevated text-highlighted' },
+  ];
+});
 
 const payers = computed(() =>
   props.data.confirmed.map((id) => {
@@ -93,13 +106,20 @@ const relative = computed(() => {
     </template>
 
     <template v-else-if="ev.stage === 'rsvp'">
+      <!-- The answers first (they sum to the team), the seat line is the summary. -->
+      <ul class="grid grid-cols-4 gap-2 text-center">
+        <li v-for="c in rsvpChips" :key="c.key" class="rounded-lg px-1 py-2" :class="c.tone">
+          <p class="text-2xl font-semibold leading-none tabular-nums">{{ c.n }}</p>
+          <p class="mt-1 text-xs">{{ t(`overview.${c.key}`) }}</p>
+        </li>
+      </ul>
       <div class="space-y-1.5">
-        <p class="text-sm tabular-nums">{{ ev.capacity ? t('overview.seatsOf', { n: data.seats, cap: ev.capacity }) : t('overview.seats', { n: data.seats }) }}</p>
+        <p class="text-sm tabular-nums">
+          {{ ev.capacity ? t('overview.seatsOf', { n: data.seats, cap: ev.capacity }) : t('overview.seats', { n: data.seats }) }}
+          <span v-if="maybeCount" class="text-muted">· {{ t('overview.maybeSeats', { n: maybeCount }) }}</span>
+        </p>
         <UProgress v-if="ev.capacity" :model-value="data.seats" :max="ev.capacity" size="sm" :aria-label="t('overview.seatsOf', { n: data.seats, cap: ev.capacity })" />
       </div>
-      <p class="text-sm text-muted tabular-nums">
-        {{ t('overview.going', { n: count('going') }) }} · {{ t('overview.maybe', { n: count('maybe') }) }} · {{ t('overview.no', { n: count('no') }) }}
-      </p>
       <p v-if="data.waitlist.length" class="text-sm text-warning">{{ t('event.waitlist', { n: data.waitlist.length }) }}</p>
     </template>
 

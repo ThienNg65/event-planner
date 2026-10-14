@@ -47,7 +47,9 @@ async function put(memberId: number, body: object) {
 
 function menu(row: (typeof rows.value)[number]) {
   const items = [];
-  if (ev.value.stage === 'rsvp') {
+  // The bill stage stays open too: a Maybe who came anyway can be moved to Going, and the share is recomputed on read.
+  // Not for someone who already paid: they would drop out of the payers and the recorded money would be orphaned.
+  if (ev.value.stage === 'rsvp' || (ev.value.stage === 'bill' && !(row.pay && row.pay.paid > 0))) {
     for (const s of ['going', 'maybe', 'no'] as const) {
       items.push({ label: t(`rsvp.${s}`), onSelect: () => put(row.r.memberId, { status: s, guests: s === 'going' ? row.r.guests : 0 }) });
     }

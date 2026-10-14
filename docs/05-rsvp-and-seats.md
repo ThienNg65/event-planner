@@ -69,7 +69,7 @@ A row's `kind`:
 - `maybe`, `no`: the member's answer
 - `voted`: counted from votes without an answer, or a held seat that has lapsed
 
-Organizers (`setOthers`) get a menu per row: set Going / Maybe / Can't (stage `rsvp`) and, while paying, mark paid / set amount / mark unpaid.
+Organizers (`setOthers`) get a menu per row: set Going / Maybe / Can't (stages `rsvp` and `bill`, so a Maybe who came anyway can be added to the split) and, while paying, mark paid / set amount / mark unpaid.
 
 ## 5.5 Home-list counters
 

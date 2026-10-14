@@ -29,8 +29,9 @@ owes(member) = share * (1 + member.guests)           (only confirmed members owe
 ```
 
 - Rounding is **up to the next 1,000 VND** per seat, so the amount collected can exceed the bill by up to 999 VND per seat (a 100,000 ₫ bill over 3 seats is 34,000 ₫ each, 102,000 ₫ collectable). The page states the rounding.
-- Only **confirmed** attendees owe. Waitlisted, Maybe and Can't members, and held seats that lapsed, owe nothing.
+- Only **confirmed** attendees owe. Waitlisted, Maybe and Can't members, and held seats that lapsed, owe nothing. An organizer can still move a Maybe to Going during the bill stage (People list); that person then owes a share and everyone else's share drops.
 - The share is computed on read from the current seat count; it is not stored. If seats change after the bill (an organizer edits someone's RSVP or guests), everyone's amount moves accordingly.
+- **Preview payment** (organizers, stage `rsvp`, before the event starts): `EventNextStep.vue` opens a read-only modal where a throwaway total is split over today's confirmed seats with `shareOf`. Nothing is saved and the stage does not change.
 
 ## 6.3 Recording payments
 

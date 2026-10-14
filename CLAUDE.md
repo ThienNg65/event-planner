@@ -34,7 +34,7 @@ Note: `C:\toys\CLAUDE.md` (parent folder) holds Java/banking rules for a differe
 Node >= 24.11 is required. On this machine put `C:\devtools\node-v24.14.1-win-x64` first on `PATH`. `DATABASE_URL` must be in `.env` (gitignored).
 
 ```bash
-npm install
+npm install --registry=https://registry.npmjs.org
 npm run db:migrate     # apply server/db/migrations to DATABASE_URL
 npm run dev            # http://localhost:3000 (preview config: .claude/launch.json "nuxt-dev")
 npm test               # node --test test/*.test.ts (native TS, no runner or transpile step)

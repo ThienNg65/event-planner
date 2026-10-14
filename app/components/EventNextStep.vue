@@ -187,6 +187,11 @@ async function saveBill() {
   if (await patch({ billTotal: total, stage: 'bill', ...bank })) billOpen.value = false;
 }
 
+// An early look at the payment step: a throwaway total over today's confirmed seats. Nothing is saved and the stage stays rsvp.
+const previewOpen = ref(false);
+const previewTotal = ref<number | null>(null);
+const previewShare = computed(() => shareOf(previewTotal.value, props.data.seats));
+
 async function settle() {
   if (await patch({ stage: 'settled' })) confetti();
 }
@@ -262,6 +267,7 @@ async function complete() {
       <!-- Close and lock look alike; one line says what each does and what the deadline does on its own. -->
       <p v-if="next.action === 'lock'" class="basis-full text-xs text-muted">{{ t(votingClosed ? 'next.lockOnly' : 'next.closeVsLock') }}</p>
       <p v-if="ev.stage === 'rsvp' && next.action !== 'bill' && ev.startsAt" class="basis-full text-xs text-muted">{{ t('next.billAfter', { when: fmtDateTime(ev.startsAt, locale) }) }}</p>
+      <UButton v-if="ev.stage === 'rsvp' && next.action !== 'bill'" color="neutral" variant="ghost" icon="i-lucide-eye" @click="previewOpen = true">{{ t('next.action.preview') }}</UButton>
       <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
       <UButton v-if="next.action === 'bill'" v-bind="hostMain" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
       <UButton v-if="ev.stage === 'bill' && next.action !== 'settle'" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'anyway'">
@@ -368,6 +374,33 @@ async function complete() {
         <UButton ref="cancelBtn" color="neutral" variant="ghost" @click="completeOpen = null">{{ t('cancel') }}</UButton>
         <UButton icon="i-lucide-check" :loading="busy" @click="complete">{{ t(completeOpen === 'free' ? 'next.action.completeFree' : 'next.action.completeAnyway') }}</UButton>
       </div>
+    </template>
+  </UModal>
+
+  <UModal v-model:open="previewOpen" :title="t('next.action.preview')" :description="t('next.previewHint')">
+    <template #body>
+      <div class="space-y-4">
+        <UFormField :label="t('manage.bill')">
+          <UInputNumber v-model="previewTotal" :min="0" :step="1000" :format-options="{ maximumFractionDigits: 0 }" class="w-48" />
+        </UFormField>
+        <p v-if="!data.seats" class="text-sm text-muted">{{ t('next.previewNoSeats') }}</p>
+        <template v-else-if="previewShare !== null">
+          <div class="rounded-xl bg-elevated p-3 text-center">
+            <p class="text-xs text-muted uppercase">{{ t('bill.perSeat') }}</p>
+            <p class="text-lg font-semibold tabular-nums">{{ fmtVnd(previewShare) }}</p>
+            <p class="text-xs text-muted">{{ t('bill.rounded', { n: data.seats }) }}</p>
+          </div>
+          <ul class="divide-y divide-default text-sm">
+            <li v-for="p in payers" :key="p.memberId" class="flex items-center justify-between gap-3 py-1.5">
+              <span class="truncate">{{ p.name }}<span v-if="p.guests" class="text-muted"> +{{ p.guests }}</span></span>
+              <span class="font-medium tabular-nums">{{ fmtVnd(previewShare * (1 + p.guests)) }}</span>
+            </li>
+          </ul>
+        </template>
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex w-full justify-end"><UButton color="neutral" variant="ghost" @click="previewOpen = false">{{ t('close') }}</UButton></div>
     </template>
   </UModal>
 
