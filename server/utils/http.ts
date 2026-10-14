@@ -22,7 +22,7 @@ export function routeId(event: H3Event) {
   return id;
 }
 
-const hashMatches = (key: string, hash: string | null) =>
+export const hashMatches = (key: string, hash: string | null) =>
   !!hash && timingSafeEqual(Buffer.from(sha256(key), 'hex'), Buffer.from(hash, 'hex'));
 
 /**

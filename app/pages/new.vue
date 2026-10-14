@@ -2,6 +2,8 @@
 const { t } = useI18n();
 const toast = useToast();
 const { meId } = useMe();
+// Tells the event page to open its share dialog once.
+const justCreated = useState<number>('justCreated', () => 0);
 
 const BANK = 'te:bank';
 const form = reactive({
@@ -82,6 +84,7 @@ async function create() {
       /* not remembered, that's fine */
     }
     saveManageKey(res.id, res.key);
+    justCreated.value = res.id;
     toast.add({ color: 'success', title: t('create.done'), description: t('create.keyHint') });
     await navigateTo(`/e/${res.id}`);
   } catch (e) {
@@ -155,6 +158,7 @@ async function create() {
                 />
                 <DateTimeInput v-if="form.dateMode === 'fixed'" v-model="form.startsAt" class="w-full" />
                 <PollDaysInput v-else v-model="form.pollDays" />
+                <p v-if="form.dateMode === 'fixed' && (form.venueMode === 'poll' || !form.venue.trim())" class="mt-2 text-sm text-muted">{{ t('create.fixedDateNoVenue') }}</p>
               </UFormField>
 
               <UFormField :label="t('create.where')">
@@ -184,7 +188,7 @@ async function create() {
               <UCollapsible class="space-y-3">
                 <UButton color="neutral" variant="link" class="px-0" trailing-icon="i-lucide-chevron-down" :label="t('create.payment')" />
                 <template #content>
-                  <UFormField :label="t('create.bank')" :hint="t('create.bankHint')" :description="t('create.paymentLater')">
+                  <UFormField :label="t('create.bank')" :hint="t('create.bankHint')" :description="t('create.paymentLater')" :help="t('create.bankPublic')">
                     <div class="grid gap-2 sm:grid-cols-3">
                       <UInput v-model="form.bankId" :placeholder="t('create.bankId')" />
                       <UInput v-model="form.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />

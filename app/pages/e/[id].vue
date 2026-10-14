@@ -174,7 +174,7 @@ useSeoMeta({
   description: () => blurb.value,
   ogType: 'website',
   ogSiteName: () => t('app.name'),
-  ogUrl: `${origin}/e/${id}`,
+  ogUrl: () => `${origin}/e/${id}?s=${ev.value.stage}`,
   ogTitle: () => ev.value.title,
   ogDescription: () => blurb.value,
   ogImage: () => cardImage.value,
@@ -192,8 +192,27 @@ useSeoMeta({
 const AVATARS = 20;
 // Members who said they can't join get a mark on their avatar.
 const declined = computed(() => new Set(data.value!.responses.filter((r) => r.status === 'no').map((r) => r.memberId)));
+// Any stage, as long as the date is set and the event still happens.
+const googleCalendar = computed(() => (ev.value.startsAt && !ev.value.cancelledAt ? googleCalendarUrl({ ...ev.value, startsAt: ev.value.startsAt }, origin) : null));
 const sharing = ref(false);
 const share = () => (sharing.value = true);
+
+// A new event opens its share dialog once, then offers the sign-in link once. The flag lives in memory only, so a refresh does not repeat it.
+const justCreated = useState<number>('justCreated', () => 0);
+const keeping = ref(false);
+let afterCreate = false;
+onMounted(() => {
+  if (justCreated.value !== id) return;
+  justCreated.value = 0;
+  afterCreate = true;
+  sharing.value = true;
+});
+watch(sharing, (open) => {
+  if (open || !afterCreate) return;
+  afterCreate = false;
+  if (me.value) keeping.value = true;
+});
+const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelledAt && (ev.value.stage !== 'poll' || votingOpen(ev.value)) && stageKey(ev.value) !== 'awaitingBill' && ev.value.stage !== 'settled' && (ev.value.stage !== 'bill' || data.value!.share !== null));
 </script>
 
 <template>
@@ -249,6 +268,11 @@ const share = () => (sharing.value = true);
                   <UIcon name="i-lucide-users" />{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}
                 </span>
               </p>
+              <p v-if="googleCalendar" class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span class="flex items-center gap-1.5 text-muted"><UIcon name="i-lucide-calendar-plus" />{{ t('event.addToCalendar') }}</span>
+                <a :href="`/api/events/${id}/ics`" download class="text-primary underline-offset-2 hover:underline">{{ t('event.calendarFile') }}</a>
+                <ULink :href="googleCalendar" target="_blank" rel="noopener noreferrer" class="text-primary">{{ t('event.googleCalendar') }}</ULink>
+              </p>
               <div v-if="ev.note" class="text-sm text-toned">
                 <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-3'">
                   <template v-for="(part, i) in noteParts" :key="i"><span v-if="i % 2" class="rounded bg-primary/10 px-1 font-medium text-primary">{{ part }}</span><template v-else>{{ part }}</template></template>
@@ -303,6 +327,11 @@ const share = () => (sharing.value = true);
           </UAlert>
 
           <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
+          <!-- The message holds the page's own origin, which only the browser knows. -->
+          <ClientOnly>
+            <EventReminder v-if="reminding" :data="data" />
+            <template #fallback><div v-if="reminding" class="min-h-48" aria-hidden="true" /></template>
+          </ClientOnly>
         </div>
 
         <aside class="rise grid content-start gap-3 sm:grid-cols-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
@@ -347,7 +376,7 @@ const share = () => (sharing.value = true);
         <!-- Organizer-only panels: kept out of SSR, where they would not hydrate cleanly. -->
         <ClientOnly>
           <EventEdit v-if="role" v-model:open="editing" :data="data" :manage-key="key" @changed="refresh" />
-          <EventOrganizersDialog v-if="role" v-model:open="organizing" :data="data" :manage-key="key" :role="role" @changed="refresh" />
+          <EventOrganizersDialog v-if="role" v-model:open="organizing" :data="data" :manage-key="key" :role="role" @changed="refresh" @rekeyed="key = $event" />
         </ClientOnly>
 
         <UModal v-model:open="posting" :title="t('post.title')" :description="t('post.body')">
@@ -363,7 +392,8 @@ const share = () => (sharing.value = true);
           </template>
         </UModal>
       </div>
-      <EventShareDialog v-model:open="sharing" :id="id" :title="ev.title" :stage="ev.stage" />
+      <EventShareDialog v-model:open="sharing" :event="ev" />
+      <ClientOnly><EventKeepAccess v-model:open="keeping" /></ClientOnly>
     </template>
   </UDashboardPanel>
 </template>

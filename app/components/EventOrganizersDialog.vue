@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{ data: EventDetail; manageKey: string | null; role: Role }>();
 const open = defineModel<boolean>('open', { required: true });
-const emit = defineEmits<{ changed: [] }>();
+const emit = defineEmits<{ changed: []; rekeyed: [key: string] }>();
 const { t, locale } = useI18n();
 const toast = useToast();
 const { me, members } = useMe();
@@ -47,7 +47,7 @@ const myRow = computed(() => (props.role === 'cohost' ? list.value.find((c) => c
 // The invite secret is only shown once (we store its hash), so the link stays on screen until the dialog closes.
 // Copying is a separate tap: Safari rejects clipboard writes that follow an await.
 const link = ref<{ name: string; url: string } | null>(null);
-const confirming = ref<{ kind: 'reissue' | 'revoke' | 'leave' | 'legacy'; memberId?: number } | null>(null);
+const confirming = ref<{ kind: 'reissue' | 'revoke' | 'leave' | 'legacy' | 'rotateKey'; memberId?: number } | null>(null);
 watch(open, (o) => {
   if (!o) return;
   link.value = null;
@@ -95,6 +95,22 @@ async function remove(memberId: number) {
   confirming.value = null;
   if (link.value) link.value = null;
   emit('changed');
+}
+
+// The old manage key dies at once; this browser keeps working because it is handed the new one.
+async function rotateKey() {
+  try {
+    const { key } = await $fetch<{ key: string }>(`/api/events/${props.data.event.id}/key`, {
+      method: 'POST',
+      headers: props.manageKey ? { 'x-manage-key': props.manageKey } : {},
+    });
+    saveManageKey(props.data.event.id, key);
+    confirming.value = null;
+    emit('rekeyed', key);
+    toast.add({ title: t('org.rotated'), description: t('org.rotatedHint') });
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  }
 }
 
 async function revokeLegacy() {
@@ -206,16 +222,23 @@ async function revokeLegacy() {
           </div>
         </section>
 
-        <div v-if="isHost && manageKey" class="space-y-2 border-t border-default pt-6">
+        <div v-if="can(role, 'rotateKey') && manageKey" class="space-y-2 border-t border-default pt-6">
           <UButton
+            v-if="manageKey"
             color="neutral"
             variant="outline"
             icon="i-lucide-key-round"
-            @click="copy(`${origin()}?key=${manageKey}`, t('manage.linkCopied'), t('manage.linkHint'))"
+            @click="copy(`${origin()}#key=${manageKey}`, t('manage.linkCopied'), t('manage.linkHint'))"
           >
             {{ t('manage.copyLink') }}
           </UButton>
-          <p class="text-xs text-muted">{{ t('manage.linkHint') }}</p>
+          <p v-if="manageKey" class="text-xs text-muted">{{ t('manage.linkHint') }}</p>
+          <div v-if="is('rotateKey')" class="flex flex-wrap items-center gap-2">
+            <span class="text-sm">{{ t('org.rotateConfirm') }}</span>
+            <UButton color="warning" @click="rotateKey">{{ t('org.rotateDo') }}</UButton>
+            <UButton ref="cancelBtn" color="neutral" variant="ghost" @click="confirming = null">{{ t('cancel') }}</UButton>
+          </div>
+          <UButton v-else color="neutral" variant="ghost" size="sm" icon="i-lucide-refresh-cw" @click="confirming = { kind: 'rotateKey' }">{{ t('org.rotateKey') }}</UButton>
         </div>
       </div>
     </template>

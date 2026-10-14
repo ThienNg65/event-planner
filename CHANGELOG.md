@@ -6,6 +6,17 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ### Added
 - The app can also be deployed on Cloudflare Workers.
+- After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The link changes with each stage so chat apps show a fresh preview.
+- Organizers see who has not voted, answered or paid, with a reminder message to copy. A payment reminder names the people who still owe or only counts them, and never shows amounts.
+- Right after you create an event you are offered your sign-in link once, with a warning to send it only to yourself.
+- You can change your sign-in link from the account menu if it leaks. The old link stops working and your other devices are signed out.
+- The host can make a new manage link if the old one leaks; the old one stops working. This works only on a device that already holds the manage link, so a leaked sign-in link alone cannot lock the host out. Copied manage links now keep the key out of link previews and server logs (the pasted text still contains it after the #, so only share it with co-hosts).
+- Events with a date have an Add to calendar option (a calendar file or Google Calendar), at any stage. Entries last 2 hours.
+- After voting closes, participants see which day got the most votes while they wait for the date.
+- The create form says that bank details are visible to anyone with the event link, and that a fixed date without a place starts as a vote on the place.
+
+### Changed
+- Signing out explains more clearly that your sign-in link is the only way back and that organizer links on this device are forgotten.
 
 ## [0.7.0] - 2026-10-13
 

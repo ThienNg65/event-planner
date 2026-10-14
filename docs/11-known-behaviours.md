@@ -12,7 +12,7 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | # | Behaviour | Evidence | Intent |
 |---|---|---|---|
 | 2 | Signing out asks first, because a claimed name can't be picked again; only the sign-in link brings it back. | E2E | Deliberate. |
-| 3 | The sign-in token is the cookie value, so a sign-in link is a permanent credential for that member until the member is deleted. There is no rotation or revoke. | Code | Deliberate simplicity ("no password by design"). |
+| 3 | The sign-in token is the cookie value, so a sign-in link is a credential for that member until rotated (`POST /api/me/rotate`). Rotating signs the member out on every device, because there is one token per member. | Code | Deliberate simplicity ("no password by design"). If a creator's link leaks, an attacker is host of the creator's events but cannot replace the manage key without holding it (`POST /api/events/:id/key` checks `x-manage-key`); rotate the sign-in link at once. A creator with no copy of the manage key anywhere cannot rotate it. |
 | 5 | A name that created an event cannot be claimed from the list, so such a member must use a sign-in or manage link to come back. | Code | Deliberate (prevents taking over host rights). |
 
 ## Dates and stages

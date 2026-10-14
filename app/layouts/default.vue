@@ -12,14 +12,16 @@ watch(meId, () => (whoOpen.value = false));
 
 // The sign-in link is fetched when the menu opens: Safari rejects clipboard writes that follow an await.
 const signInLink = ref('');
-watch(whoOpen, async (o) => {
-  if (!o || !me.value || signInLink.value) return;
+async function loadLink() {
   try {
     const { token } = await $fetch('/api/me/link', { method: 'POST' });
     signInLink.value = `${location.origin}/#signin=${token}`;
   } catch (e) {
     toast.add({ color: 'error', title: errMsg(e) });
   }
+}
+watch(whoOpen, (o) => {
+  if (o && me.value && !signInLink.value) loadLink();
 });
 watch(meId, () => (signInLink.value = ''));
 async function copyLink() {
@@ -31,9 +33,33 @@ async function copyLink() {
   }
 }
 
+// Changing the sign-in link signs every other device out, so it asks first. This device gets the new cookie and stays in.
+const confirmRotate = ref(false);
+// The confirm opens with focus on Cancel, never on the destructive button.
+const rotateCancel = useTemplateRef<{ $el: HTMLElement }>('rotateCancel');
+watch(confirmRotate, async (c) => {
+  if (!c) return;
+  await nextTick();
+  rotateCancel.value?.$el.focus();
+});
+async function rotateLink() {
+  try {
+    await $fetch('/api/me/rotate', { method: 'POST' });
+    confirmRotate.value = false;
+    signInLink.value = '';
+    await loadLink();
+    toast.add({ title: t('me.rotated'), description: t('me.rotatedHint') });
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  }
+}
+
 // A claimed name can't be picked again, so signing out asks first: the sign-in link is the only way back.
 const confirmSignOut = ref(false);
-watch(whoOpen, () => (confirmSignOut.value = false));
+watch(whoOpen, () => {
+  confirmSignOut.value = false;
+  confirmRotate.value = false;
+});
 async function signOut() {
   try {
     await $fetch('/api/me/signout', { method: 'POST' });
@@ -117,6 +143,14 @@ const nav = computed<NavigationMenuItem[]>(() => [
                   <p class="text-sm">{{ me.name }}</p>
                   <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
                   <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
+                  <div v-if="confirmRotate" class="space-y-2">
+                    <p class="text-xs text-warning">{{ t('me.rotateConfirm') }}</p>
+                    <div class="flex gap-2">
+                      <UButton color="warning" size="sm" @click="rotateLink">{{ t('me.rotateDo') }}</UButton>
+                      <UButton ref="rotateCancel" color="neutral" variant="ghost" size="sm" @click="confirmRotate = false">{{ t('cancel') }}</UButton>
+                    </div>
+                  </div>
+                  <UButton v-else color="neutral" variant="ghost" size="sm" icon="i-lucide-refresh-cw" @click="confirmRotate = true">{{ t('me.rotate') }}</UButton>
                   <UButton v-if="me.organizer" color="neutral" variant="ghost" size="sm" icon="i-lucide-users" @click="teamOpen = true">{{ t('team.manage') }}</UButton>
                   <div class="border-t border-default pt-2">
                     <div v-if="confirmSignOut" class="space-y-2">

@@ -16,6 +16,7 @@ Every handler validates its own input (there is no shared schema layer): `server
 | `POST /api/members/:id/archive` | signed in, has created an event | Hide a member from the roster ([03](03-identity-and-roles.md#archived-members)) | `signInFirst`, `organizersOnly`, `unknownMember` |
 | `GET /api/me` | none | The signed-in member `{ id, name, organizer }` or `null` | |
 | `POST /api/me/link` | signed in | `{ token }` to build a sign-in link | `signInFirst` |
+| `POST /api/me/rotate` | signed in | New sign-in token and cookie; the old link and all other devices stop working. Returns `{ ok: true }` | `signInFirst`, `signInInvalid` (lost a race with another sign-in change) |
 | `POST /api/me/signin` `{token}` | none | Sign in from a link; un-archives the member | `signInInvalid` |
 | `POST /api/me/signout` | none | Clear this browser's cookie | |
 
@@ -28,6 +29,8 @@ Every handler validates its own input (there is no shared schema layer): `server
 | `GET /api/events/:id` | none (role from key/session) | Full detail (see below) | `notFound` |
 | `PATCH /api/events/:id` | organizer (some moves host) | Edit, stage moves, cancel/restore, close/reopen voting, day diffs, corrections | many, see below |
 | `DELETE /api/events/:id` | host | Delete with cascade | `hostOnly`, `forbidden` |
+| `POST /api/events/:id/key` | host, and the current manage key in `x-manage-key` (sign-in as creator is not enough) | Replace the manage key (guarded on the current hash); returns `{ key }` once | `hostOnly`, `forbidden`, `manageKeyRequired`, `keyChanged` |
+| `GET /api/events/:id/ics` | none | iCalendar file (`text/calendar`, attachment `event-<id>.ics`): UTC start, 2 h, venue, link, note, `STATUS:CANCELLED` when cancelled; built by `icsOf` in `shared/utils/ics.ts` | `notFound` (also when the event has no start time) |
 | `GET /api/events/:id/card` | none | 1200×630 PNG: cover + QR of the event link (used as `og:image`); redirects to `/icon-512.png` on any failure | |
 
 ### `GET /api/events/:id` response

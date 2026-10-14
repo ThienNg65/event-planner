@@ -11,7 +11,7 @@ Nuxt 4 + Nuxt UI (dashboard layout), Vue 3 `<script setup>` with TypeScript, Tai
 | `/e/:id` | `app/pages/e/[id].vue` | The event page (below). |
 | `/calendar` | `app/pages/calendar.vue` | Month grid and agenda: locked events solid on their day; an event still polling shows as a dashed "tentative" pill on its first candidate day of each month, with "· N days to vote on". |
 
-Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with sign-in link and sign-out (sign-out also forgets stored keys, see [03](03-identity-and-roles.md)), "Tidy the team list" for organizers (`me.organizer`: an archive dialog over the roster), language toggle, appearance settings, dark-mode toggle). A sign-in link `/#signin=<token>` is consumed there on mount.
+Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with sign-in link, "Change sign-in link" (in-page confirm that other devices are signed out) and sign-out (sign-out also forgets stored keys, see [03](03-identity-and-roles.md)), "Tidy the team list" for organizers (`me.organizer`: an archive dialog over the roster), language toggle, appearance settings, dark-mode toggle). A sign-in link `/#signin=<token>` is consumed there on mount.
 
 ## The event page
 
@@ -19,13 +19,22 @@ Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with sign-
 
 | Piece | Component | Shows |
 |---|---|---|
-| Header | in `[id].vue` | Cover, stage badge (`stageKey`), title, date, place, host, going count (hidden during `poll`), note with @mention chips, notice banner, cancelled banner, co-host invite banner |
-| Next-step card | `EventNextStep.vue` | The visitor's one next thing (`nextStep()`), plus the organizer's controls: Lock, Close/Reopen voting, Enter bill (before the start: when it opens), Complete, Complete with open debts. Owns the lock, bill and complete dialogs. The Completed card shows "Who came" avatars. |
+| Header | in `[id].vue` | Cover, stage badge (`stageKey`), title, date, place, host, going count (hidden during `poll`), "Add to calendar" links (calendar file `GET /api/events/:id/ics` and a Google Calendar link from `googleCalendarUrl`; shown whenever `startsAt` is set and the event is not cancelled, in any stage), note with @mention chips, notice banner, cancelled banner, co-host invite banner |
+| Next-step card | `EventNextStep.vue` | The visitor's one next thing (`nextStep()`), plus the organizer's controls: Lock, Close/Reopen voting, Enter bill (before the start: when it opens), Complete, Complete with open debts. Owns the lock, bill and complete dialogs. The Completed card shows "Who came" avatars. After voting closes a participant also sees "Most votes: <day> (<n>)". |
+| Reminder card | `EventReminder.vue` | Organizers (`can(role, 'remind')`) while the event is not cancelled, in `poll` only while voting is open, and in `rsvp` only until the start time (afterwards the badge reads "awaiting the bill"). Hidden once `settled`, and in `bill` while there is no share (nothing owed), and for a lapsed seat hold the member is listed as not answered (`reminderOf` takes `data.held`). Names from `reminderOf` (not voted / not answered / needs to confirm / not paid), a "Copy reminder" button, and "Everyone has voted / answered / paid" when the list is empty. Client-only render (a fixed-height placeholder avoids a layout jump). The `<pre>` previews are focusable regions. |
 | Stage section (one of) | `EventPoll.vue` / `EventRsvp.vue` / `EventBill.vue` | Day tiles and place list with voting; RSVP buttons and guests; bill, share, QR and payment form |
 | People | `EventPeople.vue` | Everyone with a vote or answer, ranked; organizer row menu |
 | Side rail | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
-| Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` | Edit panel, roles and links, reopen/cancel/delete, date/place correction, poll day editing |
-| Sharing | `EventShareDialog.vue` | Link and QR; the page's `og:image` is `GET /api/events/:id/card` |
+| Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` | Edit panel, roles and links (the organizers dialog copies the manage link as `/e/:id#key=<key>`; the host can "Make a new manage link" after an in-page confirm: `POST /api/events/:id/key`, then `saveManageKey`), reopen/cancel/delete, date/place correction, poll day editing |
+| Sharing | `EventShareDialog.vue` | Message preview with a vi/en toggle (default vi) and "Copy message", the link (`/e/:id?s=<stage>`), QR and the system share sheet; the page's `og:image` is `GET /api/events/:id/card` |
+| After create | `EventKeepAccess.vue` | The amber "Keep access" modal, see [03](03-identity-and-roles.md) |
+
+## Sharing and reminders
+
+- After `POST /api/events` succeeds, `new.vue` sets `useState('justCreated')` to the new id; the event page opens its share dialog once and clears the flag (it lives in memory, so a refresh does not reopen it). When that dialog closes, the keep-access modal opens once.
+- Texts for chat apps are built by `shareMessage` and `reminderMessage` in `app/utils/messages.ts` from the `msg.*` keys, with an explicit locale chosen in the dialog's vi/en toggle (`MessageLangToggle.vue`), not the app's language. Dates use `fmtDateTime` (Vietnam time). A cancelled event gets a "cancelled" text, and an RSVP past its start time a neutral details-and-link text (no "are you coming?"). Tested in `test/messages.test.ts`.
+- The link carries `?s=<stage>` so each stage is a new URL and chat apps refresh a stale preview; `?s=` is ignored by the page, and `og:url` carries it too. The calendar file link is a plain `<a download>` (not a router link). The message language toggle loads the other locale's messages first (`loadLocaleMessages`): locales are lazy-loaded with no fallback. A message never contains a key or a sign-in link.
+- A payment reminder names the people who still owe, or only counts them (toggle); it never includes an amount.
 
 Finished stages collapse to one summary line each ("12 voted", "8 seats").
 "Edit" saves on request; "Post an update" (notice) publishes at once; stage moves are explicit buttons.
@@ -62,4 +71,4 @@ Finished stages collapse to one summary line each ("12 voted", "8 seats").
 
 ## Component index
 
-`CoverPicker`, `DateTimeInput`, `EventBill`, `EventCard`, `EventCorrectDialog`, `EventDaysDialog`, `EventEdit`, `EventHostMenu`, `EventNextStep`, `EventOrganizers`, `EventOrganizersDialog`, `EventOverview`, `EventPeople`, `EventPoll`, `EventRsvp`, `EventShareDialog`, `MemberAvatar`, `MemberPicker`, `PollDaysInput`, `ThemePicker`: all in `app/components/`.
+`CoverPicker`, `DateTimeInput`, `EventBill`, `EventCard`, `EventCorrectDialog`, `EventDaysDialog`, `EventEdit`, `EventHostMenu`, `EventKeepAccess`, `EventNextStep`, `EventOrganizers`, `EventOrganizersDialog`, `EventOverview`, `EventPeople`, `EventPoll`, `EventReminder`, `EventRsvp`, `EventShareDialog`, `MemberAvatar`, `MemberPicker`, `MessageLangToggle`, `PollDaysInput`, `ThemePicker`: all in `app/components/`.

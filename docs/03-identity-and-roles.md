@@ -11,7 +11,9 @@ Two independent mechanisms exist and are combined in `roleOf`.
 | Cookie | `sid`, `httpOnly`, `sameSite=lax`, `secure` outside dev, max-age 400 days. |
 | Lookup | `meOf(event)` resolves the cookie to a member id once per request (cached in `event.context.me`). |
 | Sign-in link | `/#signin=<token>`. The page posts the token to `/api/me/signin`, which sets the cookie. The token **is** the cookie value, so the link works like a password. |
-| Sign-out | `POST /api/me/signout` clears this browser's cookie. The page then forgets every manage and co-host key stored on this device (`te:keys`, `forgetAllManageKeys`), and the confirm text says so. The token stays valid; the sign-in link still works. A host gets access back by signing in (the creator is host) or by opening the manage link again. |
+| Rotate | `POST /api/me/rotate` (signed in) swaps the token for a new one with a guarded `UPDATE members SET token_hash = new WHERE id = me AND token_hash = <current>` and sets the new cookie. The old sign-in link stops working, and every other device is signed out (one `tokenHash` per member). Use it when a link leaked. |
+| Keep access (UI) | After creating an event, once the share dialog closes, a "Save your sign-in link" modal (subtitle: send it only to yourself) (`EventKeepAccess.vue`) offers **Copy sign-in link** (from `POST /api/me/link`; a failed fetch or clipboard write shows an error toast and the button retries), says the link restores the member and their organizer rights on another device, and points to **Change sign-in link** in the account menu (the sidebar, confirmed in the page, never `window.confirm`; it calls `POST /api/me/rotate` and fetches the new link). It is kept apart from the share dialog, which never contains a key or a sign-in link. |
+| Sign-out | `POST /api/me/signout` clears this browser's cookie. The page then forgets every manage and co-host key stored on this device (`te:keys`, `forgetAllManageKeys`), and the confirm text says so, and that only the sign-in link brings the member back. The token stays valid; the sign-in link still works. A host gets access back by signing in (the creator is host) or by opening the manage link again. |
 
 ### Ways to become a member
 
@@ -32,7 +34,7 @@ flowchart TD
 
 - **I'm new** (`POST /api/members`): trims and collapses whitespace in the name (max 50). The name is unique as an exact string; a 409 `nameTaken` means someone has it. The one exception is an archived name that was never claimed and created no event: adding it again reuses that member (signs in as it and un-archives it). The UI also asks "Is that you?" when a *similar* name exists (`norm()` ignores case and diacritics: Thien / Thiên / THIEN).
 - **Claim** (`POST /api/members/:id/claim`): for names added before sign-in existed (no token yet). One conditional UPDATE lets only the first claimer win. A name that **created an event** can never be claimed, because claiming would hand over host rights (`nameOrganizer`).
-- **Move to another device**: `POST /api/me/link` returns the current token (requires being signed in); open `/#signin=<token>` elsewhere.
+- **Move to another device**: `POST /api/me/link` returns the current token (requires being signed in); open `/#signin=<token>` elsewhere. A leaked link is revoked with `POST /api/me/rotate` (see 3.1).
 - `GET /api/members` lists the roster (archived members left out) with `claimed` (token set, or creator of an event). `GET /api/me` returns the current member with `organizer` (has created an event), or `null`.
 
 ### Archived members
@@ -58,7 +60,7 @@ role = host     if   x-manage-key matches events.manageKeyHash
 
 Keys are random 32-byte `base64url` strings; only SHA-256 hashes are stored; comparison uses `timingSafeEqual`.
 The browser keeps manage keys in `localStorage` under `te:keys` (`{ [eventId]: key }`) and `useEventApi` sends the stored key as
-`x-manage-key` on every call. A `?key=` URL parameter is stored then stripped; when two keys exist the higher-ranked one wins.
+`x-manage-key` on every call. A `#key=` URL fragment (preferred: it never reaches servers or logs) or an old-style `?key=` parameter is stored then stripped; when two keys exist the higher-ranked one wins.
 If the server stops accepting a key (revoked, rotated), the page forgets it.
 
 ### Permission table (`shared/utils/roles.ts`)
@@ -73,6 +75,8 @@ If the server stops accepting a key (revoked, rotated), the page forgets it.
 | `cancel` | ✘ | ✔ | Cancel, restore |
 | `delete` | ✘ | ✔ | Delete the event |
 | `cohost` | ✘ | ✔ | Invite, re-issue, revoke co-hosts; manage the legacy key |
+| `remind` | ✔ | ✔ | See who has not voted, answered or paid, and copy a reminder (`reminderOf` in `shared/utils/event.ts`; never carries amounts) |
+| `rotateKey` | ✘ | ✔ | `POST /api/events/:id/key`: replace the manage key (the old manage link stops working). Besides the host role it needs the **current manage key** in `x-manage-key` (`403 manageKeyRequired` otherwise), so a stolen creator sign-in link alone cannot lock the host out. The button only shows in a browser that holds the key. A creator with no copy of the key on any device cannot rotate it. |
 
 `can(role, action)`: host can do everything; co-host only actions whose minimum role is co-host; participant nothing.
 **Always go through `can()` / `requireCan()`**, never compare roles ad hoc.
@@ -118,7 +122,7 @@ sequenceDiagram
 
 ## 3.4 Security properties worth remembering
 
-- A name is only as safe as its sign-in link. Whoever holds the token acts as that member.
+- A name is only as safe as its sign-in link. Whoever holds the token acts as that member. For an event's creator that includes host powers, so a leaked creator link is serious: rotate the sign-in link right away. The manage key is the stronger credential (it is what authorises replacing the manage key), and the sign-in link alone cannot take it over.
 - Whoever holds an event's manage key is its host, **regardless of who is signed in**. Because the key sits in `localStorage`, anyone using that browser profile has host power on that event while the key is stored. Signing out forgets every key on that device (see 3.1).
 - The create page only asks for a new name and never lists others, so it can't be used to browse the roster.
 - **Everything is readable by anyone, by design**: all events, every member's votes, answers and payments, and the event's bank id, account number and holder. The app is team-internal; there is no per-event privacy.
