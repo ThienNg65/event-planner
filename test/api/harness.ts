@@ -114,6 +114,9 @@ const joinKeys = new Map<number, string>();
 // Each test member's sign-in token, from the cookie POST /api/members sets.
 const tokens = new Map<number, string>();
 
+/** The `sid` cookie header of a test member, for requests whose answer is not JSON. */
+export const cookieOf = (me: number) => ({ cookie: `sid=${tokens.get(me)}` });
+
 /** A request against the built server: `key` becomes x-manage-key, `me` signs in as that member (see `member()`), `sid` sends a raw session cookie, `join` overrides the x-join-key (false sends none). */
 export async function api(path: string, { method = 'GET', body, key, me, sid, join }: Opts = {}) {
   const headers: Record<string, string> = {};

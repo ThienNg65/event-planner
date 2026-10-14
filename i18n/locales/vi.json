@@ -75,7 +75,12 @@
     "setPin": "Đặt mã PIN",
     "changePin": "Đổi mã PIN",
     "noPinNudge": "Đặt mã PIN 6 số để đăng nhập trên mọi điện thoại hoặc máy tính.",
-    "otherDeviceNew": "Đã có tên? Hãy đăng nhập từ menu tài khoản ở thanh bên bằng tên và mã PIN."
+    "otherDeviceNew": "Đã có tên? Hãy đăng nhập từ menu tài khoản ở thanh bên bằng tên và mã PIN.",
+    "signOutOthers": "Đăng xuất các thiết bị khác",
+    "signOutOthersConfirm": "Mọi thiết bị khác đang đăng nhập sẽ bị đăng xuất và liên kết đăng nhập cũ hết hiệu lực. Thiết bị này vẫn đăng nhập. Mã PIN không đổi.",
+    "signOutOthersDo": "Đăng xuất các thiết bị đó",
+    "othersOut": "Đã đăng xuất các thiết bị khác",
+    "othersOutHint": "Liên kết đăng nhập cũ không còn dùng được. Hãy sao chép liên kết mới nếu cần."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
@@ -97,7 +102,10 @@
     "more": "Xem thêm",
     "less": "Thu gọn",
     "changeCover": "Thay đổi ảnh bìa",
-    "dayOptions": "Chưa chốt ngày · {n} ngày đề xuất"
+    "dayOptions": "Chưa chốt ngày · {n} ngày đề xuất",
+    "addToCalendar": "Thêm vào lịch",
+    "calendarFile": "Tệp lịch (.ics)",
+    "googleCalendar": "Google Calendar"
   },
   "create": {
     "title": "Tạo sự kiện",
@@ -128,7 +136,7 @@
     "needDays": "Chọn ít nhất một ngày để bình chọn.",
     "needDate": "Chọn ngày và giờ.",
     "done": "Đã tạo sự kiện",
-    "keyHint": "Trình duyệt này đã lưu quyền quản lý. Hãy sao chép liên kết quản lý để dùng trên máy khác.",
+    "keyHint": "Giờ hãy mời cả nhóm.",
     "quickStart": "Bắt đầu nhanh:",
     "payment": "Thông tin thanh toán (không bắt buộc)",
     "paymentLater": "Bạn có thể thêm sau, khi có hoá đơn.",
@@ -139,7 +147,9 @@
       "afterwork": "Đi nhậu sau giờ làm 🍻",
       "sports": "Ngày thể thao ⚽",
       "trip": "Du lịch cuối tuần 🏕️"
-    }
+    },
+    "bankPublic": "Thông tin ngân hàng hiển thị cho bất kỳ ai có liên kết sự kiện.",
+    "fixedDateNoVenue": "Đã có ngày nhưng chưa có địa điểm: sự kiện sẽ mở bình chọn địa điểm trước, chốt xong mọi người mới trả lời tham gia."
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
@@ -211,6 +221,8 @@
     "nameClaimed": "Tên này đã có người đăng nhập. Hãy dùng liên kết đăng nhập của bạn.",
     "nameOrganizer": "Tên này đang tổ chức một sự kiện nên không thể chọn từ danh sách. Hãy mở liên kết đăng nhập hoặc liên kết quản lý của bạn.",
     "signInInvalid": "Liên kết đăng nhập không hợp lệ.",
+    "keyChanged": "Liên kết quản lý vừa được đổi. Hãy tải lại trang rồi thử lại.",
+    "manageKeyRequired": "Cần mở bằng liên kết quản lý hiện tại để đổi liên kết quản lý.",
     "pinFormat": "Mã PIN gồm đúng 6 chữ số.",
     "pinWeak": "Mã PIN quá dễ đoán. Tránh số lặp và dãy như 123456.",
     "pinWrong": "Sai tên hoặc mã PIN.",
@@ -499,7 +511,8 @@
     "allAnswered": "Mọi người đã phản hồi. Chốt luôn?",
     "closeVsLock": "Đóng bình chọn: ngừng nhận phiếu, chưa chốt gì. Chốt: chọn ngày (và địa điểm), ai đã chọn sẽ được tính tham gia. Đến hạn, bình chọn tự đóng và chờ bạn chốt.",
     "billAfter": "Bạn có thể nhập hóa đơn khi sự kiện bắt đầu ({when}).",
-    "lockOnly": "Bình chọn đã đóng. Chốt để chọn ngày (và địa điểm); ai đã chọn sẽ được tính tham gia."
+    "lockOnly": "Bình chọn đã đóng. Chốt để chọn ngày (và địa điểm); ai đã chọn sẽ được tính tham gia.",
+    "leading": "Nhiều phiếu nhất: {day} ({n})"
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -539,17 +552,17 @@
     "honoreesPick": "Chọn thành viên"
   },
   "share": {
-    "poll": "Bình chọn ngày cho: {title}",
-    "rsvp": "Bạn có đi không? {title}",
-    "bill": "Đến lúc chia tiền: {title}",
-    "settled": "{title}",
     "dialogTitle": "Chia sẻ sự kiện",
     "dialogHint": "Chỉ ai có liên kết này mới xem và tham gia được. Quét mã hoặc gửi liên kết.",
     "qrAlt": "Mã QR của đường dẫn sự kiện",
     "link": "Đường dẫn sự kiện",
-    "copy": "Sao chép",
+    "copy": "Sao chép liên kết",
     "copyFailed": "Không sao chép được đường dẫn",
-    "native": "Chia sẻ…"
+    "native": "Chia sẻ…",
+    "copyMessage": "Sao chép tin nhắn",
+    "messageCopied": "Đã sao chép tin nhắn, dán vào Zalo là xong",
+    "messageLang": "Ngôn ngữ tin nhắn",
+    "previewLabel": "Xem trước tin nhắn"
   },
   "sum": {
     "poll": "Đã đóng bình chọn · {n} người chọn",
@@ -650,7 +663,12 @@
     "inviteCopied": "Đã sao chép liên kết mời",
     "inviteHint": "Chỉ hiện một lần. Hãy gửi riêng tư; ai mở trước có thể nhận lời. Liên kết dùng được một lần và hết hạn sau 7 ngày.",
     "legacy": "Liên kết đồng tổ chức chung (không có tên)",
-    "legacyHint": "Liên kết cũ ai cũng dùng được. Có thể thu hồi ở đây nhưng không tạo lại được; hãy mời đồng tổ chức theo tên."
+    "legacyHint": "Liên kết cũ ai cũng dùng được. Có thể thu hồi ở đây nhưng không tạo lại được; hãy mời đồng tổ chức theo tên.",
+    "rotateKey": "Tạo liên kết quản lý mới",
+    "rotateConfirm": "Liên kết quản lý hiện tại sẽ hết hiệu lực ở mọi nơi. Sau đó hãy sao chép liên kết mới nếu cần quản lý trên thiết bị khác.",
+    "rotateDo": "Tạo liên kết mới",
+    "rotated": "Đã tạo liên kết quản lý mới",
+    "rotatedHint": "Các liên kết quản lý cũ không còn dùng được."
   },
   "post": {
     "open": "Đăng thông báo",
@@ -718,8 +736,57 @@
     "tieHonorees": "Đang hoà {n} phiếu. {day} được gợi ý vì nhiều người được chúc mừng đi được hơn.",
     "tieEarlier": "Đang hoà {n} phiếu. {day} chỉ được ưu tiên tạm thời vì sớm hơn, không phải vì nhiều người đi hơn; hãy cân nhắc ai đi được ngày nào bên dưới."
   },
+  "msg": {
+    "share": {
+      "pollDays": "📅 {title}\nMọi người vào bình chọn những ngày đi được nhé: {url}",
+      "pollDaysBy": "📅 {title}\nMọi người bình chọn những ngày đi được trước {deadline} nhé: {url}",
+      "pollVenue": "📍 {title}\nMọi người vào bình chọn địa điểm nhé: {url}",
+      "pollVenueBy": "📍 {title}\nMọi người bình chọn địa điểm trước {deadline} nhé: {url}",
+      "pollClosed": "{title}\nĐã đóng bình chọn, đang chờ chốt ngày. Xem chi tiết: {url}",
+      "rsvp": "🎉 {title}\n🗓 {when}\nMọi người có tham gia không? Trả lời tại: {url}",
+      "rsvpStarted": "{title}\n🗓 {when}\nXem chi tiết sự kiện tại: {url}",
+      "cancelled": "{title}\nSự kiện đã bị huỷ. Xem chi tiết: {url}",
+      "bill": "💸 {title}\nĐến lúc chia tiền rồi, xem phần của bạn tại: {url}",
+      "settled": "{title}\nXem lại sự kiện tại: {url}"
+    },
+    "remind": {
+      "by": " trước {deadline}",
+      "poll": "⏰ {title}\nCòn chờ bình chọn từ: {names}.\nMọi người vào bình chọn{by} nhé: {url}",
+      "rsvpHead": "⏰ {title}",
+      "rsvp": "Chưa trả lời: {names}.",
+      "rsvpConfirm": "Nhờ xác nhận lại chỗ tham gia: {names}.",
+      "bill": "💸 {title}\nChưa chuyển tiền: {names}.\nXem phần của bạn tại: {url}",
+      "billCount": "💸 {title}\nCòn {n} người chưa chuyển tiền. Xem phần của bạn tại: {url}"
+    }
+  },
+  "remind": {
+    "title": "Nhắc cả nhóm",
+    "hint": "Sao chép tin nhắn rồi dán vào nhóm chat.",
+    "poll": "Chưa bình chọn",
+    "rsvp": "Chưa trả lời",
+    "confirm": "Cần xác nhận lại chỗ",
+    "bill": "Chưa chuyển tiền",
+    "allVoted": "Mọi người đã bình chọn.",
+    "allAnswered": "Mọi người đã trả lời.",
+    "allPaid": "Mọi người đã chuyển tiền.",
+    "copy": "Sao chép lời nhắc",
+    "copied": "Đã sao chép lời nhắc, dán vào Zalo là xong",
+    "names": "Kèm tên",
+    "count": "Chỉ số lượng",
+    "billNote": "Lời nhắc không bao giờ ghi số tiền."
+  },
+  "keep": {
+    "title": "Đặt mã PIN để giữ quyền truy cập",
+    "subtitle": "Để bạn đăng nhập lại được trên mọi điện thoại hoặc máy tính.",
+    "body": "{name} chưa có mã PIN. Nếu không có, chỉ liên kết đăng nhập mới đưa bạn quay lại với quyền tổ chức. Hãy chọn mã PIN 6 số ngay bây giờ.",
+    "linkInstead": "Hoặc lưu liên kết đăng nhập riêng cho bạn (ví dụ “Cloud của tôi” trên Zalo), đừng gửi vào nhóm.",
+    "copy": "Sao chép liên kết đăng nhập",
+    "manual": "Không sao chép tự động được. Hãy chọn và sao chép liên kết bên dưới:",
+    "later": "Để sau"
+  },
   "pin": {
     "label": "Mã PIN",
+    "current": "Mã PIN hiện tại",
     "enter": "Mã PIN 6 số của bạn",
     "choose": "Chọn mã PIN 6 số",
     "enterFor": "Nhập mã PIN của {name}.",

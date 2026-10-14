@@ -49,6 +49,8 @@ The lock dialog preselects the top-ranked day and the top-ranked place (places r
 
 See [02](02-event-lifecycle.md#voting-window-stage-poll-only). In short: after `voteDeadline` (or **Close voting**) participants cannot change votes; organizers can; the event stays in `poll` until someone locks.
 
+While waiting, a participant's next-step card also shows "Most votes: <day> (<n>)": the first day of `compareDays` (votes, then honorees who can come, then earliest), the same one the lock dialog preselects. It is hidden when no day has a vote, and organizers see their own comparison instead.
+
 ## 4.5 Locking
 
 `PATCH { stage:'rsvp', startsAt?, venue?, venueLink? }` by an organizer (`advance`).

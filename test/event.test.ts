@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { pinProblem } from '../shared/utils/pin.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
@@ -161,8 +161,8 @@ test('votingOpen: only while polling, not cancelled, before the deadline', () =>
 });
 
 test('can: host does everything, co-host cannot reopen/cancel/delete/manage the co-host link, others nothing', () => {
-  const shared = ['edit', 'advance', 'removeVenue', 'setOthers'] as const;
-  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost'] as const;
+  const shared = ['edit', 'advance', 'removeVenue', 'setOthers', 'remind'] as const;
+  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost', 'rotateKey'] as const;
   for (const a of [...shared, ...hostOnly]) assert.equal(can('host', a), true, `host ${a}`);
   for (const a of shared) assert.equal(can('cohost', a), true, `cohost ${a}`);
   for (const a of hostOnly) assert.equal(can('cohost', a), false, `cohost ${a}`);
@@ -416,6 +416,51 @@ test('compareDays: ties go to the day more honorees can make, then the earlier d
   assert.equal(compareDays(['2026-10-22', '2026-10-19'], rs).tie, 'earlier');
   assert.equal(compareDays(['2026-10-19', '2026-10-23'], rs).tie, null);
   assert.equal(compareDays(['2026-10-24', '2026-10-25'], rs).tie, null);
+});
+
+const team = [{ id: 1, name: 'An' }, { id: 2, name: 'Binh' }, { id: 3, name: 'Chi' }, { id: 4, name: 'Dung', archivedAt: new Date() }];
+const rrow = (memberId: number, o: Partial<{ days: string[]; venueIds: number[]; status: string | null; derived: string | null; guests: number; paidAt: unknown; paidAmount: number | null }> = {}) =>
+  ({ memberId, days: [], venueIds: [], status: null, derived: null, guests: 0, paidAt: null, ...o });
+
+test('reminderOf poll: names who have not voted, archived members skipped', () => {
+  const rs = [rrow(1, { days: ['2026-10-01'] })];
+  assert.deepEqual(reminderOf('poll', team, rs, [], null, []), { kind: 'poll', names: ['Binh', 'Chi'], confirm: [] });
+  const all = [rrow(1, { days: ['d'] }), rrow(2, { status: 'no' }), rrow(3, { venueIds: [1] })];
+  assert.deepEqual(reminderOf('poll', team, all, [], null, [])?.names, []);
+});
+
+test('reminderOf names only the roster it is given: participants of the event, not the whole team', () => {
+  const participants = [team[0]!, team[2]!];
+  assert.deepEqual(reminderOf('poll', participants, [], [], null, [])?.names, ['An', 'Chi']);
+  assert.deepEqual(reminderOf('rsvp', participants, [], [], null, [])?.names, ['An', 'Chi']);
+  assert.deepEqual(reminderOf('bill', participants, [rrow(1, { status: 'going' }), rrow(2, { status: 'going' })], [1, 2], 50_000, [])?.names, ['An']);
+});
+
+test('reminderOf rsvp: unanswered vs held seats that need confirming', () => {
+  const rs = [rrow(1, { status: 'going', derived: 'going' }), rrow(2, { status: 'going', derived: 'reconfirm' })];
+  assert.deepEqual(reminderOf('rsvp', team, rs, [1], null, [2]), { kind: 'rsvp', names: ['Chi'], confirm: ['Binh'] });
+  const answered = [rrow(1, { status: 'going' }), rrow(2, { status: 'no' }), rrow(3, { status: 'maybe' })];
+  assert.deepEqual(reminderOf('rsvp', team, answered, [1], null, []), { kind: 'rsvp', names: [], confirm: [] });
+});
+
+test('reminderOf rsvp: a lapsed hold (derived reconfirm but no longer held) is asked again, not told to confirm', () => {
+  const rs = [rrow(2, { status: 'going', derived: 'reconfirm' })];
+  assert.deepEqual(reminderOf('rsvp', team, rs, [], null, []), { kind: 'rsvp', names: ['An', 'Binh', 'Chi'], confirm: [] });
+});
+
+test('reminderOf rsvp: a lapsed holder is in names only, a live holder in confirm only', () => {
+  const rs = [rrow(1, { status: 'going', derived: 'going' }), rrow(2, { status: 'going', derived: 'reconfirm' }), rrow(3, { status: 'going', derived: 'reconfirm' })];
+  const r = reminderOf('rsvp', team, rs, [1], null, [3])!;
+  assert.deepEqual(r.names, ['Binh']);
+  assert.deepEqual(r.confirm, ['Chi']);
+});
+
+test('reminderOf bill: confirmed attendees who still owe, guests count, legacy paid and part payments handled', () => {
+  const rs = [rrow(1, { status: 'going', paidAt: new Date() }), rrow(2, { status: 'going', guests: 1, paidAmount: 50_000 }), rrow(3, { status: 'going' })];
+  assert.deepEqual(reminderOf('bill', team, rs, [1, 2, 3, 4], 50_000, []), { kind: 'bill', names: ['Binh', 'Chi'], confirm: [] });
+  assert.equal(reminderOf('bill', team, rs, [1, 2, 3], null, []), null);
+  assert.deepEqual(reminderOf('bill', team, [rrow(2, { status: 'going', paidAmount: 50_000 })], [2], 25_000, [])?.names, []);
+  assert.equal(reminderOf('settled', team, rs, [1], 1000, []), null);
 });
 
 test('a PIN is six digits that are not all alike and not a run', () => {

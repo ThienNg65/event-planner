@@ -35,6 +35,8 @@ Requires a signed-in member (the creator becomes **host**) and either poll days 
 
 Rule in code: `stage = pollDays.length || !venue ? 'poll' : 'rsvp'`. A fixed date must lie ahead (`startsInPast` otherwise); a few minutes ahead is enough.
 
+The create form says so: with a fixed date and no venue (or "let people suggest places") it shows a one-line hint that the event starts as a vote on the place (`create.fixedDateNoVenue`). Its payment section notes that bank details are visible to anyone who has the event link (`create.bankPublic`). After a successful create the event page opens with its share dialog (see [09](09-frontend-map.md#sharing-and-reminders)).
+
 ## Transition table
 
 "Organizer" = host or co-host (`can(role, 'advance')`). "Host" = host only. See [03](03-identity-and-roles.md) for roles.

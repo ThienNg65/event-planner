@@ -305,6 +305,51 @@ export const pendingVoters = <M extends { id: number }>(roster: M[], responses: 
   return roster.filter((m) => !voted.has(m.id));
 };
 
+export type Reminder = {
+  kind: 'poll' | 'rsvp' | 'bill';
+  /** Participant names still to act: vote, answer RSVP, or pay. */
+  names: string[];
+  /** RSVP only: members whose seat is held and who must confirm it. */
+  confirm: string[];
+};
+
+type RemindRow = { memberId: number; days: unknown[]; venueIds: unknown[]; status?: string | null; derived?: string | null; guests: number } & PayRow;
+
+/**
+ * Who to nudge at the current stage, for the organizer's reminder: poll = not voted, rsvp = not answered (`names`) or
+ * holding a seat to confirm (`confirm`; `held` = member ids whose hold is still live), bill = confirmed attendees who still owe.
+ * `roster` is the event's participants (people who joined it), not the whole team; archived members are skipped, order is roster order. Null once settled, or in the bill stage before there is a share. Carries no amounts, so a payment reminder can't leak them.
+ */
+export function reminderOf(
+  stage: string,
+  roster: { id: number; name: string; archivedAt?: unknown }[],
+  responses: RemindRow[],
+  confirmed: number[],
+  share: number | null,
+  held: number[]
+): Reminder | null {
+  const active = roster.filter((m) => !m.archivedAt);
+  const row = (id: number) => responses.find((r) => r.memberId === id);
+  const nameOf = (m: { name: string }) => m.name;
+  if (stage === 'poll') return { kind: 'poll', names: pendingVoters(active, responses).map(nameOf), confirm: [] };
+  if (stage === 'rsvp') {
+    // A lapsed hold (reconfirm_by passed) is not in `held` any more: that member is simply someone to ask again.
+    const holding = (id: number) => row(id)?.derived === 'reconfirm' && held.includes(id);
+    return {
+      kind: 'rsvp',
+      names: active.filter((m) => !holding(m.id) && (!row(m.id)?.status || row(m.id)?.derived === 'reconfirm')).map(nameOf),
+      confirm: active.filter((m) => holding(m.id)).map(nameOf),
+    };
+  }
+  if (stage === 'bill') {
+    // No share yet (bill not entered, or nobody seated): nobody owes anything, so there is nothing to remind.
+    if (share === null) return null;
+    const unpaid = (id: number) => !paymentOf(row(id), share * (1 + (row(id)?.guests ?? 0))).done;
+    return { kind: 'bill', names: active.filter((m) => confirmed.includes(m.id) && unpaid(m.id)).map(nameOf), confirm: [] };
+  }
+  return null;
+}
+
 /**
  * The i18n `stage.*` key for an event's badge: a poll past its deadline reads "waiting for the date", not "voting",
  * and a started event still in the RSVP stage reads "awaiting the bill", not "confirmed".

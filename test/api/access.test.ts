@@ -1,6 +1,6 @@
 import { after, afterEach, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { api, cleanup, day, event, member, startServer, stopServer } from './harness.ts';
+import { api, cleanup, cookieOf, day, event, member, startServer, stopServer } from './harness.ts';
 
 /** Private events: reachable only through the joining link; the overview lists only my events. */
 before(startServer);
@@ -115,5 +115,19 @@ describe('private events', () => {
     const withKey = await fetch(`http://localhost:3999${base(ev.id)}/card?j=${key}`);
     assert.equal(withKey.status, 200);
     assert.equal(withKey.headers.get('content-type'), 'image/png');
+  });
+
+  /** The calendar file reads the event, so it follows the same access as the page. */
+  it('guards the calendar file like the event itself', async () => {
+    const ev = await event({ pollDays: [], venue: 'zz-test-venue', startsAt: new Date(Date.now() + 10 * 86_400_000).toISOString() });
+    const stranger = await member();
+    const key = (await api(base(ev.id), { me: ev.createdBy })).body.event.joinKey;
+    // The body is a calendar file, not JSON, so these use fetch directly.
+    const ics = async (headers: Record<string, string>, q = '') => (await fetch(`http://localhost:3999${base(ev.id)}/ics${q}`, { headers })).status;
+    assert.equal(await ics(cookieOf(stranger)), 404);
+    assert.equal(await ics({}), 404);
+    assert.equal(await ics(cookieOf(ev.createdBy)), 200);
+    assert.equal(await ics(cookieOf(stranger), `?j=${key}`), 200);
+    assert.equal(await ics(cookieOf(stranger), '?j=wrong'), 404);
   });
 });

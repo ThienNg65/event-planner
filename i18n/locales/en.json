@@ -75,7 +75,12 @@
     "setPin": "Set a PIN",
     "changePin": "Change PIN",
     "noPinNudge": "Set a 6-digit PIN so you can sign in on any phone or computer.",
-    "otherDeviceNew": "Already have a name? Sign in from the account menu in the sidebar with your name and PIN."
+    "otherDeviceNew": "Already have a name? Sign in from the account menu in the sidebar with your name and PIN.",
+    "signOutOthers": "Sign out other devices",
+    "signOutOthersConfirm": "Every other device where you are signed in will be signed out, and your old sign-in link stops working. This device stays signed in. Your PIN does not change.",
+    "signOutOthersDo": "Sign them out",
+    "othersOut": "Other devices signed out",
+    "othersOutHint": "The old sign-in link no longer works. Copy the new one if you need it."
   },
   "event": {
     "dateTbd": "Date not set yet",
@@ -97,7 +102,10 @@
     "more": "More",
     "less": "Less",
     "changeCover": "Change cover",
-    "dayOptions": "Date not set · {n} proposed days"
+    "dayOptions": "Date not set · {n} proposed days",
+    "addToCalendar": "Add to calendar",
+    "calendarFile": "Calendar file (.ics)",
+    "googleCalendar": "Google Calendar"
   },
   "create": {
     "title": "New event",
@@ -128,7 +136,7 @@
     "needDays": "Pick at least one day to vote on.",
     "needDate": "Pick the date and time.",
     "done": "Event created",
-    "keyHint": "This browser remembers you as organizer. Copy the manage link to manage it elsewhere.",
+    "keyHint": "Now invite your team.",
     "quickStart": "Quick start:",
     "payment": "Payment details (optional)",
     "paymentLater": "You can add these later, when the bill comes in.",
@@ -139,7 +147,9 @@
       "afterwork": "After-work drinks 🍻",
       "sports": "Sports day ⚽",
       "trip": "Weekend trip 🏕️"
-    }
+    },
+    "bankPublic": "Bank details are visible to anyone who has the event link.",
+    "fixedDateNoVenue": "You have a date but no place yet: the event opens with a vote on the place first, and people RSVP once you lock it."
   },
   "rsvp": {
     "title": "RSVP",
@@ -211,6 +221,8 @@
     "nameClaimed": "Someone already signed in with that name. Use your sign-in link instead.",
     "nameOrganizer": "This name organizes an event, so it can't be picked from the list. Open your sign-in link or manage link instead.",
     "signInInvalid": "This sign-in link is not valid.",
+    "keyChanged": "The manage link was just changed. Reload the page and try again.",
+    "manageKeyRequired": "Open the event with its current manage link to change the manage link.",
     "pinFormat": "A PIN is exactly 6 digits.",
     "pinWeak": "That PIN is too easy to guess. Avoid repeated digits and runs like 123456.",
     "pinWrong": "Wrong name or PIN.",
@@ -499,7 +511,8 @@
     "allAnswered": "Everyone has replied. Lock it now?",
     "closeVsLock": "Close voting: stop taking votes, nothing is decided. Lock: pick the day (and place); everyone who voted for it counts as going. At the deadline, voting closes by itself and waits for you to lock.",
     "billAfter": "You can enter the bill once the event starts ({when}).",
-    "lockOnly": "Voting is closed. Lock to pick the day (and place); everyone who voted for it counts as going."
+    "lockOnly": "Voting is closed. Lock to pick the day (and place); everyone who voted for it counts as going.",
+    "leading": "Most votes: {day} ({n})"
   },
   "edit": {
     "open": "Edit",
@@ -539,17 +552,17 @@
     "honoreesPick": "Pick members"
   },
   "share": {
-    "poll": "Vote for a day: {title}",
-    "rsvp": "Are you coming? {title}",
-    "bill": "Time to settle up: {title}",
-    "settled": "{title}",
     "dialogTitle": "Share this event",
     "dialogHint": "Only people with this link can see and join. Scan the code or send the link.",
     "qrAlt": "QR code for the event link",
     "link": "Event link",
-    "copy": "Copy",
+    "copy": "Copy link",
     "copyFailed": "Couldn't copy the link",
-    "native": "Share…"
+    "native": "Share…",
+    "copyMessage": "Copy message",
+    "messageCopied": "Message copied, ready to paste into Zalo",
+    "messageLang": "Message language",
+    "previewLabel": "Message preview"
   },
   "sum": {
     "poll": "Voting closed · {n} voted",
@@ -650,7 +663,12 @@
     "inviteCopied": "Invite link copied",
     "inviteHint": "Shown once. Send it privately; whoever opens it first can accept. It works once and expires in 7 days.",
     "legacy": "Shared co-host link (no name)",
-    "legacyHint": "The older link anyone could use. It can be revoked here but not created again; invite co-hosts by name instead."
+    "legacyHint": "The older link anyone could use. It can be revoked here but not created again; invite co-hosts by name instead.",
+    "rotateKey": "Make a new manage link",
+    "rotateConfirm": "The current manage link stops working everywhere. Copy the new one afterwards if you need to manage the event from another device.",
+    "rotateDo": "Make new link",
+    "rotated": "New manage link made",
+    "rotatedHint": "Old manage links no longer work."
   },
   "post": {
     "open": "Post an update",
@@ -718,8 +736,57 @@
     "tieHonorees": "Tied at {n} votes. {day} is suggested because more honorees can come.",
     "tieEarlier": "Tied at {n} votes. {day} is only a tentative pick because it is earlier, not because more people can come; check who can make each day below."
   },
+  "msg": {
+    "share": {
+      "pollDays": "📅 {title}\nPlease vote for the days you can make: {url}",
+      "pollDaysBy": "📅 {title}\nPlease vote for the days you can make by {deadline}: {url}",
+      "pollVenue": "📍 {title}\nPlease vote for the place: {url}",
+      "pollVenueBy": "📍 {title}\nPlease vote for the place by {deadline}: {url}",
+      "pollClosed": "{title}\nVoting is closed, waiting for the date. Details: {url}",
+      "rsvp": "🎉 {title}\n🗓 {when}\nAre you coming? Answer here: {url}",
+      "rsvpStarted": "{title}\n🗓 {when}\nSee the event details here: {url}",
+      "cancelled": "{title}\nThis event has been cancelled. Details: {url}",
+      "bill": "💸 {title}\nTime to settle up, see your share here: {url}",
+      "settled": "{title}\nSee the event here: {url}"
+    },
+    "remind": {
+      "by": " by {deadline}",
+      "poll": "⏰ {title}\nStill waiting for votes from: {names}.\nPlease vote{by}: {url}",
+      "rsvpHead": "⏰ {title}",
+      "rsvp": "Not answered yet: {names}.",
+      "rsvpConfirm": "Please confirm your seat: {names}.",
+      "bill": "💸 {title}\nNot paid yet: {names}.\nSee your share here: {url}",
+      "billCount": "💸 {title}\n{n} still to pay. See your share here: {url}"
+    }
+  },
+  "remind": {
+    "title": "Remind the team",
+    "hint": "Copy a message and paste it into your group chat.",
+    "poll": "Not voted yet",
+    "rsvp": "Not answered yet",
+    "confirm": "Needs to confirm the seat",
+    "bill": "Not paid yet",
+    "allVoted": "Everyone has voted.",
+    "allAnswered": "Everyone has answered.",
+    "allPaid": "Everyone has paid.",
+    "copy": "Copy reminder",
+    "copied": "Reminder copied, ready to paste into Zalo",
+    "names": "With names",
+    "count": "Count only",
+    "billNote": "The reminder never includes amounts."
+  },
+  "keep": {
+    "title": "Set a PIN to keep your access",
+    "subtitle": "So you can get back in from any phone or computer.",
+    "body": "{name}, you have no PIN yet. Without one, only your sign-in link brings you back with your organizer rights. Choose a 6-digit PIN now.",
+    "linkInstead": "Or save your sign-in link to yourself (for example Zalo “My Cloud”) and never post it in a group.",
+    "copy": "Copy sign-in link",
+    "manual": "Copy did not work. Select and copy the link below:",
+    "later": "Later"
+  },
   "pin": {
     "label": "PIN",
+    "current": "Your current PIN",
     "enter": "Your 6-digit PIN",
     "choose": "Choose a 6-digit PIN",
     "enterFor": "Enter the PIN for {name}.",

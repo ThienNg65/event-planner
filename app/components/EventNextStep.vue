@@ -111,6 +111,8 @@ const dayCompare = computed(() => compareDays(ev.value.pollDays, props.data.resp
 const dayRank = computed(() =>
   dayCompare.value.ranked.map((d) => ({ value: d.day, n: d.n, label: fmtDay(d.day, locale.value), description: t('next.votes', { n: d.n }, d.n) }))
 );
+// Participants see the day that is ahead once voting closes (the lock dialog preselects the same one).
+const leader = computed(() => (dayRank.value[0]?.n ? dayRank.value[0] : null));
 const bar = (n: number) => `${voted.value ? Math.round((n / voted.value) * 100) : 0}%`;
 const venueRank = computed(() =>
   props.data.venues.map((v) => ({ value: v.id, n: v.upvotes.length, label: v.name, description: t('next.votes', { n: v.upvotes.length }, v.upvotes.length) }))
@@ -225,6 +227,7 @@ async function complete() {
         <div class="min-w-0">
           <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
           <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
+          <p v-if="copy === 'voteClosed' && !canAdvance && leader" class="mt-1 text-sm font-medium text-highlighted">{{ t('next.leading', { day: leader.label, n: leader.n }) }}</p>
           <template v-if="!me && votingClosed">
             <button v-if="!whoOpen" type="button" class="mt-1 text-sm text-primary underline underline-offset-2" @click="whoOpen = true">{{ t('next.who.link') }}</button>
             <MemberPicker v-else pick-only class="mt-2" />

@@ -47,6 +47,8 @@ export default defineEventHandler(async (event) => {
     event: ev,
     role,
     manager: role !== null,
+    // The manage key this browser sent still opens the host role (a creator's other devices may hold a rotated-out one).
+    hostKey: hashMatches(getHeader(event, 'x-manage-key') ?? '', manageKeyHash),
     hasCoHost: !!coHostKeyHash,
     // Active co-hosts are public; pending and expired invites are for organizers only.
     cohosts: co

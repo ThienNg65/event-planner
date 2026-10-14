@@ -43,8 +43,8 @@ const rankOf = (id: number, key: string) =>
 export const hasManageKey = (id: number) => id in readKeys();
 
 /**
- * The organizer key for event `id`, browser-only. A `?key=` in the URL (a forwarded manage link)
- * is stored and then stripped from the address bar.
+ * The organizer key for event `id`, browser-only. A `#key=` in the URL (a forwarded manage link; the fragment never
+ * reaches servers or logs) or an old-style `?key=` is stored and then stripped from the address bar.
  */
 export function useManageKey(id: number) {
   const route = useRoute();
@@ -53,12 +53,17 @@ export function useManageKey(id: number) {
   const key = ref<string | null>(import.meta.client && !useNuxtApp().isHydrating ? (readKeys()[id] ?? null) : null);
   // After hydration: a refresh() triggered during hydration would just reuse the SSR payload.
   onNuxtReady(async () => {
-    const fromUrl = route.query.key;
+    const fragment = new URLSearchParams(route.hash.slice(1));
+    const fromUrl = fragment.get('key') || route.query.key;
     if (typeof fromUrl === 'string' && fromUrl) {
       const old = readKeys()[id];
       // A co-host link opened in the host's browser must not replace the host key: keep whichever key ranks higher.
       if (!old || (old !== fromUrl && (await rankOf(id, fromUrl)) > (await rankOf(id, old)))) saveManageKey(id, fromUrl);
-      router.replace({ query: { ...route.query, key: undefined } });
+      // Re-read after the awaits above: a hash captured before them could restore a fragment the page has since stripped.
+      const rest = new URLSearchParams(route.hash.slice(1));
+      rest.delete('key');
+      const hash = rest.toString();
+      router.replace({ query: { ...route.query, key: undefined }, hash: hash ? `#${hash}` : '' });
     }
     key.value = readKeys()[id] ?? null;
   });

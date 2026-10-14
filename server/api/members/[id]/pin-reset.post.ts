@@ -14,15 +14,19 @@ export default defineEventHandler(async (event) => {
   const [mine] = await useDb().select({ host: organizes(me).mapWith(Boolean) }).from(members).where(eq(members.id, me));
   if (!mine?.host) fail(403, 'organizersOnly');
   const pin = randomPin();
-  const [done] = await useDb()
-    .update(members)
-    .set({ pinHash: await hashPin(pin), pinFails: 0, pinLockedUntil: null, tokenHash: null })
-    .where(and(eq(members.id, id), sql`not ${organizes(id)}`))
-    .returning({ id: members.id });
-  if (!done) {
-    const [m] = await useDb().select({ id: members.id }).from(members).where(eq(members.id, id));
+  // One batch with the sign-out, so a sign-out-others landing in between can't leave a session that survives the reset.
+  const db = useDb();
+  const [done] = await db.batch([
+    db
+      .update(members)
+      .set({ pinHash: await hashPin(pin), pinFails: 0, pinLockedUntil: null, tokenHash: null })
+      .where(and(eq(members.id, id), sql`not ${organizes(id)}`))
+      .returning({ id: members.id }),
+    db.delete(memberSessions).where(and(eq(memberSessions.memberId, id), sql`not ${organizes(id)}`)),
+  ]);
+  if (!done.length) {
+    const [m] = await db.select({ id: members.id }).from(members).where(eq(members.id, id));
     fail(m ? 403 : 404, m ? 'pinResetOrganizer' : 'unknownMember');
   }
-  await useDb().delete(memberSessions).where(eq(memberSessions.memberId, id));
   return { pin };
 });

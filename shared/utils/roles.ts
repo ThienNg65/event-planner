@@ -7,10 +7,12 @@ const MIN_ROLE = {
   advance: 'cohost',
   removeVenue: 'cohost',
   setOthers: 'cohost',
+  remind: 'cohost',
   reopen: 'host',
   cancel: 'host',
   delete: 'host',
   cohost: 'host',
+  rotateKey: 'host',
 } as const;
 
 /** How long a pending co-host invite can still be accepted (an active co-host never expires). */

@@ -5,7 +5,16 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
+- Signing out other devices and changing your PIN now ask for your current PIN, so someone who only got hold of your session or sign-in link cannot lock you out. Resetting a member's PIN also signs them out reliably, even if they sign out other devices at the same moment. A manage link that was replaced on another device is now forgotten and no longer offered for copying.
 - The app can also be deployed on Cloudflare Workers.
+- After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The message carries the joining link of your private event, and the link changes with each stage so chat apps show a fresh preview.
+- Organizers see who has not voted, answered or paid among the people who joined the event, with a reminder message to copy. A payment reminder names the people who still owe or only counts them, and never shows amounts.
+- Right after you create an event, if you have no PIN yet, you are offered to set one (or to save your sign-in link, with a warning to keep it to yourself).
+- You can sign out your other devices from the account menu if a link leaks or you lose a phone. The old sign-in link stops working, your PIN stays the same and this device stays signed in.
+- The host can make a new manage link if the old one leaks; the old one stops working. This works only on a device that already holds the manage link, so a leaked sign-in link alone cannot lock the host out. Copied manage links now keep the key out of link previews and server logs (the pasted text still contains it after the #, so only share it with co-hosts).
+- Events with a date have an Add to calendar option (a calendar file or Google Calendar), at any stage. Entries last 2 hours and open the event through its joining link; the calendar file is only given to people who can see the event.
+- After voting closes, participants see which day got the most votes while they wait for the date.
+- The create form says that bank details are visible to anyone with the event link, and that a fixed date without a place starts as a vote on the place.
 
 ## [0.10.0] - 2026-10-14
 
