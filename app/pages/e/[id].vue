@@ -20,9 +20,10 @@ if (error.value) {
   const notFound = error.value.statusCode === 404;
   throw createError({ statusCode: notFound ? 404 : 500, statusMessage: t(notFound ? 'event.private' : 'err.generic'), fatal: true });
 }
-// A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos.
+// A revoked or rotated key no longer grants a role: forget it so home stops offering organizer todos. The creator stays host
+// through their session, so a rotated-out key is told apart by `hostKey`.
 function dropRejectedKey() {
-  if (!error.value && data.value?.role === null) {
+  if (!error.value && data.value && (data.value.role === null || (data.value.role === 'host' && !data.value.hostKey))) {
     forgetManageKey(id);
     key.value = null;
   }

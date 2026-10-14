@@ -222,7 +222,7 @@ async function revokeLegacy() {
           </div>
         </section>
 
-        <div v-if="can(role, 'rotateKey') && manageKey" class="space-y-2 border-t border-default pt-6">
+        <div v-if="can(role, 'rotateKey') && manageKey && data.hostKey" class="space-y-2 border-t border-default pt-6">
           <UButton
             v-if="manageKey"
             color="neutral"

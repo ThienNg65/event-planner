@@ -35,6 +35,9 @@ async function copyLink() {
 
 // Signing out the other devices also kills the old sign-in link, so it asks first. This device gets a new token and stays in.
 const confirmOthers = ref(false);
+// A member with a PIN proves it again to sign out other devices or to change it, so a stolen session can't lock them out.
+const currentPin = ref('');
+watch(currentPin, (v) => (currentPin.value = v.replace(/\D/g, '')));
 // The confirm opens with focus on Cancel, never on the destructive button.
 const othersCancel = useTemplateRef<{ $el: HTMLElement }>('othersCancel');
 watch(confirmOthers, async (c) => {
@@ -44,8 +47,9 @@ watch(confirmOthers, async (c) => {
 });
 async function signOutOthers() {
   try {
-    await $fetch('/api/me/signout-others', { method: 'POST' });
+    await $fetch('/api/me/signout-others', { method: 'POST', body: { currentPin: currentPin.value } });
     confirmOthers.value = false;
+    currentPin.value = '';
     signInLink.value = '';
     await loadLink();
     toast.add({ title: t('me.othersOut'), description: t('me.othersOutHint') });
@@ -57,7 +61,7 @@ async function signOutOthers() {
 // Sign in again with the PIN, or (no PIN yet) with the sign-in link, so signing out asks first.
 const confirmSignOut = ref(false);
 
-// Set or change the PIN: being signed in is the proof, so only the new PIN is asked for.
+// Set the first PIN, or change it (the current PIN is asked for too).
 const pinEditing = ref(false);
 const newPin = ref('');
 const pinBusy = ref(false);
@@ -67,14 +71,16 @@ watch(whoOpen, () => {
   confirmOthers.value = false;
   pinEditing.value = false;
   newPin.value = '';
+  currentPin.value = '';
 });
 const pinProblemKey = computed(() => (newPin.value.length === PIN_LENGTH ? pinProblem(newPin.value) : null));
 async function savePin() {
   pinBusy.value = true;
   try {
-    await $fetch('/api/me/pin', { method: 'POST', body: { pin: newPin.value } });
+    await $fetch('/api/me/pin', { method: 'POST', body: { pin: newPin.value, currentPin: currentPin.value } });
     pinEditing.value = false;
     newPin.value = '';
+    currentPin.value = '';
     await refreshMe();
     toast.add({ title: t('pin.saved') });
   } catch (e) {
@@ -181,9 +187,12 @@ const nav = computed<NavigationMenuItem[]>(() => [
                 <div v-if="me" class="space-y-2">
                   <p class="text-sm">{{ me.name }}</p>
                   <p v-if="!me.hasPin && !pinEditing" class="text-xs text-warning">{{ t('me.noPinNudge') }}</p>
-                  <form v-if="pinEditing" class="flex gap-2" @submit.prevent="savePin">
-                    <UInput v-model="newPin" type="password" inputmode="numeric" autocomplete="new-password" autofocus :maxlength="PIN_LENGTH" :placeholder="t('pin.choose')" :aria-label="t('pin.label')" class="flex-1" />
-                    <UButton type="submit" :loading="pinBusy" :disabled="newPin.length !== PIN_LENGTH || !!pinProblemKey">{{ t('pin.save') }}</UButton>
+                  <form v-if="pinEditing" class="space-y-2" @submit.prevent="savePin">
+                    <UInput v-if="me.hasPin" v-model="currentPin" type="password" inputmode="numeric" autocomplete="current-password" autofocus :maxlength="PIN_LENGTH" :placeholder="t('pin.current')" :aria-label="t('pin.current')" class="w-full" />
+                    <div class="flex gap-2">
+                      <UInput v-model="newPin" type="password" inputmode="numeric" autocomplete="new-password" :autofocus="!me.hasPin" :maxlength="PIN_LENGTH" :placeholder="t('pin.choose')" :aria-label="t('pin.label')" class="flex-1" />
+                      <UButton type="submit" :loading="pinBusy" :disabled="newPin.length !== PIN_LENGTH || !!pinProblemKey || (me.hasPin && currentPin.length !== PIN_LENGTH)">{{ t('pin.save') }}</UButton>
+                    </div>
                   </form>
                   <p v-if="pinEditing" class="text-xs" :class="pinProblemKey ? 'text-error' : 'text-muted'">{{ pinProblemKey ? t('pin.weak') : t('pin.hintNew') }}</p>
                   <UButton v-else color="neutral" variant="outline" icon="i-lucide-key-round" @click="pinEditing = true">{{ t(me.hasPin ? 'me.changePin' : 'me.setPin') }}</UButton>
@@ -191,8 +200,9 @@ const nav = computed<NavigationMenuItem[]>(() => [
                   <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
                   <div v-if="confirmOthers" class="space-y-2">
                     <p class="text-xs text-warning">{{ t('me.signOutOthersConfirm') }}</p>
+                    <UInput v-if="me.hasPin" v-model="currentPin" type="password" inputmode="numeric" autocomplete="current-password" :maxlength="PIN_LENGTH" :placeholder="t('pin.current')" :aria-label="t('pin.current')" class="w-full" />
                     <div class="flex gap-2">
-                      <UButton color="warning" size="sm" @click="signOutOthers">{{ t('me.signOutOthersDo') }}</UButton>
+                      <UButton color="warning" size="sm" :disabled="me.hasPin && currentPin.length !== PIN_LENGTH" @click="signOutOthers">{{ t('me.signOutOthersDo') }}</UButton>
                       <UButton ref="othersCancel" color="neutral" variant="ghost" size="sm" @click="confirmOthers = false">{{ t('cancel') }}</UButton>
                     </div>
                   </div>

@@ -786,6 +786,7 @@
   },
   "pin": {
     "label": "Mã PIN",
+    "current": "Mã PIN hiện tại",
     "enter": "Mã PIN 6 số của bạn",
     "choose": "Chọn mã PIN 6 số",
     "enterFor": "Nhập mã PIN của {name}.",

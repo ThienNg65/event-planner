@@ -5,6 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
+- Signing out other devices and changing your PIN now ask for your current PIN, so someone who only got hold of your session or sign-in link cannot lock you out. Resetting a member's PIN also signs them out reliably, even if they sign out other devices at the same moment. A manage link that was replaced on another device is now forgotten and no longer offered for copying.
 - The app can also be deployed on Cloudflare Workers.
 - After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The message carries the joining link of your private event, and the link changes with each stage so chat apps show a fresh preview.
 - Organizers see who has not voted, answered or paid among the people who joined the event, with a reminder message to copy. A payment reminder names the people who still owe or only counts them, and never shows amounts.

@@ -786,6 +786,7 @@
   },
   "pin": {
     "label": "PIN",
+    "current": "Your current PIN",
     "enter": "Your 6-digit PIN",
     "choose": "Choose a 6-digit PIN",
     "enterFor": "Enter the PIN for {name}.",

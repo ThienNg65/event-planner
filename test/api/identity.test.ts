@@ -37,6 +37,21 @@ describe('organizer rights by identity', () => {
   });
 });
 
+describe('a rotated-out manage key', () => {
+  it('no longer counts as the host key, even for the creator signed in on that device', async () => {
+    const ev = await event();
+    assert.equal((await api(`/api/events/${ev.id}`, { key: ev.key, me: ev.createdBy })).body.hostKey, true);
+    assert.equal((await api(`/api/events/${ev.id}`, { me: ev.createdBy })).body.hostKey, false);
+    const rotated = await api(`/api/events/${ev.id}/key`, { method: 'POST', key: ev.key, me: ev.createdBy });
+    assert.equal(rotated.status, 200);
+    const stale = await api(`/api/events/${ev.id}`, { key: ev.key, me: ev.createdBy });
+    assert.equal(stale.body.role, 'host');
+    assert.equal(stale.body.hostKey, false);
+    assert.equal((await api(`/api/events/${ev.id}`, { key: rotated.body.key, me: ev.createdBy })).body.hostKey, true);
+    await api(`/api/events/${ev.id}`, { method: 'DELETE', key: rotated.body.key });
+  });
+});
+
 describe('claiming a name', () => {
   it('works once; the second claim is refused', async () => {
     const id = await member();
@@ -127,12 +142,31 @@ describe('signing in with a PIN', () => {
     assert.equal((await api('/api/members', { method: 'POST', body: { name: 'zz-test-short', pin: '12' } })).message, 'pinFormat');
   });
 
-  it('a signed-in member can change their PIN; the old one stops working', async () => {
+  it('a signed-in member can change their PIN with the current one; the old one stops working', async () => {
     const id = await member();
-    assert.equal((await api('/api/me/pin', { method: 'POST', me: id, body: { pin: '135790' } })).status, 200);
+    assert.equal((await api('/api/me/pin', { method: 'POST', me: id, body: { pin: '135790', currentPin: PIN } })).status, 200);
     assert.equal((await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: PIN } })).message, 'pinWrong');
     assert.equal((await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: '135790' } })).status, 200);
     assert.equal((await api('/api/me/pin', { method: 'POST', body: { pin: '135790' } })).status, 401);
+  });
+
+  it('changing a PIN needs the current one; a wrong guess counts toward the lockout', async () => {
+    const id = await member();
+    const change = (currentPin?: string) => api('/api/me/pin', { method: 'POST', me: id, body: { pin: '135790', currentPin } });
+    assert.equal((await change()).message, 'pinWrong');
+    assert.equal((await change('135790')).message, 'pinWrong');
+    for (let i = 0; i < 4; i++) await change('135790');
+    assert.equal((await change(PIN)).message, 'pinLocked');
+    assert.equal((await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: PIN } })).message, 'pinLocked');
+    await query('UPDATE members SET pin_locked_until = NULL, pin_fails = 0 WHERE id = $1', [id]);
+    assert.equal((await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: PIN } })).status, 200);
+  });
+
+  it('a member without a PIN sets the first one without presenting anything', async () => {
+    const id = await member();
+    await query('UPDATE members SET pin_hash = NULL WHERE id = $1', [id]);
+    assert.equal((await api('/api/me/pin', { method: 'POST', me: id, body: { pin: '135790' } })).status, 200);
+    assert.equal((await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: '135790' } })).status, 200);
   });
 });
 
@@ -165,13 +199,40 @@ describe('signing out other devices', () => {
     const other = await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: PIN } });
     const otherSid = /sid=([^;]+)/.exec(other.headers.get('set-cookie') ?? '')![1]!;
     assert.equal((await api('/api/me', { sid: otherSid })).body.id, id);
-    const res = await api('/api/me/signout-others', { method: 'POST', me: id });
+    const res = await api('/api/me/signout-others', { method: 'POST', me: id, body: { currentPin: PIN } });
     assert.equal(res.status, 200);
     const fresh = /sid=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')![1]!;
     assert.notEqual(fresh, link);
     assert.equal((await api('/api/me/signin', { method: 'POST', body: { token: link } })).message, 'signInInvalid');
     assert.equal((await api('/api/me', { sid: otherSid })).body, null);
     assert.equal((await api('/api/me', { sid: fresh })).body.id, id);
+  });
+
+  it('needs the current PIN, so a stolen session or link cannot lock the owner out', async () => {
+    const id = await member();
+    const link = (await api('/api/me/link', { method: 'POST', me: id })).body.token as string;
+    assert.equal((await api('/api/me/signout-others', { method: 'POST', me: id })).message, 'pinWrong');
+    assert.equal((await api('/api/me/signout-others', { method: 'POST', me: id, body: { currentPin: '135790' } })).message, 'pinWrong');
+    assert.equal((await api('/api/me/signin', { method: 'POST', body: { token: link } })).body.id, id);
+  });
+
+  it('works from a PIN-signed-in browser and keeps that browser in', async () => {
+    const id = await member();
+    const mine = await api(`/api/members/${id}/signin`, { method: 'POST', body: { pin: PIN } });
+    const mySid = /sid=([^;]+)/.exec(mine.headers.get('set-cookie') ?? '')![1]!;
+    const first = await api('/api/me/link', { method: 'POST', me: id });
+    const res = await api('/api/me/signout-others', { method: 'POST', sid: mySid, body: { currentPin: PIN } });
+    assert.equal(res.status, 200);
+    const fresh = /sid=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')![1]!;
+    assert.equal((await api('/api/me', { sid: mySid })).body, null);
+    assert.equal((await api('/api/me', { sid: fresh })).body.id, id);
+    assert.equal((await api('/api/me/signin', { method: 'POST', body: { token: first.body.token } })).message, 'signInInvalid');
+  });
+
+  it('a member without a PIN needs nothing', async () => {
+    const id = await member();
+    await query('UPDATE members SET pin_hash = NULL WHERE id = $1', [id]);
+    assert.equal((await api('/api/me/signout-others', { method: 'POST', me: id })).status, 200);
   });
 
   it('needs a session', async () => {

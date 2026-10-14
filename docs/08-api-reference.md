@@ -14,12 +14,12 @@ Every handler validates its own input (there is no shared schema layer): `server
 | `POST /api/members` `{name, pin}` | none | Create a member with a PIN and sign this browser in (201). An archived, never-claimed, non-organizer name is reused and un-archived | `nameRequired`, `nameTaken`, `pinFormat`, `pinWeak` |
 | `POST /api/members/:id/claim` `{pin}` | none | Sign in as an unclaimed, non-organizer member and set its PIN | `unknownMember`, `nameClaimed`, `nameOrganizer`, `pinFormat`, `pinWeak` |
 | `POST /api/members/:id/signin` `{pin}` | none | Sign in with the PIN; counts each guess, 5 wrong PINs lock the name for 15 minutes; un-archives | `pinWrong` (401), `pinLocked` (429) |
-| `POST /api/members/:id/pin-reset` | signed in, has created an event | New random PIN `{ pin }` for a member; signs them out everywhere | `signInFirst`, `organizersOnly`, `unknownMember`, `pinResetOrganizer` |
+| `POST /api/members/:id/pin-reset` | signed in, has created an event | New random PIN `{ pin }` for a member; signs them out everywhere (PIN swap and session delete are one batch) | `signInFirst`, `organizersOnly`, `unknownMember`, `pinResetOrganizer` |
 | `POST /api/members/:id/archive` | signed in, has created an event | Hide a member from the roster ([03](03-identity-and-roles.md#archived-members)) | `signInFirst`, `organizersOnly`, `unknownMember` |
 | `GET /api/me` | none | The signed-in member `{ id, name, organizer, hasPin }` or `null` | |
-| `POST /api/me/pin` `{pin}` | signed in | Set or change this member's PIN | `signInFirst`, `pinFormat`, `pinWeak` |
+| `POST /api/me/pin` `{pin, currentPin}` | signed in; `currentPin` required when the member has a PIN | Set or change this member's PIN (a wrong `currentPin` counts toward the sign-in lockout) | `signInFirst`, `pinFormat`, `pinWeak`, `pinWrong`, `pinLocked` |
 | `POST /api/me/link` | signed in | `{ token }` to build a sign-in link | `signInFirst` |
-| `POST /api/me/signout-others` | signed in | New sign-in token and cookie for this browser; deletes the member's other `member_sessions` and kills the old sign-in link, so every other device is signed out (the PIN is unchanged). One guarded batch. Returns `{ ok: true }` | `signInFirst`, `signInInvalid` (lost a race with another sign-in change) |
+| `POST /api/me/signout-others` `{currentPin}` | signed in; `currentPin` required when the member has a PIN | New sign-in token and cookie for this browser; deletes the member's other `member_sessions` and kills the old sign-in link, so every other device is signed out (the PIN is unchanged). One guarded batch. Returns `{ ok: true }` | `signInFirst`, `pinWrong`, `pinLocked`, `signInInvalid` (lost a race with another sign-in change) |
 | `POST /api/me/signin` `{token}` | none | Sign in from a link; un-archives the member | `signInInvalid` |
 | `POST /api/me/signout` | none | Clear this browser's cookie | |
 
@@ -41,9 +41,9 @@ Every handler validates its own input (there is no shared schema layer): `server
 Also `joinedNow` (this visit made you a participant) and `participants` (`{ id, name }`, by name), which the UI uses for counts and the avatar strip. `PUT /response`, `POST /days` and `POST /venues` also go through `requireAccess`, and so do the organizer-only endpoints (PATCH, DELETE, cohost, venue delete) before their role check, so a stranger gets `notFound` rather than 403.
 
 `event` (all columns except the key hashes), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
-`hostName`, `votingOpen`, `responses` (every member's row plus `name`), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).
+`hostName`, `hostKey` (the sent `x-manage-key` still matches the manage key), `votingOpen`, `responses` (every member's row plus `name`), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).
 
-Everything is public by design ([03](03-identity-and-roles.md#34-security-properties-worth-remembering)).
+Events are private to organizers, joining-key holders and participants ([03](03-identity-and-roles.md#34-security-properties-worth-remembering)).
 
 ### `PATCH /api/events/:id`: which body does what
 
