@@ -880,7 +880,7 @@
     "current": "Email của bạn: {email}",
     "cooldown": "Bạn vừa đổi địa chỉ. Đến {until}, mã khôi phục PIN vẫn được gửi về địa chỉ cũ.",
     "label": "Địa chỉ email",
-    "consent": "Tôi đồng ý để Team Events lưu địa chỉ email của tôi nhằm gửi mã dùng một lần (xác nhận địa chỉ này và đặt lại mã PIN) và thông báo bảo mật, cùng các email về sự kiện tôi tham gia (chốt hoặc đổi ngày, địa điểm, yêu cầu và ghi nhận thanh toán, hủy sự kiện), mà tôi có thể tắt từng loại trong hồ sơ. Email được gửi qua Resend, một dịch vụ ở ngoài Việt Nam, nên địa chỉ của tôi được chuyển ra nước ngoài. Tôi có thể rút lại sự đồng ý bất cứ lúc nào bằng cách xoá email tại đây.",
+    "consent": "Tôi đồng ý để Team Events lưu địa chỉ email của tôi nhằm gửi mã dùng một lần (xác nhận địa chỉ này và đặt lại mã PIN) và thông báo bảo mật, cùng các email về sự kiện tôi tham gia (chốt hoặc đổi ngày, địa điểm, yêu cầu và ghi nhận thanh toán, hủy sự kiện), mà tôi có thể tắt từng loại trong hồ sơ. Email được gửi qua Gmail (Google), có máy chủ ở ngoài Việt Nam, nên địa chỉ của tôi được chuyển ra nước ngoài. Tôi có thể rút lại sự đồng ý bất cứ lúc nào bằng cách xoá email tại đây.",
     "send": "Gửi mã",
     "codeSent": "Chúng tôi đã gửi mã 6 số đến {email}. Mã có hiệu lực 15 phút.",
     "code": "Mã 6 số",

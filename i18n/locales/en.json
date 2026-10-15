@@ -880,7 +880,7 @@
     "current": "Your email: {email}",
     "cooldown": "You changed your address recently. Until {until}, PIN recovery codes still go to your previous address.",
     "label": "Email address",
-    "consent": "I agree that Team Events keeps my email address to send me one-time codes (to confirm this address and to reset my PIN) and security notices, and emails about events I take part in (date or place set or changed, payment requests and recorded payments, cancellations), which I can switch off one by one in my profile. Mails are sent for us by Resend, a service outside Vietnam, so my address is sent abroad. I can withdraw this at any time by removing my email here.",
+    "consent": "I agree that Team Events keeps my email address to send me one-time codes (to confirm this address and to reset my PIN) and security notices, and emails about events I take part in (date or place set or changed, payment requests and recorded payments, cancellations), which I can switch off one by one in my profile. Mails are sent through Gmail (Google), whose servers are outside Vietnam, so my address is sent abroad. I can withdraw this at any time by removing my email here.",
     "send": "Send code",
     "codeSent": "We sent a 6-digit code to {email}. It works for 15 minutes.",
     "code": "6-digit code",

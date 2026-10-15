@@ -24,6 +24,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Organizers can limit how many guests each person may bring (0 to 10). Anyone asking for more is told the limit; organizers can still set any number, and lowering the limit does not change answers already given.
 - Organizers can hide poll results until people have voted: others' votes and the order of places stay hidden until you pick your own, so early votes do not sway the rest. Organizers always see the results.
 
+### Changed
+- Emails are sent from a Gmail account (set `GMAIL_USER` and `GMAIL_APP_PASSWORD`), so no own domain is needed. The consent text now names Gmail instead of Resend.
+
 ## [0.11.0] - 2026-10-15
 
 ### Added
