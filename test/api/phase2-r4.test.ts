@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { api, cleanup, member, query, startServer, stopServer } from './harness.ts';
 
 /**
- * Phase 2 R4: email ships switched off. The harness server has no RESEND_API_KEY, so every email endpoint must refuse and
+ * Phase 2 R4: email ships switched off. The harness server has no GMAIL_USER, so every email endpoint must refuse and
  * the app must report that email is off. (The mailed-code flows need a sender and are covered by test/email.test.ts and the SQL checks.)
  */
 before(startServer);
 afterEach(cleanup);
 after(stopServer);
 
-describe('email is off without a Resend key', () => {
+describe('email is off without a Gmail account', () => {
   it('reports emailEnabled false to the signed-in member and to visitors, and returns no address', async () => {
     const me = await member();
     const mine = (await api('/api/me', { me })).body;

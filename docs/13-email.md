@@ -1,13 +1,16 @@
 # 13. Email: verified address, PIN recovery and event mails
 
-Phase 2 release R4. Email **ships switched off**: without a working Resend configuration the app sends nothing, hides every email control and answers the email endpoints with `404 emailOff`. Legal sign-off (consent text, data sent abroad to Resend) is the gate for switching it on. Release R5 adds event mails on the same plumbing ([below](#event-emails-the-outbox)); R6 will add scheduled ones.
+Phase 2 release R4. Email **ships switched off**: without a Gmail account configured the app sends nothing, hides every email control and answers the email endpoints with `404 emailOff`. Legal sign-off (consent text, data sent abroad to Google) is the gate for switching it on. Release R5 adds event mails on the same plumbing ([below](#event-emails-the-outbox)); R6 will add scheduled ones.
 
 ## Switching it on
 
 | Variable | Purpose |
 |---|---|
-| `RESEND_API_KEY` | Resend API key. Unset: nothing is sent (in local dev only, mails are written to the server log instead) |
-| `MAIL_FROM` | Sender, on a domain verified in Resend, e.g. `Team Events <events@example.com>` |
+| `GMAIL_USER` | Gmail address that sends the mails (best a dedicated account). Unset: nothing is sent (in local dev only, mails are written to the server log instead) |
+| `GMAIL_APP_PASSWORD` | App password of that account (needs 2-step verification); spaces are ignored |
+| `MAIL_FROM_NAME` | Sender name on mails, default `Team Events` |
+
+`GmailSender` (`server/utils/mail.ts`) sends over SMTP (`smtp.gmail.com:465`, `nodemailer`), so it needs a Node host (Vercel, Netlify); Cloudflare Workers cannot open the socket. Mails come from the Gmail address itself, and replies go to it.
 | `APP_URL` | Public address of the site, used for links in mails. Required, so a link can never be built from a forged `Host` header |
 | `NOTIFY_SECRET` | Long random string. Signs the "not me" link and keys the code hashes; changing it invalidates both |
 | `ALLOWED_EMAIL_DOMAINS` | Comma-separated domains allowed for member emails (exact match, no subdomains); empty allows any |
@@ -40,7 +43,7 @@ Replacing a verified address sets `prev_email`, `prev_until` and `recovery_after
 
 ## Mail budget
 
-Resend's free plan sends 100 a day. Every send first takes a place in `mail_log` atomically (`reserveMail`): codes and security notices are refused (`429 mailBudget`) once 95 mails went out in the last 24 hours, event mails (R5) are held until the next day above 70 (`MAIL_BUDGET_NOTIFY`), leaving room for codes. Pure maths: `mailLimit`, `mailAllowed` in `shared/utils/email.ts`. Log rows older than two days are deleted on the way.
+The app keeps to 100 mails a day (a personal Gmail account allows about 500). Every send first takes a place in `mail_log` atomically (`reserveMail`): codes and security notices are refused (`429 mailBudget`) once 95 mails went out in the last 24 hours, event mails (R5) are held until the next day above 70 (`MAIL_BUDGET_NOTIFY`), leaving room for codes. Pure maths: `mailLimit`, `mailAllowed` in `shared/utils/email.ts`. Log rows older than two days are deleted on the way.
 
 ## Event emails: the outbox
 
@@ -72,7 +75,7 @@ The amount appears only in the personal `paymentRequested` and `paymentReminder`
 
 **Where it runs.** On Cloudflare Workers `dispatch` continues after the response (`event.waitUntil`, detected by `event.context.waitUntil`). On Netlify nothing can run after the response, so the request waits for it but at most 3 seconds (`afterCommit`); whatever is left is still queued. Leftovers are picked up by the next dispatch for the same event, and by the scheduled tick (below).
 
-**Every mail** carries a "stop these emails" link and the `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers, all pointing to `APP_URL/api/unsubscribe?t=<token>&l=<locale>`. The token is `signToken(NOTIFY_SECRET, "unsub:<memberId>:<kind>")`, so it can only mute that kind for that member. `GET` shows a page (`mail.unsubscribe.*`, with a locked-down `Content-Security-Policy` and `Referrer-Policy: no-referrer`) and changes nothing, so a mail scanner that follows the link does no harm; its button, and mail clients' one-click, `POST` the same address, which appends the kind to `member_email.muted_kinds` (idempotent) and answers a page. The profile (`MemberEmail.vue`) shows one switch per kind, backed by `POST /api/me/email/mute`. Verifying the email also covers these mails: the consent text and `EMAIL_CONSENT_VERSION` (`2026-10.2`) name them.
+**Every mail** carries a "stop these emails" link and the `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers, all pointing to `APP_URL/api/unsubscribe?t=<token>&l=<locale>`. The token is `signToken(NOTIFY_SECRET, "unsub:<memberId>:<kind>")`, so it can only mute that kind for that member. `GET` shows a page (`mail.unsubscribe.*`, with a locked-down `Content-Security-Policy` and `Referrer-Policy: no-referrer`) and changes nothing, so a mail scanner that follows the link does no harm; its button, and mail clients' one-click, `POST` the same address, which appends the kind to `member_email.muted_kinds` (idempotent) and answers a page. The profile (`MemberEmail.vue`) shows one switch per kind, backed by `POST /api/me/email/mute`. Verifying the email also covers these mails: the consent text and `EMAIL_CONSENT_VERSION` (`2026-10.3`, which names Gmail as the processor) name them.
 
 ## Scheduled mails: the hourly tick
 
@@ -87,4 +90,4 @@ Scheduled mails are only queued between 09:00 and 20:59 Vietnam time (`isSending
 
 ## Files
 
-`shared/utils/email.ts` (constants, address and domain checks, budget maths), `server/utils/mailCrypto.ts` (code, hash, signed token), `server/utils/mailTemplates.ts` (renders `mail.<kind>.*` from the locale files), `server/utils/mail.ts` (`EmailSender`, `ResendSender`, `LogSender`, `sendMail`), `server/utils/emailCodes.ts`, `server/api/me/email*`, `server/api/members/[id]/recover*`, `app/components/MemberEmail.vue`, `app/components/MemberPicker.vue` (recovery), and for event mails `server/utils/outbox.ts` (queueing, `dispatch`, `afterCommit`), `server/utils/unsubscribe.ts`, `server/api/unsubscribe.*`, `server/api/me/email/mute.post.ts`, `shared/utils/notify.ts` (facts, `audienceOf`, `reachable`, retry rules), `server/utils/tick.ts` and `server/plugins/tickJobs.ts` (scheduled mails). Tests: `test/email.test.ts`, `test/notify.test.ts`, `test/api/phase2-r4.test.ts` (the dark behaviour), `test/api/phase2-r5.test.ts` (nothing queued while email is off).
+`shared/utils/email.ts` (constants, address and domain checks, budget maths), `server/utils/mailCrypto.ts` (code, hash, signed token), `server/utils/mailTemplates.ts` (renders `mail.<kind>.*` from the locale files), `server/utils/mail.ts` (`EmailSender`, `GmailSender`, `LogSender`, `sendMail`), `server/utils/emailCodes.ts`, `server/api/me/email*`, `server/api/members/[id]/recover*`, `app/components/MemberEmail.vue`, `app/components/MemberPicker.vue` (recovery), and for event mails `server/utils/outbox.ts` (queueing, `dispatch`, `afterCommit`), `server/utils/unsubscribe.ts`, `server/api/unsubscribe.*`, `server/api/me/email/mute.post.ts`, `shared/utils/notify.ts` (facts, `audienceOf`, `reachable`, retry rules), `server/utils/tick.ts` and `server/plugins/tickJobs.ts` (scheduled mails). Tests: `test/email.test.ts`, `test/notify.test.ts`, `test/api/phase2-r4.test.ts` (the dark behaviour), `test/api/phase2-r5.test.ts` (nothing queued while email is off).

@@ -14,9 +14,9 @@ export default defineNuxtConfig({
       });
     },
   },
-  // Email settings. Empty here: set RESEND_API_KEY, MAIL_FROM, APP_URL, NOTIFY_SECRET and ALLOWED_EMAIL_DOMAINS (or the
+  // Email settings. Empty here: set GMAIL_USER, GMAIL_APP_PASSWORD, MAIL_FROM_NAME, APP_URL, NOTIFY_SECRET and ALLOWED_EMAIL_DOMAINS (or the
   // NUXT_* forms) in the host's environment. Without a key the app sends nothing and hides its email features.
-  runtimeConfig: { resendApiKey: '', mailFrom: '', appUrl: '', notifySecret: '', allowedEmailDomains: '', cronSecret: '' },
+  runtimeConfig: { gmailUser: '', gmailAppPassword: '', mailFromName: '', appUrl: '', notifySecret: '', allowedEmailDomains: '', cronSecret: '' },
   app: {
     head: {
       title: 'Team Events',
