@@ -64,7 +64,7 @@ const rows = computed(() => [
   { label: t('create.note'), value: form.note.trim(), icon: 'i-lucide-notebook-pen', slot: 'note' },
   { label: t('theme.label'), value: t(`theme.${form.theme}`), icon: 'i-lucide-palette', slot: 'look' },
   { label: t('edit.honorees'), value: form.honorees.map((id) => members.value.find((m) => m.id === id)?.name).filter(Boolean).join(', '), icon: 'i-lucide-cake', slot: 'honorees' },
-  { label: t('create.advanced'), value: form.hideVotes ? t('create.hideVotes') : '', icon: 'i-lucide-sliders-horizontal', slot: 'advanced' },
+  { label: t('create.advanced'), value: [form.maxGuests !== MAX_GUESTS && `${t('create.maxGuests')}: ${form.maxGuests}`, form.hideVotes && t('create.hideVotes')].filter(Boolean).join(' · '), icon: 'i-lucide-sliders-horizontal', slot: 'advanced' },
   // Repeating needs a fixed date and place, so the row waits for them.
   ...(canRepeat.value ? [{ label: t('create.repeat'), value: form.repeat === 'none' ? '' : t(`create.repeat${form.repeat.charAt(0).toUpperCase()}${form.repeat.slice(1)}`), icon: 'i-lucide-repeat', slot: 'repeat' }] : []),
   { label: t('create.payment'), value: form.bankHolder.trim(), icon: 'i-lucide-wallet', slot: 'payment' },

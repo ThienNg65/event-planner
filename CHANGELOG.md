@@ -17,7 +17,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Organizers can hide poll results until people have voted: others' votes and the order of places stay hidden until you pick your own, so early votes do not sway the rest. Organizers always see the results.
 
 ### Changed
-- Voting takes one tap per day or place: tap once for "can go", again for "can if I must" (Vietnamese: "Cố được", replacing "Nếu cần"), a third time to clear. The separate "if need be" button is gone, and the help icon explains the taps.
+- Voting takes one tap per day or place: tap once for "can go", again for "can if I must" (Vietnamese: "Cố được", replacing "Nếu cần"), a third time to clear (a one-time message says so after the first "Cố được"). The separate "if need be" button is gone, and the help icon explains the taps.
 - The create form groups settings clearly: the people to celebrate have their own row, guest limit and hide-results sit under "Advanced", Repeat only appears once the date and place are fixed, every row shows what is set, and "Next 7 days" sits above the calendar and adds to the days already picked.
 - The name box only offers "Add" for a name nobody has (ignoring case and accents), and the PIN no longer submits by itself while a similar-name warning is showing. The PIN step repeats the name being added.
 - Rename is a labelled button in the account menu, and a "You're <name> · Rename" message appears right after joining. The join step slides up from the bottom on phones.

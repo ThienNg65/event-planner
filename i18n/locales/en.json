@@ -322,7 +322,8 @@
     "daysResult": "Day results",
     "venuesResult": "Place results",
     "honoreeIn": "can come",
-    "honoreeOut": "can't come"
+    "honoreeOut": "can't come",
+    "placesHint": "Tap once: you can go. Twice: if need be (you would go if you must). Three times: clear it."
   },
   "bill": {
     "title": "Bill",
@@ -997,6 +998,7 @@
     "title": "Details"
   },
   "hint": {
-    "tapDays": "Tap days you're free"
+    "tapDays": "Tap days you're free",
+    "tapAgain": "Tap again to clear"
   }
 }

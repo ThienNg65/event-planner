@@ -131,10 +131,22 @@ const undecline = () => (mine.value?.status === 'no' ? { status: null } : {});
 
 // One save at a time, so quick taps never land out of order; a tap during a save is sent right after it.
 let savingDays = false;
+// Once, after the first "if need be": a second tap does not clear it, a third does.
+function tapAgainHint() {
+  try {
+    if (localStorage.getItem('te:hint:clear')) return;
+    localStorage.setItem('te:hint:clear', '1');
+  } catch {
+    return;
+  }
+  toast.add({ title: t('hint.tapAgain') });
+}
+
 // One tap cycles a day: can go, then if need be, then nothing.
 async function tapDay(day: string) {
   const without = (list: string[]) => list.filter((d) => d !== day);
   const to = myDays.value.includes(day) ? 'maybe' : myMaybe.value.includes(day) ? null : 'yes';
+  if (to === 'maybe') tapAgainHint();
   draft.value = { days: to === 'yes' ? [...myDays.value, day] : without(myDays.value), maybe: to === 'maybe' ? [...myMaybe.value, day] : without(myMaybe.value) };
   if (savingDays) return;
   savingDays = true;
@@ -195,6 +207,7 @@ const tapPlace = (id: number) => {
   const maybe = mine.value?.maybeVenueIds ?? [];
   const without = (list: number[]) => list.filter((v) => v !== id);
   const to = yes.includes(id) ? 'maybe' : maybe.includes(id) ? null : 'yes';
+  if (to === 'maybe') tapAgainHint();
   return save({ venueIds: to === 'yes' ? [...yes, id] : without(yes), maybeVenueIds: to === 'maybe' ? [...maybe, id] : without(maybe) });
 };
 async function suggest() {
@@ -347,8 +360,8 @@ async function remove() {
             <h2 class="flex items-center gap-1 text-lg font-semibold text-highlighted">
               {{ closed ? t('poll.venuesResult') : ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}
               <UPopover v-if="!closed">
-                <UButton icon="i-lucide-circle-help" color="neutral" variant="link" size="xs" :aria-label="t('poll.daysHint')" />
-                <template #content><p class="max-w-xs p-3 text-sm text-muted">{{ t('poll.daysHint') }}</p></template>
+                <UButton icon="i-lucide-circle-help" color="neutral" variant="link" size="xs" :aria-label="t('poll.placesHint')" />
+                <template #content><p class="max-w-xs p-3 text-sm text-muted">{{ t('poll.placesHint') }}</p></template>
               </UPopover>
             </h2>
           </div>

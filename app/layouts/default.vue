@@ -68,7 +68,6 @@ const newPin = ref('');
 const pinBusy = ref(false);
 watch(newPin, (v) => (newPin.value = v.replace(/\D/g, '')));
 watch(whoOpen, () => {
-  renaming.value = false;
   confirmSignOut.value = false;
   confirmOthers.value = false;
   pinEditing.value = false;
@@ -101,14 +100,14 @@ const nameLookalike = computed(() => {
 });
 // Asked for by the "You're Thiên · Rename" toast after joining.
 const renameRequest = useState<boolean>('renameRequest', () => false);
-watch(renameRequest, async (r) => {
+watch(renameRequest, (r) => {
   if (!r) return;
   renameRequest.value = false;
-  whoOpen.value = true;
-  await nextTick();
   startRename();
 });
+// The name field has its own small dialog: the account popover lives in the sidebar, which is closed on phones.
 function startRename() {
+  whoOpen.value = false;
   nameDraft.value = me.value?.name ?? '';
   renaming.value = true;
 }
@@ -222,14 +221,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
               <div class="w-80 max-w-[calc(100vw-2rem)] space-y-2 p-3">
                 <p class="text-sm font-semibold text-highlighted">{{ t('me.label') }}</p>
                 <div v-if="me" class="space-y-2">
-                  <form v-if="renaming" class="space-y-1" @submit.prevent="saveName">
-                    <div class="flex gap-2">
-                      <UInput v-model="nameDraft" :maxlength="50" autofocus :aria-label="t('me.rename')" class="flex-1" />
-                      <UButton type="submit" :loading="nameBusy" :disabled="!nameDraft.trim()">{{ t('pin.save') }}</UButton>
-                    </div>
-                    <p v-if="nameLookalike" class="text-xs text-warning">{{ t('me.lookalike', { name: nameLookalike.name }) }}</p>
-                  </form>
-                  <div v-else class="flex items-center gap-2">
+                  <div class="flex items-center gap-2">
                     <p class="min-w-0 flex-1 truncate text-sm">{{ me.name }}</p>
                     <UButton icon="i-lucide-pencil" size="xs" color="neutral" variant="soft" :label="t('me.rename')" @click="startRename" />
                   </div>
@@ -305,6 +297,21 @@ const nav = computed<NavigationMenuItem[]>(() => [
     <slot />
 
     <JoinSheet />
+
+    <UModal v-model:open="renaming" :title="t('me.rename')">
+      <template #body>
+        <form id="rename-form" class="space-y-1" @submit.prevent="saveName">
+          <UInput v-model="nameDraft" :maxlength="50" autofocus :aria-label="t('me.rename')" class="w-full" />
+          <p v-if="nameLookalike" class="text-xs text-warning">{{ t('me.lookalike', { name: nameLookalike.name }) }}</p>
+        </form>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="renaming = false">{{ t('cancel') }}</UButton>
+          <UButton type="submit" form="rename-form" :loading="nameBusy" :disabled="!nameDraft.trim()">{{ t('save') }}</UButton>
+        </div>
+      </template>
+    </UModal>
 
     <UModal v-model:open="teamOpen" :title="t('team.manage')" :description="t('team.hint')">
       <template #body>

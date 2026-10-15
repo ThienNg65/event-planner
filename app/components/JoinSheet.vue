@@ -25,7 +25,7 @@ async function onDone() {
 </script>
 
 <template>
-  <component :is="Shell" v-model:open="open" :title="t('join.title')" :description="t('join.title')" :ui="{ description: 'sr-only' }">
+  <component :is="Shell" v-model:open="open" :title="t('join.title')" :description="t('join.pinWhy')" :ui="{ description: 'sr-only' }">
     <template #body>
       <MemberPicker :new-only="newOnly" autofocus @done="onDone" />
     </template>

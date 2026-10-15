@@ -26,6 +26,8 @@ const exact = computed(() => {
   return n ? members.value.find((m) => norm(m.name) === n) : undefined;
 });
 const hiddenMatch = computed(() => (exact.value && !listed.value.some((m) => m.id === exact.value!.id) ? exact.value : undefined));
+// The list closes while the "Is that you?" answer is shown: an open list would swallow the click on its button.
+const menuOpen = ref(false);
 const lookalike = computed(() => {
   const n = norm(newName.value);
   return n ? members.value.find((m) => norm(m.name) === n) : undefined;
@@ -126,6 +128,8 @@ async function submit() {
         :items="listed"
         label-key="name"
         v-model:search-term="term"
+        :open="menuOpen && !hiddenMatch"
+        @update:open="(o: boolean) => (menuOpen = o)"
         :create-item="pickOnly || exact ? false : 'always'"
         :placeholder="t('me.yourName')"
         :autofocus="autofocus"
@@ -137,7 +141,10 @@ async function submit() {
       >
         <template #create-item-label="{ item }">{{ t('join.add', { name: item }) }}</template>
       </UInputMenu>
-      <p v-if="hiddenMatch" class="text-xs text-warning">{{ t(pickable.some((m) => m.id === hiddenMatch!.id) ? 'me.isThisYou' : 'me.claimedName', { name: hiddenMatch.name }) }}</p>
+      <template v-if="hiddenMatch">
+        <p class="text-xs text-warning">{{ t(pickable.some((m) => m.id === hiddenMatch!.id) ? 'me.isThisYou' : 'me.claimedName', { name: hiddenMatch.name }) }}</p>
+        <UButton v-if="pickable.some((m) => m.id === hiddenMatch!.id)" size="sm" variant="soft" @pointerdown.prevent="pickMember(hiddenMatch!)" @click="pickMember(hiddenMatch!)">{{ t('me.thatsMe') }}</UButton>
+      </template>
       <UButton v-if="newOnly && !revealed" variant="link" size="xs" class="px-0" @click="revealed = true">{{ t('me.otherDeviceNew') }}</UButton>
     </div>
 

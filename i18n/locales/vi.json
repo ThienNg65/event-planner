@@ -196,7 +196,7 @@
     "bill": "Tổng hoá đơn (₫)",
     "schedule": "Ngày giờ",
     "menu": "Quản lý",
-    "more": "Thêm"
+    "more": "Khác"
   },
   "err": {
     "generic": "Có lỗi xảy ra, vui lòng thử lại.",
@@ -322,7 +322,8 @@
     "daysResult": "Kết quả bình chọn ngày",
     "venuesResult": "Kết quả bình chọn địa điểm",
     "honoreeIn": "đi được",
-    "honoreeOut": "không đi được"
+    "honoreeOut": "không đi được",
+    "placesHint": "Chạm lần 1: chọn. Lần 2: cố được (đi nếu bắt buộc). Lần 3: bỏ chọn."
   },
   "bill": {
     "title": "Chia tiền",
@@ -555,7 +556,7 @@
     "checkGuests": "Số bạn đi cùng {name}",
     "checkShare": "{n} chỗ · {share} mỗi chỗ",
     "checkOver": "Giới hạn {cap} chỗ + {n} người nữa. Giới hạn được nâng để mọi người đã đến cùng chia tiền.",
-    "hostMore": "Thêm",
+    "hostMore": "Khác",
     "votedNoDay": {
       "title": "Chưa chọn ngày",
       "cta": "Chọn ngày"
@@ -997,6 +998,7 @@
     "title": "Chi tiết"
   },
   "hint": {
-    "tapDays": "Chạm ngày bạn rảnh"
+    "tapDays": "Chạm ngày bạn rảnh",
+    "tapAgain": "Chạm lần nữa để bỏ chọn"
   }
 }
