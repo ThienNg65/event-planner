@@ -20,6 +20,10 @@ const blank = () => {
     startsAt: e.startsAt ? toTeamInput(e.startsAt) : '',
     voteDeadline: e.voteDeadline ? toTeamInput(e.voteDeadline) : '',
     capacity: e.capacity,
+    maxGuests: guestLimit(e),
+    hideVotes: e.hideVotes,
+    repeat: e.repeat ?? 'none',
+    repeatUntil: e.repeatUntil ?? '',
     billTotal: e.billTotal,
     bankId: e.bankId ?? '',
     bankAccount: e.bankAccount ?? '',
@@ -36,6 +40,8 @@ usePlaceName(
     if (!form.value.venue.trim()) form.value.venue = name;
   }
 );
+// Repeating needs a fixed date and a place; an event already in a series can always turn it off.
+const canRepeat = computed(() => !!ev.value.repeat || (!!ev.value.startsAt && !ev.value.pollDays.length && !!ev.value.venue));
 // What the form held when the panel opened: the baseline for "unsaved" and for the fields a save sends.
 const snapshot = ref(blank());
 const changes = computed(() => changedFields(snapshot.value, form.value));
@@ -124,19 +130,24 @@ const FIELD_OF: Record<string, string> = {
   titleRequired: 'title',
   invalidLink: 'venueLink',
   invalidCapacity: 'capacity',
+  invalidGuests: 'maxGuests',
   invalidBank: 'bank',
   invalidCover: 'cover',
   startsInPast: 'startsAt',
+  invalidRepeat: 'repeat',
+  repeatNeedsFixedPlan: 'repeat',
 };
 
 async function save() {
-  const { startsAt, voteDeadline, billTotal, ...f } = changes.value;
+  const { startsAt, voteDeadline, billTotal, repeat, repeatUntil, ...f } = changes.value;
   const e = ev.value;
   const notice = prefill.value && postUpdate.value ? updateText.value.trim() : '';
   const body = {
     ...f,
     ...(startsAt && { startsAt: startsAtIso.value }),
     ...('voteDeadline' in changes.value && { voteDeadline: voteDeadline ? teamTime(...(voteDeadline.split('T') as [string, string])) : null }),
+    ...(repeat && { repeat: repeat === 'none' ? null : repeat }),
+    ...('repeatUntil' in changes.value && { repeatUntil: repeatUntil || null }),
     ...('billTotal' in changes.value && { billTotal: billTotal ?? null }),
     ...(notice && { notice }),
     ...(rederive.value?.hold.length && reconfirmIso.value && { reconfirmBy: reconfirmIso.value }),
@@ -260,6 +271,13 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
         <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')" :error="errors.capacity">
           <UInputNumber v-model="form.capacity" :min="1" :max="500" class="w-40" />
         </UFormField>
+        <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')" :error="errors.maxGuests">
+          <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-40" />
+        </UFormField>
+        <UFormField v-if="canRepeat" :error="errors.repeat">
+          <RepeatFields v-model:repeat="form.repeat" v-model:until="form.repeatUntil" />
+        </UFormField>
+        <UCheckbox v-model="form.hideVotes" :label="t('create.hideVotes')" :description="t('create.hideVotesHint')" />
         <UAlert
           v-if="seatMoves?.waitlisted.length"
           color="warning"

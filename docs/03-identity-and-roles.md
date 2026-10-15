@@ -86,6 +86,8 @@ If the server stops accepting a key (revoked, rotated), the page forgets it.
 | `cohost` | ✘ | ✔ | Invite, re-issue, revoke co-hosts; manage the legacy key |
 | `remind` | ✔ | ✔ | See who has not voted, answered or paid, and copy a reminder (`reminderOf` in `shared/utils/event.ts`; never carries amounts) |
 | `rotateKey` | ✘ | ✔ | `POST /api/events/:id/key`: replace the manage key (the old manage link stops working). Besides the host role it needs the **current manage key** in `x-manage-key` (`403 manageKeyRequired` otherwise), so a stolen creator sign-in link alone cannot lock the host out. The button only shows in a browser that holds the key. A creator with no copy of the key on any device cannot rotate it. |
+| `handover` | ✘ | ✔ | Offer the event to a co-host, or withdraw the offer ([3.5](#35-handing-an-event-over)); the server also needs the **signed-in creator** (`403 creatorOnly`), so a manage key alone cannot do it |
+| `acceptHandover` | ✔ | ✔ | Take an offer over; the server also needs the signed-in member to be the offered one |
 
 `can(role, action)`: host can do everything; co-host only actions whose minimum role is co-host; participant nothing.
 **Always go through `can()` / `requireCan()`**, never compare roles ad hoc.
@@ -96,7 +98,7 @@ Enforced in the API, not the UI:
 
 | Write | Participant | Organizer |
 |---|---|---|
-| Own votes (`days`, `venueIds`) | Only while voting is open and stage is `poll` | Any time in `poll`, on anyone's row |
+| Own votes (`days`, `venueIds`, `maybeDays`, `maybeVenueIds`) | Only while voting is open and stage is `poll` | Any time in `poll`, on anyone's row |
 | Suggest a day / place | Same window | Same |
 | Own RSVP status and guests | Stage `rsvp` (and "can't join" while polling) | Any stage, anyone's row |
 | Own payment | Stage `bill`; `addPaid` also in `settled`; only with a seat ([06](06-bill-and-payments.md#63-recording-payments)) | Both stages, anyone's row, any amount |
@@ -136,3 +138,19 @@ sequenceDiagram
 - Whoever holds an event's manage key is its host, **regardless of who is signed in**. Because the key sits in `localStorage`, anyone using that browser profile has host power on that event while the key is stored. Signing out forgets every key on that device (see 3.1).
 - The create page only asks for a new name and never lists others, so it can't be used to browse the roster.
 - **Events are private, the roster is not**: an event, with every member's votes, answers and payments and its bank id, account number and holder, is readable only by an organizer, a holder of the joining key or a participant (`requireAccess`, section 3.2); anyone else gets `notFound`. The member name list is public.
+
+- **Forgotten PIN**: an organizer's reset (above) or, once email is switched on, the member's own recovery by a code sent to their verified address ([3.6](#36-verified-email-and-recovering-a-pin)). A member without a verified email still needs an organizer.
+
+## 3.5 Handing an event over
+
+The creator can pass the event to an active co-host (`events.handover_to`, `handover_at`). Q3 of the Phase 2 spec: full creator rights move, not just the manage key.
+
+1. **Offer**: `POST /api/events/:id/handover {to}`, signed in as the creator. The target must be an active co-host whose member has a PIN (`409 handoverTarget`), so the new host can always get back in. One offer at a time: a new one replaces the old. `DELETE /handover` withdraws it (creator) or turns it down (the target).
+2. **Accept**: `POST /api/events/:id/handover/accept`, signed in as the target. One `db.batch`: the event UPDATE sets `created_by` to the target, `manage_key_hash` to the hash of a fresh key and clears the offer, guarded on `created_by` being the creator the caller saw, `handover_to` being the caller, the caller still being an active co-host with a PIN and the event not cancelled. The target's co-host row is deleted and the old host is inserted as an active co-host (random, unheld `key_hash` to satisfy `cohosts_key`; they get in through their member row) only if that UPDATE took effect. A stale accept (offer withdrawn or replaced, co-host removed, creator changed, double submit) changes nothing and returns `409 handoverGone`. The new manage key is in the response only (`{ key }`); the page stores it like any manage key.
+3. **Afterwards**: the old manage link and key stop working; the old host is a co-host and sees the page as one. The new host's old co-host access key stops working with the deleted row.
+4. **Clearing**: revoking, leaving or re-issuing the target's co-host row clears the offer in the same batch. Deleting the event removes it. `GET` returns `handover` (`{ to, name, at, mine }`) and `handoverOptions` (eligible co-hosts) only to the signed-in creator and the target, and the raw `handoverTo`/`handoverAt` never.
+5. **Side effect**: `organizes()` follows `created_by`, so the new host's name gains the organizer protections (no claim, no PIN reset by others) and the old host loses them unless they created other events; see [11](11-known-behaviours.md).
+
+## 3.6 Verified email and recovering a PIN
+
+A member with a PIN may attach a verified email (`member_email`), after consent, to recover their own PIN: `POST /api/members/:id/recover` mails a code, `/recover/confirm` sets a new PIN, signs the member out everywhere else and in on this browser. Organizers may use it too (it hands nothing over; manage keys are untouched). Adding, changing or removing the address needs the current PIN. After a change, recovery codes keep going to the **previous** address for 72 hours and that address gets a signed "not me" link that restores it, signs the member out everywhere and rotates their token. The address is visible only to its owner (`GET /api/me`). Everything is switched off until Resend is configured. Details: [13](13-email.md).

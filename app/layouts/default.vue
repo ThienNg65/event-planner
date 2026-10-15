@@ -198,6 +198,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
                   <UButton v-else color="neutral" variant="outline" icon="i-lucide-key-round" @click="pinEditing = true">{{ t(me.hasPin ? 'me.changePin' : 'me.setPin') }}</UButton>
                   <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
                   <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
+                  <MemberEmail v-if="me.emailEnabled && me.hasPin" />
                   <div v-if="confirmOthers" class="space-y-2">
                     <p class="text-xs text-warning">{{ t('me.signOutOthersConfirm') }}</p>
                     <UInput v-if="me.hasPin" v-model="currentPin" type="password" inputmode="numeric" autocomplete="current-password" :maxlength="PIN_LENGTH" :placeholder="t('pin.current')" :aria-label="t('pin.current')" class="w-full" />

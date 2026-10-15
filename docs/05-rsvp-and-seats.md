@@ -10,7 +10,7 @@ Stored on the member's `responses` row:
 | Column | Meaning |
 |---|---|
 | `status` | `going`, `maybe`, `no`, or `null` (no answer) |
-| `guests` | 0 to 10 extra people the member brings (`invalidGuests`); only meaningful when going (the UI sends 0 for maybe/no) |
+| `guests` | 0 to 10 extra people the member brings (`invalidGuests`), at most the event's guest limit (`tooManyGuests`, see below); only meaningful when going (the UI sends 0 for maybe/no) |
 | `derived` | `null` = the member's own answer; `'going'` = counted from their votes; `'reconfirm'` = seat held after a plan change |
 | `goingAt` | Queue timestamp; set when the member becomes Going or adds guests |
 
@@ -55,6 +55,10 @@ Seat counts, the waitlist and the per-seat share are **computed on read** and ne
 Editing `capacity` writes nothing to responses. Because the queue is recomputed on read, a lower limit pushes the tail of the confirmed list onto the waitlist,
 and a higher limit promotes the head of the waitlist. `capacityImpact(responses, from, to)` returns `{ waitlisted, promoted }` and the edit panel shows it before saving.
 Valid range: 1 to 500 or unlimited (`invalidCapacity`).
+
+### Guest limit
+
+`events.max_guests` (null means 10, the hard ceiling; 0 to 10, validated by `eventFields` as `invalidGuests`) caps the guests one member may bring. `PUT /response` refuses a larger `guests` with `tooManyGuests` unless the caller is an organizer (who may set any number from 0 to 10, e.g. when fixing someone's row). `guestLimit(ev)` in `shared/utils/event.ts` is the one place the default lives; the RSVP stepper uses it as its maximum. Lowering the limit never rewrites rows: people already over it stay as they are (and must lower their number before answering again). It is set in the create form and in Edit.
 
 ## 5.4 What the page shows per person (People list)
 

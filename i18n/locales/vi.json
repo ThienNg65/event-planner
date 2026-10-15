@@ -86,6 +86,7 @@
     "dateTbd": "Chưa chốt ngày",
     "seats": "chỗ",
     "share": "Chia sẻ",
+    "duplicate": "Nhân bản",
     "linkCopied": "Đã sao chép liên kết sự kiện",
     "joined": "Bạn đã tham gia \"{title}\"",
     "private": "Không tìm thấy sự kiện hoặc sự kiện riêng tư. Hãy xin chủ sự kiện liên kết tham gia.",
@@ -149,7 +150,21 @@
       "trip": "Du lịch cuối tuần 🏕️"
     },
     "bankPublic": "Thông tin ngân hàng hiển thị cho bất kỳ ai có liên kết sự kiện.",
-    "fixedDateNoVenue": "Đã có ngày nhưng chưa có địa điểm: sự kiện sẽ mở bình chọn địa điểm trước, chốt xong mọi người mới trả lời tham gia."
+    "fixedDateNoVenue": "Đã có ngày nhưng chưa có địa điểm: sự kiện sẽ mở bình chọn địa điểm trước, chốt xong mọi người mới trả lời tham gia.",
+    "maxGuests": "Khách đi cùng tối đa",
+    "maxGuestsHint": "Mỗi người được mang tối đa bấy nhiêu khách (0 đến 10)",
+    "hideVotes": "Ẩn kết quả cho đến khi bình chọn",
+    "hideVotesHint": "Mỗi người chỉ thấy kết quả sau khi đã chọn ngày hoặc địa điểm của mình. Người tổ chức luôn thấy.",
+    "copiedFrom": "Sao chép từ \"{title}\". Chọn ngày mới rồi tạo sự kiện.",
+    "repeat": "Lặp lại",
+    "repeatNone": "Không lặp lại",
+    "repeatWeekly": "Hằng tuần",
+    "repeatBiweekly": "2 tuần một lần",
+    "repeatMonthly": "Hằng tháng",
+    "repeatUntil": "Lặp đến hết ngày",
+    "repeatUntilHint": "Không bắt buộc. Ngày cuối cùng một sự kiện mới được diễn ra.",
+    "repeatNeeds": "Sự kiện lặp lại cần ngày giờ và địa điểm cố định.",
+    "repeatHint": "Sự kiện kế tiếp tự động được tạo 14 ngày trước ngày diễn ra (hoặc khi sự kiện này bắt đầu, nếu muộn hơn), với cùng thông tin và người tổ chức."
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
@@ -169,7 +184,8 @@
     "fromVote": "Bạn được tính là đi theo phiếu bầu. Đổi câu trả lời nếu bạn không đi được.",
     "held": "Kế hoạch đã đổi. Chỗ của bạn được giữ đến {deadline}. Hãy xác nhận để giữ chỗ.",
     "released": "Chỗ giữ của bạn đã được nhả. Bạn vẫn có thể tham gia.",
-    "guestsQueue": "Thêm khách sẽ đưa bạn xuống cuối hàng chờ."
+    "guestsQueue": "Thêm khách sẽ đưa bạn xuống cuối hàng chờ.",
+    "guestsMax": "Tối đa {n} khách đi cùng."
   },
   "manage": {
     "copyLink": "Liên kết quản lý",
@@ -197,6 +213,7 @@
     "invalidBill": "Số tiền không hợp lệ.",
     "invalidBank": "Thông tin ngân hàng không hợp lệ.",
     "invalidGuests": "Số người đi cùng từ 0 đến 10.",
+    "tooManyGuests": "Sự kiện này không cho mang nhiều khách đến vậy.",
     "unknownVenue": "Địa điểm không tồn tại.",
     "invalidCover": "Chọn một ảnh bìa hoặc dán liên kết ảnh bắt đầu bằng https://",
     "notYou": "Bạn chỉ có thể sửa câu trả lời của chính mình.",
@@ -227,7 +244,25 @@
     "pinWeak": "Mã PIN quá dễ đoán. Tránh số lặp và dãy như 123456.",
     "pinWrong": "Sai tên hoặc mã PIN.",
     "pinLocked": "Nhập sai quá nhiều lần. Hãy thử lại sau 15 phút, hoặc nhờ người tổ chức đặt lại mã PIN.",
-    "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN."
+    "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN.",
+    "creatorOnly": "Chỉ người tổ chức đã tạo sự kiện mới chuyển giao được.",
+    "handoverTarget": "Hãy chọn một đồng tổ chức đang hoạt động và đã đặt mã PIN.",
+    "handoverGone": "Lời đề nghị chuyển giao này không còn hiệu lực.",
+    "emailOff": "Chưa dùng được email.",
+    "cronSecret": "Sai mã bí mật của bộ hẹn giờ.",
+    "consentRequired": "Hãy tích vào ô đồng ý.",
+    "emailInvalid": "Địa chỉ email này không hợp lệ.",
+    "emailDomain": "Tên miền email này không được chấp nhận. Hãy dùng email công việc.",
+    "pinRequired": "Hãy đặt mã PIN trước: email được thêm bằng mã PIN.",
+    "emailSame": "Đây đã là email của bạn.",
+    "emailTooSoon": "Mã vừa được gửi, hoặc hôm nay bạn đã yêu cầu quá nhiều lần. Hãy thử lại sau.",
+    "mailBudget": "Hiện chưa gửi được email. Hãy thử lại vào ngày mai.",
+    "mailFailed": "Không gửi được email. Hãy thử lại sau.",
+    "codeInvalid": "Mã sai hoặc đã hết hạn.",
+    "revertInvalid": "Liên kết này không còn hiệu lực.",
+    "unsubscribeInvalid": "Liên kết hủy nhận thư này không hợp lệ.",
+    "invalidRepeat": "Chọn tần suất lặp lại và một ngày kết thúc hợp lệ.",
+    "repeatNeedsFixedPlan": "Sự kiện lặp lại cần ngày giờ và địa điểm cố định, không dùng bình chọn."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -256,6 +291,8 @@
     "pickName": "Chọn tên của bạn ở trên để bình chọn",
     "suggestDay": "Gợi ý ngày",
     "suggestPlace": "Gợi ý địa điểm",
+    "votesHidden": "Kết quả được ẩn cho đến khi bạn bình chọn.",
+    "answeredOf": "{n}/{total} người đã trả lời",
     "dup": "Đã có trong danh sách. Mình đã thêm phiếu của bạn.",
     "remove": "Xoá",
     "removeTitle": "Xoá “{name}”?",
@@ -267,7 +304,11 @@
     "notSelected": "chưa chọn",
     "closedDeadline": "Đã đóng bình chọn: quá hạn",
     "closedCancelled": "Đã đóng bình chọn: sự kiện bị huỷ",
-    "daysHint": "Chọn mọi ngày bạn đi được. Nếu một trong các ngày đó được chốt, bạn được tính là đi.",
+    "daysHint": "Chọn mọi ngày bạn đi được. Nếu một trong các ngày đó được chốt, bạn được tính là đi. Ngày chọn \"Nếu cần\" không tự được tính: bạn sẽ được hỏi xác nhận.",
+    "ifNeedBe": "Nếu cần",
+    "ifNeedBeState": "nếu cần",
+    "ifNeedBeFor": "Nếu cần: {name}",
+    "maybeChosen": "{n} nếu cần",
     "picked": "Bạn chọn {n}/{total} ngày",
     "chosen": "{n} người chọn",
     "venuesHint": "Bình chọn chỗ bạn thích, hoặc gợi ý thêm một chỗ.",
@@ -618,7 +659,14 @@
     "votingChoice": "Bình chọn sau khi mở lại",
     "reopenDerived": "Đã xoá {n} câu trả lời tính từ phiếu bầu. | Đã xoá {n} câu trả lời tính từ phiếu bầu.",
     "reopenPayments": "Các khoản thanh toán được giữ nguyên, không bị xoá:",
-    "reopenAck": "Tôi biết các khoản thanh toán này vẫn được ghi nhận"
+    "reopenAck": "Tôi biết các khoản thanh toán này vẫn được ghi nhận",
+    "handover": "Chuyển giao…",
+    "handoverTitle": "Chuyển giao sự kiện",
+    "handoverBody": "Đề nghị một đồng tổ chức nhận sự kiện. Khi họ đồng ý, họ trở thành người tổ chức chính còn bạn thành đồng tổ chức. Liên kết quản lý của bạn sẽ không còn dùng được.",
+    "handoverButton": "Gửi đề nghị",
+    "handoverPick": "Chọn đồng tổ chức",
+    "handoverNone": "Chưa có ai nhận được: người đó phải là đồng tổ chức đang hoạt động và đã đặt mã PIN.",
+    "handoverReplace": "Đề nghị này thay cho đề nghị gửi {name}."
   },
   "org": {
     "title": "Ban tổ chức",
@@ -639,7 +687,8 @@
       "setOthers": "Sửa đăng ký và thanh toán của người khác",
       "reopen": "Mở lại một bước trước",
       "cancel": "Huỷ, khôi phục hoặc xoá sự kiện",
-      "cohost": "Quản lý liên kết quản lý và liên kết đồng tổ chức"
+      "cohost": "Quản lý liên kết quản lý và liên kết đồng tổ chức",
+      "handover": "Chuyển sự kiện cho một đồng tổ chức"
     },
     "legacyActive": "Đang có liên kết đồng tổ chức",
     "manage": "Quản lý ban tổ chức",
@@ -735,6 +784,7 @@
     "suggested": "Gợi ý chốt",
     "provisional": "Ưu tiên tạm thời",
     "in": "Đi được:",
+    "maybe": "Nếu cần:",
     "out": "Không đi được ({n})",
     "pending": "{n} người chưa phản hồi.",
     "tieHonorees": "Đang hoà {n} phiếu. {day} được gợi ý vì nhiều người được chúc mừng đi được hơn.",
@@ -811,5 +861,123 @@
     "previewNote": "Chuyen khoan thu",
     "failed": "VietQR không tạo được mã. Hãy kiểm tra mã ngân hàng và số tài khoản.",
     "previewHint": "Quét bằng ứng dụng ngân hàng: phải hiện đúng tài khoản và chủ tài khoản. Không cần chuyển tiền."
+  },
+  "handover": {
+    "offerTitle": "{name} đề nghị chuyển sự kiện này cho bạn",
+    "offerBody": "Đồng ý để trở thành người tổ chức chính. Người tổ chức trước vẫn là đồng tổ chức. Bạn sẽ nhận liên kết quản lý mới trên thiết bị này.",
+    "accept": "Đồng ý",
+    "decline": "Từ chối",
+    "accepted": "Bạn đã là người tổ chức chính",
+    "pending": "Đã đề nghị chuyển giao cho {name}, đang chờ trả lời",
+    "cancel": "Hủy đề nghị"
+  },
+  "email": {
+    "title": "Email",
+    "intro": "Thêm email đã xác minh để tự đặt lại mã PIN khi quên và nhận email về các sự kiện của bạn.",
+    "add": "Thêm email",
+    "change": "Đổi email",
+    "remove": "Xoá email",
+    "current": "Email của bạn: {email}",
+    "cooldown": "Bạn vừa đổi địa chỉ. Đến {until}, mã khôi phục PIN vẫn được gửi về địa chỉ cũ.",
+    "label": "Địa chỉ email",
+    "consent": "Tôi đồng ý để Team Events lưu địa chỉ email của tôi nhằm gửi mã dùng một lần (xác nhận địa chỉ này và đặt lại mã PIN) và thông báo bảo mật, cùng các email về sự kiện tôi tham gia (chốt hoặc đổi ngày, địa điểm, yêu cầu và ghi nhận thanh toán, hủy sự kiện), mà tôi có thể tắt từng loại trong hồ sơ. Email được gửi qua Resend, một dịch vụ ở ngoài Việt Nam, nên địa chỉ của tôi được chuyển ra nước ngoài. Tôi có thể rút lại sự đồng ý bất cứ lúc nào bằng cách xoá email tại đây.",
+    "send": "Gửi mã",
+    "codeSent": "Chúng tôi đã gửi mã 6 số đến {email}. Mã có hiệu lực 15 phút.",
+    "code": "Mã 6 số",
+    "confirm": "Xác nhận",
+    "saved": "Đã lưu email",
+    "removed": "Đã xoá email",
+    "removeNote": "Việc này rút lại sự đồng ý của bạn. Bạn sẽ không thể đặt lại mã PIN bằng email nữa.",
+    "forgot": "Quên mã PIN?",
+    "recoverSend": "Gửi mã qua email",
+    "recoverSent": "Nếu tên này có email đã xác minh, chúng tôi đã gửi mã đến đó. Mã có hiệu lực 15 phút.",
+    "recoverNone": "Tên này chưa có email? Hãy nhờ người tổ chức đặt lại mã PIN.",
+    "recoverDo": "Đặt PIN mới và đăng nhập",
+    "recovered": "Đã đổi mã PIN. Bạn đã đăng nhập.",
+    "back": "Quay lại",
+    "revertTitle": "Có phải bạn không?",
+    "revertBody": "Địa chỉ của một tài khoản Team Events vừa bị thay bằng địa chỉ khác. Nếu không phải bạn làm, hãy khôi phục: tài khoản sẽ bị đăng xuất ở mọi nơi, rồi bạn có thể đặt lại mã PIN bằng mã gửi về địa chỉ này.",
+    "revertDo": "Không phải tôi: khôi phục địa chỉ này",
+    "revertDone": "Xong. Địa chỉ cũ đã được khôi phục và tài khoản đã bị đăng xuất ở mọi nơi.",
+    "revertMissing": "Liên kết này không đầy đủ. Hãy mở lại từ email.",
+    "notifyTitle": "Email về sự kiện",
+    "notifyIntro": "Chọn loại email về sự kiện bạn muốn nhận. Mỗi thư đều có liên kết để ngừng nhận."
+  },
+  "mail": {
+    "footer": "Team Events. Đây là thư tự động, vui lòng không trả lời.",
+    "verifyCode": {
+      "subject": "Mã Team Events của bạn: {code}",
+      "body": "Mã để xác nhận địa chỉ email này là {code}.\n\nMã có hiệu lực 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua thư này: không có gì thay đổi nếu thiếu mã."
+    },
+    "recoverCode": {
+      "subject": "Team Events: mã đặt lại PIN",
+      "body": "Dùng mã này để chọn mã PIN mới: {code}.\n\nMã có hiệu lực 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua thư này: mã PIN của bạn giữ nguyên."
+    },
+    "emailChanged": {
+      "subject": "Team Events: địa chỉ email đã đổi",
+      "body": "Địa chỉ email của một tài khoản Team Events vừa được đổi thành {email}. Đây là địa chỉ trước đó của bạn.\n\nNếu là bạn làm thì không cần làm gì thêm. Trong 72 giờ, mã khôi phục PIN vẫn được gửi đến địa chỉ này.\n\nNếu không phải bạn, hãy dùng liên kết bên dưới để khôi phục địa chỉ này.",
+      "action": "Không phải tôi: khôi phục địa chỉ này"
+    },
+    "pinReset": {
+      "subject": "Team Events: mã PIN của bạn đã được đặt lại",
+      "body": "Mã PIN của {name} vừa được đặt lại bằng mã gửi qua email và mọi thiết bị khác đã bị đăng xuất.\n\nNếu là bạn làm thì không cần làm gì thêm. Nếu không, có thể ai đó đang truy cập hộp thư này: hãy bảo mật tài khoản email và nhờ người tổ chức Team Events hỗ trợ."
+    },
+    "stop": "Ngừng nhận các email này",
+    "tomorrow": {
+      "subject": "{title}: ngày mai",
+      "body": "Chào {name}, {title} diễn ra vào ngày mai.\n\nThời gian: {when}\nĐịa điểm: {place}\n\nNếu bạn không đi được nữa, hãy cập nhật câu trả lời để người khác có chỗ.",
+      "action2": "Mở sự kiện"
+    },
+    "paymentReminder": {
+      "subject": "{title}: nhắc thanh toán {amount}",
+      "body": "Chào {name}, bạn còn {amount} cho {title}.\n\nNếu bạn đã chuyển khoản, hãy bấm \"Tôi đã trả\" trên trang sự kiện để người tổ chức biết.",
+      "action": "Mở mã VietQR",
+      "action2": "Mở sự kiện"
+    },
+    "kinds": {
+      "planSet": "Chốt hoặc đổi ngày, địa điểm",
+      "paymentRequested": "Yêu cầu thanh toán",
+      "paymentRecorded": "Người tổ chức ghi nhận thanh toán",
+      "cancelled": "Sự kiện bị hủy",
+      "tomorrow": "Nhắc sự kiện ngày mai",
+      "paymentReminder": "Nhắc thanh toán"
+    },
+    "unsubscribe": {
+      "title": "Ngừng nhận các email này?",
+      "body": "Bạn sẽ không nhận email Team Events về: {what} nữa. Bạn có thể bật lại trong hồ sơ của mình.",
+      "button": "Ngừng nhận các email này",
+      "done": "Xong. Bạn sẽ không nhận email Team Events về: {what} nữa."
+    },
+    "planSet": {
+      "subject": "{title}: đã chốt ngày hoặc địa điểm",
+      "body": "Ngày hoặc địa điểm của {title} vừa được chốt hoặc thay đổi.\n\nThời gian: {when}\nĐịa điểm: {place}\n\nHãy kiểm tra xem còn phù hợp với bạn không và cập nhật câu trả lời nếu cần.",
+      "action2": "Mở sự kiện"
+    },
+    "paymentRequested": {
+      "subject": "{title}: phần của bạn là {amount}",
+      "body": "Chào {name}, hóa đơn của {title} đã có. Phần của bạn là {amount}.\n\nHãy chuyển khoản, rồi bấm \"Tôi đã trả\" trên trang sự kiện để người tổ chức biết.",
+      "action": "Mở mã VietQR",
+      "action2": "Mở sự kiện"
+    },
+    "paymentRecorded": {
+      "subject": "{title}: đã ghi nhận khoản thanh toán của bạn",
+      "body": "Người tổ chức vừa ghi nhận khoản thanh toán của bạn cho {title}. Bạn không cần làm gì thêm.",
+      "action2": "Mở sự kiện"
+    },
+    "cancelled": {
+      "subject": "{title} đã bị hủy",
+      "body": "{title} đã bị người tổ chức hủy. Bạn có tên trong danh sách tham dự.\n\nTrang sự kiện có thông tin chi tiết.",
+      "action2": "Mở sự kiện"
+    }
+  },
+  "series": {
+    "repeats": "Lặp lại {every}",
+    "next": "lần tới {when}",
+    "until": "đến {day}",
+    "prev": "Sự kiện trước",
+    "nextEvent": "Sự kiện kế tiếp",
+    "weekly": "hằng tuần",
+    "biweekly": "2 tuần một lần",
+    "monthly": "hằng tháng"
   }
 }

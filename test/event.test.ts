@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, capacityImpact, guestLimit, hasPicked, hasVoted, planFit, hidesVotes, redactVotes, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { pinProblem } from '../shared/utils/pin.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
@@ -161,8 +161,8 @@ test('votingOpen: only while polling, not cancelled, before the deadline', () =>
 });
 
 test('can: host does everything, co-host cannot reopen/cancel/delete/manage the co-host link, others nothing', () => {
-  const shared = ['edit', 'advance', 'removeVenue', 'setOthers', 'remind'] as const;
-  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost', 'rotateKey'] as const;
+  const shared = ['edit', 'advance', 'removeVenue', 'setOthers', 'remind', 'acceptHandover'] as const;
+  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost', 'rotateKey', 'handover'] as const;
   for (const a of [...shared, ...hostOnly]) assert.equal(can('host', a), true, `host ${a}`);
   for (const a of shared) assert.equal(can('cohost', a), true, `cohost ${a}`);
   for (const a of hostOnly) assert.equal(can('cohost', a), false, `cohost ${a}`);
@@ -485,4 +485,123 @@ test('placeName: the name from a full Google Maps place link, else null', () => 
 test('dateBlock: vi month reads "thg 10" on every runtime, en stays short', () => {
   assert.deepEqual(dateBlock('2026-10-19T11:30:00Z', 'vi'), { day: '19', month: 'thg 10' });
   assert.deepEqual(dateBlock('2026-10-18T18:00:00Z', 'en'), { day: '19', month: 'Oct' });
+});
+
+test('guestLimit: an event with no limit allows the ceiling of 10', () => {
+  assert.equal(guestLimit({ maxGuests: null }), 10);
+  assert.equal(guestLimit({ maxGuests: 0 }), 0);
+  assert.equal(guestLimit({ maxGuests: 3 }), 3);
+});
+
+const ballot = (memberId: number, days: string[] = [], venueIds: number[] = [], status: string | null = null) => ({ memberId, days, venueIds, status });
+const spot = (id: number, min: number, upvotes: number[]) => ({ id, createdAt: at(min), upvotes, maybe: [] as number[] });
+
+test('hasVoted: a day, a place (yes or if need be) or declining counts; an RSVP maybe or an empty row does not', () => {
+  assert.equal(hasVoted(ballot(1, ['2026-10-20'])), true);
+  assert.equal(hasVoted(ballot(1, [], [4])), true);
+  assert.equal(hasVoted(ballot(1, [], [], 'no')), true);
+  assert.equal(hasVoted(ballot(1, [], [], 'maybe')), false);
+  assert.equal(hasVoted(ballot(1)), false);
+});
+
+test('hasVoted and hasPicked: an "if need be" day or place is a vote; declining is an answer but not a pick', () => {
+  assert.equal(hasVoted({ ...ballot(1), maybeDays: ['2026-10-20'] }), true);
+  assert.equal(hasVoted({ ...ballot(1), maybeVenueIds: [4] }), true);
+  assert.equal(hasPicked({ ...ballot(1), maybeVenueIds: [4] }), true);
+  assert.equal(hasPicked(ballot(1, [], [], 'no')), false);
+  assert.equal(hasPicked({ ...ballot(1), maybeDays: [], maybeVenueIds: [] }), false);
+});
+
+test('pendingVoters: someone who only picked "if need be" has answered', () => {
+  const rs = [{ memberId: 1, days: [], venueIds: [], maybeDays: ['2026-10-01'], maybeVenueIds: [] }, { memberId: 2, days: [], venueIds: [], maybeDays: [], maybeVenueIds: [] }];
+  assert.deepEqual(pendingVoters([{ id: 1 }, { id: 2 }], rs), [{ id: 2 }]);
+});
+
+test('planFit: yes beats if-need-be; the weaker of day and place decides; no pick on a polled place leaves the day alone', () => {
+  const day = '2026-10-23';
+  const m = (days: string[], maybeDays: string[], venueIds: number[] = [], maybeVenueIds: number[] = []) => ({ days, maybeDays, venueIds, maybeVenueIds });
+  assert.equal(planFit(m([day], []), plan(day)), 'yes');
+  assert.equal(planFit(m([], [day]), plan(day)), 'maybe');
+  assert.equal(planFit(m(['2026-10-24'], [day]), plan(day)), 'maybe');
+  assert.equal(planFit(m([], []), plan(day)), 'no');
+  assert.equal(planFit(m([day], [], [1]), plan(day, [1])), 'yes');
+  assert.equal(planFit(m([day], [], [], [1]), plan(day, [1])), 'maybe');
+  assert.equal(planFit(m([], [day], [1]), plan(day, [1])), 'maybe');
+  assert.equal(planFit(m([day], [], [2], [1]), plan(day, [1])), 'maybe');
+  assert.equal(planFit(m([day], [], [2]), plan(day, [1])), 'no');
+  assert.equal(planFit(m([day], []), plan(day, [1])), 'yes');
+  assert.equal(planFit(m([], [], [], [1]), plan(null, [1])), 'maybe');
+  assert.equal(planFit(m([], [], [1]), plan(null, [1])), 'yes');
+  assert.equal(planFit(m([], [day], [], [1]), plan(null, [])), 'no');
+});
+
+test('matchesPlan: an "if need be" match is not a fit', () => {
+  assert.equal(matchesPlan({ days: [], venueIds: [], maybeDays: ['2026-10-23'] }, plan('2026-10-23')), false);
+  assert.equal(matchesPlan({ days: ['2026-10-23'], venueIds: [], maybeVenueIds: [1] }, plan('2026-10-23', [1])), false);
+});
+
+test('deriveAttendance lock: an if-need-be match is not seated, and lockImpact asks that member to confirm', () => {
+  const rows = [row(1), row(2, { days: [], maybeDays: ['2026-10-23'] }), row(3, { days: ['2026-10-24'], maybeDays: ['2026-10-23'] })];
+  const d = deriveAttendance(rows, plan('2026-10-23'), 'lock', NO_HOLDS);
+  assert.deepEqual([ids(d.going), ids(d.untouched)], [[1], [2, 3]]);
+  const r = lockImpact(rows, plan('2026-10-23'), null, at(99), NO_HOLDS, 'lock');
+  assert.deepEqual([ids(r.going), ids(r.confirm)], [[1], [2, 3]]);
+});
+
+test('deriveAttendance edit: a derived seat that only fits as if-need-be is held to confirm', () => {
+  const ev = { reconfirmBy: new Date(Date.now() + 3600_000) };
+  const rows = [row(1, { status: 'going', derived: 'going', days: [], maybeDays: ['2026-10-23'] }), row(2, { status: 'going', derived: 'going' })];
+  const d = deriveAttendance(rows, plan('2026-10-23'), 'edit', ev);
+  assert.deepEqual([ids(d.hold), ids(d.going)], [[1], [2]]);
+});
+
+test('mineOf: an if-need-be pick counts as having voted', () => {
+  assert.equal(mineOf({ days: [], venueIds: [], maybeDays: ['2026-10-23'], status: null, guests: 0, paidAt: null }, false, false, null).voted, true);
+});
+
+test('compareDays: ranks by yes, then if need be; if-need-be voters are listed apart from yes', () => {
+  const rs = [
+    { memberId: 1, days: ['2026-10-19'], maybeDays: [] },
+    { memberId: 2, days: ['2026-10-20'], maybeDays: ['2026-10-19'] },
+    { memberId: 3, days: ['2026-10-20'], maybeDays: [] },
+    { memberId: 4, days: ['2026-10-19'], maybeDays: ['2026-10-20'] },
+    { memberId: 5, days: [], maybeDays: ['2026-10-19', '2026-10-20'] },
+  ];
+  const { ranked, tie } = compareDays(['2026-10-19', '2026-10-20'], rs);
+  assert.deepEqual(ranked.map((d) => [d.day, d.n, d.maybe]), [['2026-10-19', 2, [2, 5]], ['2026-10-20', 2, [4, 5]]]);
+  assert.equal(tie, 'earlier');
+  const lead = compareDays(['2026-10-19', '2026-10-20'], [...rs, { memberId: 6, days: [], maybeDays: ['2026-10-20'] }]);
+  assert.deepEqual([lead.ranked[0]!.day, lead.tie], ['2026-10-20', null]);
+});
+
+test('redactVotes: also clears if-need-be picks and counts, keeps honoree days', () => {
+  const rows = [{ ...ballot(1, ['2026-10-20'], [7]), maybeDays: ['2026-10-21'], maybeVenueIds: [8] }, { ...ballot(2, ['2026-10-20']), maybeDays: ['2026-10-21'], maybeVenueIds: [8] }];
+  const out = redactVotes(rows, [{ ...spot(8, 1, [1]), maybe: [2] }], 3, [2]);
+  assert.deepEqual(out.rows.map((r) => [r.days, r.maybeDays, r.venueIds, r.maybeVenueIds]), [[[], [], [], []], [['2026-10-20'], ['2026-10-21'], [], []]]);
+  assert.deepEqual(out.venues.map((v) => [v.upvotes, v.maybe]), [[[], []]]);
+});
+
+test('hidesVotes: only for a non-organizer who has not voted, in the poll of an event that asks for it', () => {
+  const rows = [ballot(1, ['2026-10-20']), ballot(2)];
+  const ev = { hideVotes: true, stage: 'poll' };
+  assert.equal(hidesVotes(ev, null, rows, 2), true);
+  assert.equal(hidesVotes(ev, null, rows, null), true);
+  assert.equal(hidesVotes(ev, null, rows, 1), false);
+  assert.equal(hidesVotes(ev, null, [ballot(2, [], [], 'no')], 2), false);
+  assert.equal(hidesVotes(ev, 'host', rows, 2), false);
+  assert.equal(hidesVotes(ev, 'cohost', rows, 2), false);
+  assert.equal(hidesVotes({ ...ev, hideVotes: false }, null, rows, 2), false);
+  assert.equal(hidesVotes({ ...ev, stage: 'rsvp' }, null, rows, 2), false);
+});
+
+test('redactVotes empties other people picks and counts, keeps honoree days and my own row, and sorts places by age', () => {
+  const rows = [ballot(1, ['2026-10-20'], [7]), ballot(2, ['2026-10-21'], [8]), ballot(3, ['2026-10-22'], [7])];
+  const out = redactVotes(rows, [spot(8, 5, [2]), spot(7, 1, [1, 3])].sort((a, b) => b.upvotes.length - a.upvotes.length), 3, [2]);
+  assert.deepEqual(out.rows.map((r) => [r.memberId, r.days, r.venueIds]), [
+    [1, [], []],
+    [2, ['2026-10-21'], []],
+    [3, ['2026-10-22'], [7]],
+  ]);
+  assert.deepEqual(out.venues.map((v) => [v.id, v.upvotes]), [[7, []], [8, []]]);
+  assert.equal(rows[0]!.days.length, 1, 'the input is not mutated');
 });

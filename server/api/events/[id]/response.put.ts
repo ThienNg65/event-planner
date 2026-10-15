@@ -21,8 +21,8 @@ export default defineEventHandler(async (event) => {
   const open = (...stages: string[]) => role !== null || stages.includes(ev.stage);
   const set: Partial<typeof responses.$inferInsert> = {};
   // Days and places are filtered against the current lists inside the write itself (see the batch below).
-  const wanted: { days?: string[]; venueIds?: number[] } = {};
-  const picks: { days?: SQL; venueIds?: SQL } = {};
+  const wanted: { days?: string[]; venueIds?: number[]; maybeDays?: string[]; maybeVenueIds?: number[] } = {};
+  const picks: { days?: SQL; venueIds?: SQL; maybeDays?: SQL; maybeVenueIds?: SQL } = {};
 
   if ('days' in b) {
     requireVoting(ev, role);
@@ -36,6 +36,19 @@ export default defineEventHandler(async (event) => {
     wanted.venueIds = [...new Set(b.venueIds as number[])];
     picks.venueIds = sql`ARRAY(SELECT DISTINCT v FROM unnest(${sqlArray(wanted.venueIds, 'int')}) AS v WHERE v IN ${currentVenueIds(ev.id)} ORDER BY v)`;
   }
+  // "If need be" picks: a day or place sent as yes in the same request is dropped from them, so the two lists stay apart.
+  if ('maybeDays' in b) {
+    requireVoting(ev, role);
+    if (!Array.isArray(b.maybeDays) || !b.maybeDays.every(isDay)) fail(400, 'invalidDays');
+    wanted.maybeDays = [...new Set(b.maybeDays as string[])].filter((d) => !wanted.days?.includes(d));
+    picks.maybeDays = sql`ARRAY(SELECT DISTINCT d FROM unnest(${sqlArray(wanted.maybeDays, 'date')}) AS d WHERE d = ANY(${currentDays(ev.id)}) ORDER BY d)`;
+  }
+  if ('maybeVenueIds' in b) {
+    requireVoting(ev, role);
+    if (!Array.isArray(b.maybeVenueIds) || !b.maybeVenueIds.every((v) => Number.isInteger(v))) fail(400, 'unknownVenue');
+    wanted.maybeVenueIds = [...new Set(b.maybeVenueIds as number[])].filter((v) => !wanted.venueIds?.includes(v));
+    picks.maybeVenueIds = sql`ARRAY(SELECT DISTINCT v FROM unnest(${sqlArray(wanted.maybeVenueIds, 'int')}) AS v WHERE v IN ${currentVenueIds(ev.id)} ORDER BY v)`;
+  }
   if ('status' in b) {
     // While polling, a member may say up front they can't come (or take it back), on the same terms as a vote.
     const pollDecline = ev.stage === 'poll' && (b.status === 'no' || b.status === null);
@@ -43,13 +56,15 @@ export default defineEventHandler(async (event) => {
     else if (!open('rsvp')) fail(409, 'stageClosed');
     if (b.status !== null && !STATUSES.includes(b.status as never)) fail(400, 'invalid');
     const guests = b.guests ?? 0;
-    if (!intIn(guests, 0, 10)) fail(400, 'invalidGuests');
+    if (!intIn(guests, 0, MAX_GUESTS)) fail(400, 'invalidGuests');
+    // Lowering the limit never rewrites rows; it only stops members from asking for more. Organizers may set any number.
+    if (role === null && (guests as number) > guestLimit(ev)) fail(400, 'tooManyGuests');
     set.status = b.status as (typeof STATUSES)[number] | null;
     set.guests = guests;
     // An answer given by the member is explicit: it is no longer counted from their votes or held.
     set.derived = null;
     // Declining a poll withdraws the votes too, so they no longer count toward a day or place.
-    if (pollDecline && b.status === 'no') Object.assign(set, { days: [], venueIds: [] });
+    if (pollDecline && b.status === 'no') Object.assign(set, { days: [], venueIds: [], maybeDays: [], maybeVenueIds: [] });
   }
   if (paying) {
     // After Completed, participants may still report a payment (addPaid); setting or clearing amounts stays with the organizers.
@@ -98,14 +113,18 @@ export default defineEventHandler(async (event) => {
       },
     });
   if (!Object.keys(picks).length) {
-    await upsert;
+    // A payment an organizer records for someone else is mailed to that member (the member's own report is not).
+    const outbox = role !== null && set.paidAt && member.id !== (await meOf(event)) ? queuePaymentRecorded(ev.id, member.id, set.paidAt) : [];
+    await commit(event, ev.id, [upsert], outbox);
     return { ok: true };
   }
   // The share lock waits for an edit of the days or places in flight (voters don't block each other), so the filter sees its result.
   const lock = useDb().select({ id: events.id }).from(events).where(eq(events.id, ev.id)).for('share');
-  const [, [saved]] = await useDb().batch([lock, upsert.returning({ days: responses.days, venueIds: responses.venueIds })]);
+  const [, [saved]] = await useDb().batch([lock, upsert.returning({ days: responses.days, venueIds: responses.venueIds, maybeDays: responses.maybeDays, maybeVenueIds: responses.maybeVenueIds })]);
   // Part of the request named a day or place that was removed meanwhile: the rest is saved, the client refreshes.
   if (wanted.days && saved!.days.length < wanted.days.length) fail(409, 'daysChanged');
   if (wanted.venueIds && saved!.venueIds.length < wanted.venueIds.length) fail(409, 'venuesChanged');
+  if (wanted.maybeDays && saved!.maybeDays.length < wanted.maybeDays.length) fail(409, 'daysChanged');
+  if (wanted.maybeVenueIds && saved!.maybeVenueIds.length < wanted.maybeVenueIds.length) fail(409, 'venuesChanged');
   return { ok: true };
 });

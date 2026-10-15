@@ -11,7 +11,7 @@ Code: `shared/utils/event.ts` (`compareDays`, `planFor`, `matchesPlan`, `deriveA
 | Poll | Set up by | Stored in | Notes |
 |---|---|---|---|
 | **Days** | Creator picks up to 20 days on the calendar | `events.pollDays` (`date[]`) | Plain `YYYY-MM-DD`, no time. The time of day is chosen at lock. |
-| **Places** | Anyone suggests (only when the event has no fixed venue) | `venues` rows | Upvotes live on the voter's row (`responses.venueIds`). |
+| **Places** | Anyone suggests (only when the event has no fixed venue) | `venues` rows | Upvotes live on the voter's row (`responses.venueIds`; "if need be" in `responses.maybeVenueIds`). |
 
 An event may poll days only, places only, or both. A fixed-date event with no venue polls places only.
 
@@ -22,9 +22,10 @@ against the days and places that exist *right now*, so a vote can never referenc
 
 - **Days**: send the full list of days the member can make. A day that was removed meanwhile is dropped and the call returns `daysChanged` (409); the rest is saved and the client refreshes.
 - **Places**: send the full list of upvoted place ids. Unknown ids → `venuesChanged`.
+- **If need be**: every day and place is Yes, If need be or No (blank). `maybeDays` and `maybeVenueIds` take the same lists as `days` and `venueIds`, filtered the same way (`daysChanged` / `venuesChanged`). The two lists are kept apart: an id sent as yes and as if need be in one request stays yes only, `POST /days` removes the day from the suggester's if-need-be list, and on read a day or place stored in both counts as yes. The poll tallies show yes and if-need-be counts side by side; the leader is the most yes, then the most if-need-be. "Can't join" clears these lists too.
 - **"Can't join"** while polling: `status:'no'` clears the member's days and places (so they no longer count toward anything) and removes them from the "not replied" list. `status:null` takes it back. It follows the same voting-window rules as a vote.
 - **First vote time**: `firstVotedAt` is set once, on the member's first write of days or places, and never moves, even if they later empty or change their votes. It decides their place in the queue at lock.
-- **Who is "pending"**: a roster member with no day, no place and not `no` (`pendingVoters`). When at least one member has voted and none is pending, organizers are nudged to lock.
+- **Who is "pending"**: a roster member with no day, no place (yes or if need be) and not `no` (`pendingVoters`; the same rule as `hasVoted`). When at least one member has voted and none is pending, organizers are nudged to lock.
 
 ### Suggesting
 
@@ -36,14 +37,15 @@ against the days and places that exist *right now*, so a vote can never referenc
 
 `compareDays(days, responses, honorees)` orders days by:
 
-1. number of members who can make it (descending),
-2. then how many **honorees** can make it (descending),
-3. then the earlier date.
+1. number of members who said Yes (descending),
+2. then how many said **If need be** (descending),
+3. then how many **honorees** can make it with a Yes (descending),
+4. then the earlier date.
 
-`tie` reports why the first day beats an equal-vote second day: `'honorees'` or `'earlier'` (null when there is no tie or no votes).
+`tie` reports why the first day beats a second day with the same Yes and If need be counts: `'honorees'` or `'earlier'` (null when there is no tie or no votes).
 The lock dialog preselects the top-ranked day and the top-ranked place (places rank by upvotes). The event page shows the leading days side by side for organizers: who can come, who can't, who hasn't replied.
 
-**Honorees** (`events.honorees`, max 20 member ids) are chosen in Edit. They do not change who may vote; they only add the "can the honoree come?" mark on every day and feed rule 2 above.
+**Honorees** (`events.honorees`, max 20 member ids) are chosen in Edit. They do not change who may vote; they only add the "can the honoree come?" mark on every day and feed rule 3 above.
 
 ## 4.4 Closing and deadline
 
@@ -77,8 +79,10 @@ planFor(pollDays, startsAt, polledVenues, venueName) = {
 | Plan | A member fits when… |
 |---|---|
 | Day plan, no places polled | their `days` contain the locked day |
-| Day plan, places polled | their `days` contain the locked day **and** (they upvoted no place **or** upvoted the locked place) |
+| Day plan, places polled | their `days` contain the locked day **and** (they picked no place **or** upvoted the locked place) |
 | Place-only plan | they upvoted the locked place |
+
+**If need be is not a fit.** `planFit` returns `yes`, `maybe` or `no`; only `yes` matches. A locked day or place that is in the member's `maybeDays` / `maybeVenueIds` gives `maybe`, and the weaker of the day and the place decides. People who fit only as "if need be" are treated like voters for other days: not seated at lock (asked to confirm), and on a later plan edit a seat derived from their votes is held (`reconfirm`) instead of kept. Someone who picked places (yes or if need be) needs the locked one, so "upvoted A, if need be B" with B locked is `maybe`.
 
 A member who voted only for places on a day plan has no day, so they do not fit; they are asked to confirm instead.
 
@@ -117,3 +121,23 @@ attendance is re-derived in mode **`edit`**:
 - An edit never marks anyone who wasn't already counted from votes.
 - A fixed-date event that never had a poll has no votes to derive from, so moving its date holds nobody.
 - The edit panel previews the effect (`lockImpact` with mode `edit`) before saving.
+
+## 4.7 Hiding results until you vote
+
+`events.hide_votes` (default off, a switch in create and Edit) keeps the poll from anchoring people. While it is on, the event is in `poll` and the visitor is not an organizer and has not voted themselves (`hasVoted`: a day or place picked, yes or if need be, or declined; an RSVP Maybe or an empty row does not count), `GET /api/events/:id` is redacted by `redactVotes` in `shared/utils/event.ts`:
+
+- other members' `days`, `venueIds`, `maybeDays` and `maybeVenueIds` are `[]`, except honorees' days, which stay visible; the visitor's own row is untouched;
+- every place's `upvotes` and `maybe` are `[]` and places are ordered by when they were suggested instead of by votes (the order would leak the ranking);
+- the response carries `votesHidden: true` and each row's `voted` flag, so the UI can say how many people have answered.
+
+The decision is `hidesVotes`. Organizers always see everything, and the data returns as soon as the visitor votes (declining counts). Known limits: it is a nudge, not secrecy (see [11](11-known-behaviours.md)).
+
+## 4.8 Repeating events
+
+A series is the set of events sharing `events.series_id` (the first event points at itself); `repeat` and `repeat_until` are kept equal on every event of the series. Turning repeat on needs a fixed date, no day poll and a place (`repeatNeedsFixedPlan`), so a series never has a vote to run again.
+
+The tick job `repeat` (`createDueOccurrences` in `server/utils/series.ts`, not gated on email) looks at the **latest event of each series** by `starts_at`, cancelled or not (so cancelling skips only that date). `nextInSeries` in `shared/utils/repeat.ts` gives the next start: +7 days, +14 days, or the same day next month (Vietnam time), clamped to the month's last day while keeping the first event's day of the month (31 Jan, 28 Feb, 31 Mar). It is created once the latest event has started **and** no earlier than 14 days before the next one; an occurrence already in the past is skipped, and one later than `repeat_until` (inclusive) ends the series. At most 10 events per tick.
+
+The new event copies title, note, place, capacity, max guests, hide votes, bank details, cover, theme, honorees, creator, repeat settings and series, starts in `rsvp`, and gets a new join link and a random manage key nobody holds: the signed-in creator gets in as host, and every **active co-host** is copied as an active co-host with a fresh key (they get in through their sign-in). Responses, notice, bill and cancellation are not copied; the creator gets an empty response row. One statement (`INSERT ... ON CONFLICT (series_id, starts_at) DO NOTHING` with the response and co-host rows) makes it atomic and safe for overlapping ticks.
+
+`PATCH` with `repeat` / `repeatUntil` (organizers) writes both to every event of the series in the same batch; `repeat: null` also clears `repeatUntil`. The event page shows "Repeats ... next on ..." and links to the previous and next event (`series` in `GET /api/events/:id`).

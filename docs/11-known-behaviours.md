@@ -16,6 +16,7 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 5 | A name that created an event cannot be claimed from the list, and another organizer cannot reset its PIN (it would hand over host rights). Such a member signs in with their PIN or sign-in link; with neither, only the manage link gets them back, and only as host. | Code | Deliberate (prevents taking over host rights). |
 | 6 | A PIN has only 10^6 values and the name list is public, so the lockout is the protection. Anyone can lock a colleague's name for 15 minutes by guessing; an organizer's reset clears it. | Code | Deliberate trade-off for an internal app. |
 | 7 | A member who signed in before PINs existed has no PIN and is not in the name list until they set one (from a device that is still signed in) or an organizer resets it. | Code | Transition. |
+| 8 | Email recovery (R4): removing an address and adding another skips the 72 h cool-down (only a replacement counts as a change), and a "not me" revert restores the old address but leaves the PIN alone, so someone who knows the PIN can sign in again until the owner recovers and picks a new one. Anyone can burn a colleague's recovery code with five wrong guesses (a new one can be asked for, 3 a day). A member without a verified email still needs an organizer to reset a PIN. | Code | Deliberate for a first version; the PIN is already needed to change the address. |
 
 ## Dates and stages
 
@@ -52,12 +53,21 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 31 | Archiving a member keeps their access to events they joined, but they no longer count in "no reply yet" or the people strip. | Code | Deliberate. |
 | 32 | An event opened only with a manage key (a legacy co-host key, or a host signed in as someone else or signed out) is not listed on home or the calendar: listing follows the signed-in member. Open it by its link. | Code | Undecided. |
 | 33 | An organizer answering for a team member (`PUT /response` with their `memberId`) also makes that member a participant, so the event shows on their home. | Code | Deliberate. |
+| 34 | Hiding results until you vote is a nudge: someone can vote, see the results and then clear their votes (`hasVoted`, which counts yes and if-need-be votes, is read live), and a visitor who is not signed in sees the poll hidden. Home screen answered counts are not hidden. | Code | Deliberate. |
+| 35 | A day or place can be stored as both yes and if need be (a vote saved from an older page, or a `days` write that does not mention `maybeDays`). Reads treat it as yes (`days` wins), so nothing is shown twice; the stale entry stays until the member's next write of that list. | Code | Deliberate. |
 
 ## Data hygiene
 
 | # | Behaviour | Evidence | Intent |
 |---|---|---|---|
 | 26 | Deleting an event cascades to its responses, places and co-hosts; the members stay. | Code | Deliberate. |
-| 27 | There are no notifications of any kind. People only learn something changed by opening the app; the home to-do list is the nudge. | Code | Deliberate for now. |
+| 27 | Without email switched on, there are no notifications: people only learn something changed by opening the app; the home to-do list is the nudge. With it on, only the four event mails of [13](13-email.md#event-emails-the-outbox) exist. | Code | Deliberate. |
+| 37 | Event mails are at most once: a crash or a refusal by the provider between "recipient recorded" and "sent" loses that one mail, which is not retried. A mail over the day's budget (70 notifications in 24 h) is held until the next day, and is dropped then if it is no longer true. | Code | Deliberate. |
+| 38 | Date or place mails go to people who have a seat or a place on the waitlist (including a live held seat), not to voters who were only asked to confirm. A cancellation of an event nobody has a seat in (still polling) mails no one. Promotion from the waitlist is not mailed. | Code | Undecided. |
+| 39 | The fact of a plan or bill mail is "from → to", so A→B→A is announced again, but A→B repeated a third time after B→A is not (the same fact was already queued). Re-locking the same plan after a reopen announces it only the first time. | Code | Deliberate. |
+| 40 | Payment-request mails go out when the bill is entered or its total changes, and only to seat holders who owe something at that moment: someone who gets a seat later (promoted from the waitlist) is not mailed. | Code | Undecided. |
+| 36 | After a handover the old host is an ordinary co-host: no longer protected by `organizes()` (unless they created other events), so another organizer can reset their PIN, like any co-host. There is no way to take the event back except the new host handing it over again. A handover needs the target to have a PIN, and a pending offer does not expire. | Code | Undecided. |
+| 41 | Repeating events: the next one is created only after the previous one has started (and at most 14 days ahead of its date), so people see it once the last one is under way. Cancelling an occurrence skips that date only; **deleting** the latest one makes the tick create it again. Turning repeat off or changing it applies to the whole series. | Code, tests | Deliberate. |
+| 42 | A new occurrence copies the active co-hosts and has a random manage key nobody holds, so the signed-in creator and co-hosts get in by sign-in only. It queues no email and is not shared on Zalo by itself. A series needs a fixed place from the start (no place poll), and a date the tick missed entirely (tick down past it) is skipped, not created late. A monthly series started on the 31st lands on the last day of shorter months. | Code | Deliberate. |
 
 When you decide one of the "Undecided" items, change the behaviour *and* move the line here to the relevant chapter (or delete it).

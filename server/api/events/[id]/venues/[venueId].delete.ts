@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     useDb().delete(venues).where(and(eq(venues.id, venueId), eq(venues.eventId, ev.id))),
     useDb()
       .update(responses)
-      .set({ venueIds: sql`array_remove(${responses.venueIds}, ${venueId})` })
+      .set({ venueIds: sql`array_remove(${responses.venueIds}, ${venueId})`, maybeVenueIds: sql`array_remove(${responses.maybeVenueIds}, ${venueId})` })
       .where(eq(responses.eventId, ev.id)),
   ]);
   return { ok: true };

@@ -34,7 +34,7 @@ The app is **team-internal and public inside the team**: every event is visible 
 | **Fixed-date event** | Created with a date and time instead of poll days; has no day poll. |
 | **Venue / place** | A named place. Either fixed on the event (`events.venue`) or collected as suggestions (`venues`) that people upvote. |
 | **Lock** | The organizer's move from `poll` to `rsvp`: picks the day (and place), freezes the vote and marks attendance from votes. |
-| **Vote** | A member's chosen days and upvoted places (`responses.days`, `responses.venueIds`). |
+| **Vote** | A member's chosen days and upvoted places (`responses.days`, `responses.venueIds`), each a **Yes** or an **If need be** (`responses.maybeDays`, `responses.maybeVenueIds`). Not the same as the RSVP answer "Maybe" (`status = 'maybe'`). |
 | **Honoree** | A member the event is for (birthday person). The poll shows whether each honoree can make each day. |
 | **Status** | A member's own RSVP answer: `going`, `maybe`, `no`. |
 | **Derived attendance** | A `going` answer the member did not give: `derived = 'going'` (counted from their votes at lock) or `'reconfirm'` (seat held after a plan change). |
@@ -53,7 +53,7 @@ The app is **team-internal and public inside the team**: every event is visible 
 
 ## What the app deliberately does not have
 
-- No passwords, no email, no push notifications or reminders. Everything is pull-based; the home page lists what needs you.
+- No passwords and no push notifications. Email is optional and ships switched off ([13](13-email.md)); with it on, a few events send a mail (date or place set, payment asked or recorded, cancellation), but the home page stays the main nudge and there are no reminders yet.
 - No per-event privacy or invitations: the roster is the audience.
 - No member deletion in the product (only the API tests' cleanup removes members).
 - No payment processing: VietQR is an image link; "paid" is self- or organizer-reported.

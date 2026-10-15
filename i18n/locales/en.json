@@ -86,6 +86,7 @@
     "dateTbd": "Date not set yet",
     "seats": "seats",
     "share": "Share",
+    "duplicate": "Duplicate",
     "linkCopied": "Event link copied",
     "joined": "You joined \"{title}\"",
     "private": "This event doesn't exist or is private. Ask the host for the joining link.",
@@ -149,7 +150,21 @@
       "trip": "Weekend trip 🏕️"
     },
     "bankPublic": "Bank details are visible to anyone who has the event link.",
-    "fixedDateNoVenue": "You have a date but no place yet: the event opens with a vote on the place first, and people RSVP once you lock it."
+    "fixedDateNoVenue": "You have a date but no place yet: the event opens with a vote on the place first, and people RSVP once you lock it.",
+    "maxGuests": "Max guests per person",
+    "maxGuestsHint": "Most guests one person may bring (0 to 10)",
+    "hideVotes": "Hide results until people vote",
+    "hideVotesHint": "Each person sees the results only after they have picked their own days or places. Organizers always see them.",
+    "copiedFrom": "Copied from \"{title}\". Pick new dates, then create the event.",
+    "repeat": "Repeat",
+    "repeatNone": "Does not repeat",
+    "repeatWeekly": "Every week",
+    "repeatBiweekly": "Every 2 weeks",
+    "repeatMonthly": "Every month",
+    "repeatUntil": "Repeat until",
+    "repeatUntilHint": "Optional. The last day a new event may fall on.",
+    "repeatNeeds": "Repeating needs a fixed date and a place.",
+    "repeatHint": "The next event is created automatically 14 days before its date (or once this one has started, if that is later), with the same details and organizers."
   },
   "rsvp": {
     "title": "RSVP",
@@ -169,7 +184,8 @@
     "fromVote": "Counted as going from your votes. Change your answer if you can't make it.",
     "held": "The plan changed. Your seat is held until {deadline}. Confirm to keep it.",
     "released": "Your held seat was released. You can still join.",
-    "guestsQueue": "Adding guests puts you at the back of the queue."
+    "guestsQueue": "Adding guests puts you at the back of the queue.",
+    "guestsMax": "Up to {n} guests."
   },
   "manage": {
     "copyLink": "Manage link",
@@ -197,6 +213,7 @@
     "invalidBill": "Invalid amount.",
     "invalidBank": "Invalid bank details.",
     "invalidGuests": "Guests must be between 0 and 10.",
+    "tooManyGuests": "That is more guests than this event allows.",
     "unknownVenue": "That venue doesn't exist.",
     "invalidCover": "Pick a cover or paste an image link starting with https://",
     "notYou": "You can only change your own answers.",
@@ -227,7 +244,25 @@
     "pinWeak": "That PIN is too easy to guess. Avoid repeated digits and runs like 123456.",
     "pinWrong": "Wrong name or PIN.",
     "pinLocked": "Too many wrong PINs. Try again in 15 minutes, or ask an organizer to reset your PIN.",
-    "pinResetOrganizer": "This member organizes events, so their PIN can only be changed by themselves."
+    "pinResetOrganizer": "This member organizes events, so their PIN can only be changed by themselves.",
+    "creatorOnly": "Only the host who created this event can hand it over.",
+    "handoverTarget": "Pick an active co-host who has set a PIN.",
+    "handoverGone": "This handover offer is no longer valid.",
+    "emailOff": "Email is not available.",
+    "cronSecret": "Wrong scheduler secret.",
+    "consentRequired": "Please tick the box to agree.",
+    "emailInvalid": "That does not look like an email address.",
+    "emailDomain": "That email domain is not allowed. Use your work email.",
+    "pinRequired": "Set a PIN first: email is added with your PIN.",
+    "emailSame": "That is already your email.",
+    "emailTooSoon": "A code was just sent, or you asked for too many today. Try again later.",
+    "mailBudget": "Email cannot be sent right now. Try again tomorrow.",
+    "mailFailed": "The email could not be sent. Try again later.",
+    "codeInvalid": "That code is wrong or has expired.",
+    "revertInvalid": "This link is no longer valid.",
+    "unsubscribeInvalid": "This unsubscribe link is not valid.",
+    "invalidRepeat": "Pick how often it repeats, and a real end date.",
+    "repeatNeedsFixedPlan": "A repeating event needs a fixed date and a place, not a vote."
   },
   "days": {
     "edit": "Edit days",
@@ -256,6 +291,8 @@
     "pickName": "Pick your name above to vote",
     "suggestDay": "Suggest a day",
     "suggestPlace": "Suggest a place",
+    "votesHidden": "Results are hidden until you vote.",
+    "answeredOf": "{n} of {total} have answered",
     "dup": "Already on the list. We added your vote.",
     "remove": "Remove",
     "removeTitle": "Remove “{name}”?",
@@ -267,7 +304,11 @@
     "notSelected": "not selected",
     "closedDeadline": "Voting closed: the deadline passed",
     "closedCancelled": "Voting closed: the event was cancelled",
-    "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going.",
+    "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going. Days marked \"If need be\" don't count automatically: you'll be asked to confirm.",
+    "ifNeedBe": "If need be",
+    "ifNeedBeState": "if need be",
+    "ifNeedBeFor": "If need be: {name}",
+    "maybeChosen": "{n} if need be",
     "picked": "You picked {n} of {total}",
     "chosen": "{n} picked",
     "venuesHint": "Vote for the places you like, or suggest another.",
@@ -618,7 +659,14 @@
     "votingChoice": "Voting after reopening",
     "reopenDerived": "{n} answer counted from votes is cleared. | {n} answers counted from votes are cleared.",
     "reopenPayments": "Payments are kept, they are not cleared:",
-    "reopenAck": "I know these payments stay recorded"
+    "reopenAck": "I know these payments stay recorded",
+    "handover": "Hand over…",
+    "handoverTitle": "Hand this event over",
+    "handoverBody": "Offer the event to a co-host. When they accept, they become the host and you become a co-host. Your manage link stops working.",
+    "handoverButton": "Offer handover",
+    "handoverPick": "Choose a co-host",
+    "handoverNone": "No co-host can take it yet: they must be an active co-host and have set a PIN.",
+    "handoverReplace": "This replaces your offer to {name}."
   },
   "org": {
     "title": "Organizers",
@@ -639,7 +687,8 @@
       "setOthers": "Change other people's RSVP and payments",
       "reopen": "Reopen an earlier stage",
       "cancel": "Cancel, restore or delete the event",
-      "cohost": "Manage the manage link and the co-host link"
+      "cohost": "Manage the manage link and the co-host link",
+      "handover": "Hand the event over to a co-host"
     },
     "legacyActive": "A co-host link is active",
     "manage": "Manage organizers",
@@ -735,6 +784,7 @@
     "suggested": "Suggested",
     "provisional": "Tentative pick",
     "in": "Can come:",
+    "maybe": "If need be:",
     "out": "Can't come ({n})",
     "pending": "{n} haven't replied yet.",
     "tieHonorees": "Tied at {n} votes. {day} is suggested because more honorees can come.",
@@ -811,5 +861,123 @@
     "previewNote": "Test transfer",
     "failed": "VietQR could not build a code. Check the bank code and account number.",
     "previewHint": "Scan it with your banking app: it should show this account and holder. Do not complete the transfer."
+  },
+  "handover": {
+    "offerTitle": "{name} offers you this event",
+    "offerBody": "Accept to become its host. The previous host stays on as a co-host. You will get a new manage link on this device.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "accepted": "You are now the host",
+    "pending": "Handover offered to {name}, waiting for their answer",
+    "cancel": "Cancel offer"
+  },
+  "email": {
+    "title": "Email",
+    "intro": "Add a verified email to reset your own PIN if you forget it and to get emails about your events.",
+    "add": "Add email",
+    "change": "Change email",
+    "remove": "Remove email",
+    "current": "Your email: {email}",
+    "cooldown": "You changed your address recently. Until {until}, PIN recovery codes still go to your previous address.",
+    "label": "Email address",
+    "consent": "I agree that Team Events keeps my email address to send me one-time codes (to confirm this address and to reset my PIN) and security notices, and emails about events I take part in (date or place set or changed, payment requests and recorded payments, cancellations), which I can switch off one by one in my profile. Mails are sent for us by Resend, a service outside Vietnam, so my address is sent abroad. I can withdraw this at any time by removing my email here.",
+    "send": "Send code",
+    "codeSent": "We sent a 6-digit code to {email}. It works for 15 minutes.",
+    "code": "6-digit code",
+    "confirm": "Confirm",
+    "saved": "Email saved",
+    "removed": "Email removed",
+    "removeNote": "This withdraws your consent. You will no longer be able to reset your PIN by email.",
+    "forgot": "Forgot your PIN?",
+    "recoverSend": "Email me a code",
+    "recoverSent": "If this name has a verified email, we sent a code there. It works for 15 minutes.",
+    "recoverNone": "No email on this name? Ask an organizer to reset your PIN.",
+    "recoverDo": "Set new PIN and sign in",
+    "recovered": "PIN changed. You are signed in.",
+    "back": "Back",
+    "revertTitle": "Was this you?",
+    "revertBody": "Your address was replaced on a Team Events account. If you did not do this, put it back: the account will be signed out everywhere, and you can then reset its PIN with a code sent to this address.",
+    "revertDo": "Not me: restore this address",
+    "revertDone": "Done. The previous address is back and the account is signed out everywhere.",
+    "revertMissing": "This link is incomplete. Open it again from the email.",
+    "notifyTitle": "Event emails",
+    "notifyIntro": "Choose which event emails you get. Every one has a link to stop it."
+  },
+  "mail": {
+    "footer": "Team Events. This is an automatic message, please do not reply.",
+    "verifyCode": {
+      "subject": "Your Team Events code: {code}",
+      "body": "Your code to confirm this email address is {code}.\n\nIt works for 15 minutes. If you did not ask for it, ignore this email: nothing changes without it."
+    },
+    "recoverCode": {
+      "subject": "Team Events: code to reset your PIN",
+      "body": "Use this code to choose a new PIN: {code}.\n\nIt works for 15 minutes. If you did not ask for it, ignore this email: your PIN stays the same."
+    },
+    "emailChanged": {
+      "subject": "Team Events: email address changed",
+      "body": "The email address of a Team Events account was changed to {email}. This was your address before.\n\nIf you did this, there is nothing more to do. For 72 hours PIN recovery codes still come to this address.\n\nIf it was not you, use the link below to put this address back.",
+      "action": "Not me: restore this address"
+    },
+    "pinReset": {
+      "subject": "Team Events: your PIN was reset",
+      "body": "The PIN of {name} was reset with an email code, and every other device was signed out.\n\nIf this was you, there is nothing more to do. If it was not, someone may have access to this inbox: secure your email account and ask a Team Events organizer for help."
+    },
+    "stop": "Stop these emails",
+    "tomorrow": {
+      "subject": "{title}: tomorrow",
+      "body": "Hi {name}, {title} is tomorrow.\n\nWhen: {when}\nWhere: {place}\n\nIf you can no longer come, update your answer so someone else can have the seat.",
+      "action2": "Open the event"
+    },
+    "paymentReminder": {
+      "subject": "{title}: reminder, {amount} to pay",
+      "body": "Hi {name}, you still owe {amount} for {title}.\n\nIf you have already paid, tap \"I've paid\" on the event page so the organizer can see it.",
+      "action": "Open the VietQR code",
+      "action2": "Open the event"
+    },
+    "kinds": {
+      "planSet": "Date or place set or changed",
+      "paymentRequested": "Payment requests",
+      "paymentRecorded": "Payment recorded by the organizer",
+      "cancelled": "Event cancelled",
+      "tomorrow": "Event tomorrow",
+      "paymentReminder": "Payment reminders"
+    },
+    "unsubscribe": {
+      "title": "Stop these emails?",
+      "body": "You will no longer get Team Events emails about: {what}. You can switch them back on in your profile.",
+      "button": "Stop these emails",
+      "done": "Done. You will no longer get Team Events emails about: {what}."
+    },
+    "planSet": {
+      "subject": "{title}: date or place set",
+      "body": "The date or place of {title} was set or changed.\n\nWhen: {when}\nWhere: {place}\n\nPlease check that it still suits you and update your answer if it does not.",
+      "action2": "Open the event"
+    },
+    "paymentRequested": {
+      "subject": "{title}: your share is {amount}",
+      "body": "Hi {name}, the bill for {title} is in. Your share is {amount}.\n\nPay by bank transfer, then tap \"I've paid\" on the event page so the organizer can see it.",
+      "action": "Open the VietQR code",
+      "action2": "Open the event"
+    },
+    "paymentRecorded": {
+      "subject": "{title}: your payment was recorded",
+      "body": "The organizer recorded your payment for {title}. There is nothing more to do.",
+      "action2": "Open the event"
+    },
+    "cancelled": {
+      "subject": "{title} was cancelled",
+      "body": "{title} was cancelled by its organizer. You had a place on its guest list.\n\nThe event page has the details.",
+      "action2": "Open the event"
+    }
+  },
+  "series": {
+    "repeats": "Repeats {every}",
+    "next": "next on {when}",
+    "until": "until {day}",
+    "prev": "Previous event",
+    "nextEvent": "Next event",
+    "weekly": "every week",
+    "biweekly": "every 2 weeks",
+    "monthly": "every month"
   }
 }

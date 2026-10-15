@@ -12,33 +12,44 @@ const { busy, call, error } = useEventApi(
 
 const ev = computed(() => props.data.event);
 const mine = computed(() => props.data.responses.find((r) => r.memberId === props.me?.id));
-// Day picks not yet confirmed by a reload: shown at once while the saves run in the background.
-const draftDays = ref<string[] | null>(null);
+// Day picks (yes and "if need be") not yet confirmed by a reload: shown at once while the saves run in the background.
+type Draft = { days: string[]; maybe: string[] };
+const draft = ref<Draft | null>(null);
 // Ticks on days the organizer has since removed from the poll are dropped on the next save.
-const myDays = computed(() => draftDays.value ?? (mine.value?.days ?? []).filter((d) => ev.value.pollDays.includes(d)));
+const myDays = computed(() => draft.value?.days ?? (mine.value?.days ?? []).filter((d) => ev.value.pollDays.includes(d)));
+const myMaybe = computed(() => draft.value?.maybe ?? (mine.value?.maybeDays ?? []).filter((d) => ev.value.pollDays.includes(d)));
 type Row = EventDetail['responses'][number];
 // The responses with my unsaved day picks in place, so names, counts and bars move with the tap.
 const rows = computed<Row[]>(() => {
-  const days = draftDays.value;
+  const d = draft.value;
   const me = props.me;
-  if (!days || !me) return props.data.responses;
-  if (!mine.value) return [...props.data.responses, { memberId: me.id, name: me.name, days, venueIds: [] } as unknown as Row];
-  return props.data.responses.map((r) => (r.memberId === me.id ? { ...r, days } : r));
+  if (!d || !me) return props.data.responses;
+  if (!mine.value) return [...props.data.responses, { memberId: me.id, name: me.name, days: d.days, maybeDays: d.maybe, venueIds: [], maybeVenueIds: [] } as unknown as Row];
+  return props.data.responses.map((r) => (r.memberId === me.id ? { ...r, days: d.days, maybeDays: d.maybe } : r));
 });
 const voters = (pick: (r: Row) => boolean) => rows.value.filter(pick).map((r) => r.name);
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 // My vote on a place (the server list, no optimistic draft for places).
 const myVote = (v: EventDetail['venues'][number]) => !!props.me && v.upvotes.includes(props.me.id);
+const myMaybeVote = (v: EventDetail['venues'][number]) => !!props.me && v.maybe.includes(props.me.id);
 
 // Past the deadline or cancelled: the poll shows results; only organizers can still fix votes.
 const closed = computed(() => !!ev.value.cancelledAt || !votingOpen(ev.value));
 const readOnly = computed(() => !props.role && closed.value);
-const voted = computed(() => rows.value.filter((r) => r.days.length || r.venueIds.length).length);
+const voted = computed(() => rows.value.filter(hasPicked).length);
 
 const days = computed(() => {
-  const rows = ev.value.pollDays.map((d) => ({ day: d, ...dayParts(d, locale.value), label: fmtDay(d, locale.value), names: voters((r) => r.days.includes(d)) }));
+  const rows = ev.value.pollDays.map((d) => ({
+    day: d,
+    ...dayParts(d, locale.value),
+    label: fmtDay(d, locale.value),
+    names: voters((r) => r.days.includes(d)),
+    maybeNames: voters((r) => !r.days.includes(d) && !!r.maybeDays?.includes(d)),
+  }));
+  // Leader: most yes, then most "if need be" among those.
   const best = Math.max(0, ...rows.map((r) => r.names.length));
-  return rows.map((r) => ({ ...r, top: best > 0 && r.names.length === best }));
+  const bestMaybe = Math.max(0, ...rows.filter((r) => r.names.length === best).map((r) => r.maybeNames.length));
+  return rows.map((r) => ({ ...r, top: best > 0 && r.names.length === best && r.maybeNames.length === bestMaybe }));
 });
 
 /** Runs `fn` for a signed-in, allowed visitor; otherwise points to the "who are you" card instead of a silent no-op. */
@@ -65,7 +76,7 @@ const compare = computed(() => {
   const top = ranked.filter((d) => d.n > 0).slice(0, 3);
   if (top.length < 2) return null;
   // Anyone who answered (days, places only, or can't join): not picking a day means they're out for it.
-  const answered = rows.value.filter((r) => r.days.length || r.venueIds.length || r.status === 'no');
+  const answered = rows.value.filter(hasVoted);
   return {
     tie,
     answered: answered.length,
@@ -74,7 +85,8 @@ const compare = computed(() => {
       ...d,
       label: fmtDay(d.day, locale.value),
       inNames: answered.filter((r) => d.yes.includes(r.memberId)).map((r) => r.name),
-      outNames: answered.filter((r) => !d.yes.includes(r.memberId)).map((r) => r.name),
+      maybeNames: answered.filter((r) => d.maybe.includes(r.memberId)).map((r) => r.name),
+      outNames: answered.filter((r) => !d.yes.includes(r.memberId) && !d.maybe.includes(r.memberId)).map((r) => r.name),
       honorees: honoreesOn(d.day),
     })),
   };
@@ -82,6 +94,8 @@ const compare = computed(() => {
 
 // Places get the same leader badge and share bar as days, on the same base: everyone who voted.
 const placeBest = computed(() => Math.max(0, ...props.data.venues.map((v) => v.upvotes.length)));
+const placeBestMaybe = computed(() => Math.max(0, ...props.data.venues.filter((v) => v.upvotes.length === placeBest.value).map((v) => v.maybe.length)));
+const placeTop = (v: EventDetail['venues'][number]) => placeBest.value > 0 && v.upvotes.length === placeBest.value && v.maybe.length === placeBestMaybe.value;
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
 
 // Voting after "can't join" means the member can come after all.
@@ -89,33 +103,36 @@ const undecline = () => (mine.value?.status === 'no' ? { status: null } : {});
 
 // One save at a time, so quick taps never land out of order; a tap during a save is sent right after it.
 let savingDays = false;
-async function tapDay(day: string) {
-  draftDays.value = toggle(myDays.value, day);
+// A day is yes, "if need be" or neither: picking one kind takes the day out of the other.
+async function tapDay(day: string, kind: 'yes' | 'maybe' = 'yes') {
+  const without = (list: string[]) => list.filter((d) => d !== day);
+  draft.value =
+    kind === 'yes' ? { days: toggle(myDays.value, day), maybe: without(myMaybe.value) } : { days: without(myDays.value), maybe: toggle(myMaybe.value, day) };
   if (savingDays) return;
   savingDays = true;
-  const first = !mine.value?.days.length && !mine.value?.venueIds.length;
-  let sent: string[] | null = null;
+  const first = !mine.value || !hasPicked(mine.value);
+  let sent: Draft | null = null;
   let ok = true;
-  while (ok && draftDays.value && draftDays.value !== sent) {
-    sent = draftDays.value;
-    ok = await call('/response', 'PUT', { memberId: props.me!.id, days: sent, ...undecline() });
+  while (ok && draft.value && draft.value !== sent) {
+    sent = draft.value;
+    ok = await call('/response', 'PUT', { memberId: props.me!.id, days: sent.days, maybeDays: sent.maybe, ...undecline() });
   }
   savingDays = false;
-  if (ok && first && sent?.length) confetti();
+  if (ok && first && (sent?.days.length || sent?.maybe.length)) confetti();
   // On failure the server's answer replaces the draft: the deadline may have passed or the list changed under us.
-  if (!ok) draftDays.value = null;
+  if (!ok) draft.value = null;
   emit('changed');
 }
 // A reload that lands after the saves holds the truth.
 watch(
   () => props.data,
   () => {
-    if (!savingDays) draftDays.value = null;
+    if (!savingDays) draft.value = null;
   }
 );
 
 async function save(body: object) {
-  const first = !mine.value?.days.length && !mine.value?.venueIds.length;
+  const first = !mine.value || !hasPicked(mine.value);
   const ok = await call('/response', 'PUT', { memberId: props.me!.id, ...body, ...undecline() });
   if (ok && first) confetti();
   // Also on failure: the deadline may have passed or the list changed under us.
@@ -142,7 +159,14 @@ usePlaceName(
   }
 );
 const voteFor = async (id: number) => {
-  if (!mine.value?.venueIds.includes(id)) await save({ venueIds: [...(mine.value?.venueIds ?? []), id] });
+  if (!mine.value?.venueIds.includes(id)) await save({ venueIds: [...(mine.value?.venueIds ?? []), id], maybeVenueIds: (mine.value?.maybeVenueIds ?? []).filter((v) => v !== id) });
+};
+// A place is yes, "if need be" or neither, like a day.
+const tapPlace = (id: number, kind: 'yes' | 'maybe') => {
+  const yes = mine.value?.venueIds ?? [];
+  const maybe = mine.value?.maybeVenueIds ?? [];
+  const without = (list: number[]) => list.filter((v) => v !== id);
+  return save(kind === 'yes' ? { venueIds: toggle(yes, id), maybeVenueIds: without(maybe) } : { venueIds: without(yes), maybeVenueIds: toggle(maybe, id) });
 };
 async function suggest() {
   const same = props.data.venues.find((v) => norm(v.name) === norm(form.name));
@@ -172,6 +196,14 @@ async function remove() {
 <template>
   <section id="poll" class="scroll-mt-4 space-y-6">
     <div class="space-y-1">
+      <UAlert
+        v-if="data.votesHidden"
+        color="info"
+        variant="subtle"
+        icon="i-lucide-eye-off"
+        :title="t('poll.votesHidden')"
+        :description="t('poll.answeredOf', { n: data.responses.filter((r) => r.voted).length, total: data.participants.length })"
+      />
       <p v-if="!me && !closed" class="text-sm">
         <button type="button" class="text-primary underline underline-offset-2" @click="act(() => {})">{{ t('poll.pickName') }}</button>
       </p>
@@ -198,13 +230,15 @@ async function remove() {
         </div>
       </div>
       <div class="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-        <UTooltip v-for="d in days" :key="d.day" :delay-duration="0" :text="d.names.join(', ')" :disabled="!d.names.length">
+        <div v-for="d in days" :key="d.day" class="flex flex-col gap-1.5">
+        <UTooltip :delay-duration="0" :text="[...d.names, ...d.maybeNames.map((n) => `${n} (${t('poll.ifNeedBeState')})`)].join(', ')" :disabled="!d.names.length && !d.maybeNames.length">
           <button
             type="button"
             :aria-pressed="myDays.includes(d.day)"
             :aria-disabled="readOnly"
-            :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : 'poll.notSelected') })"
+            :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : myMaybe.includes(d.day) ? 'poll.ifNeedBeState' : 'poll.notSelected') })"
             class="themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
+            :class="myMaybe.includes(d.day) && 'border-dashed'"
             :data-on="myDays.includes(d.day)"
             @click="act(() => tapDay(d.day))"
           >
@@ -222,7 +256,7 @@ async function remove() {
             <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
             <span class="mt-1 flex items-center gap-1.5 text-xs text-muted tabular-nums">
               <UIcon name="i-lucide-users-round" class="size-3.5 text-dimmed" />
-              {{ t('poll.chosen', { n: d.names.length }) }}
+              {{ t('poll.chosen', { n: d.names.length }) }}<template v-if="d.maybeNames.length"> · {{ t('poll.maybeChosen', { n: d.maybeNames.length }) }}</template>
             </span>
             <span v-if="ev.honorees.length" class="mt-1 flex flex-wrap gap-1">
               <span
@@ -240,6 +274,19 @@ async function remove() {
             </span>
           </button>
         </UTooltip>
+        <UButton
+          v-if="!readOnly && me"
+          size="xs"
+          :color="myMaybe.includes(d.day) ? 'warning' : 'neutral'"
+          :variant="myMaybe.includes(d.day) ? 'soft' : 'outline'"
+          :icon="myMaybe.includes(d.day) ? 'i-lucide-check' : 'i-lucide-circle-help'"
+          :label="t('poll.ifNeedBe')"
+          block
+          :aria-pressed="myMaybe.includes(d.day)"
+          :aria-label="t('poll.ifNeedBeFor', { name: d.label })"
+          @click="act(() => tapDay(d.day, 'maybe'))"
+        />
+        </div>
       </div>
 
       <section v-if="compare" class="space-y-3 rounded-xl border border-default p-4" :aria-label="t('compare.title')">
@@ -257,6 +304,7 @@ async function remove() {
               <span v-for="h in d.honorees" :key="h.id" :class="h.in ? 'text-success' : 'text-dimmed line-through'">🎂 {{ h.name }}</span>
             </p>
             <p class="break-words"><span class="font-medium text-success">{{ t('compare.in') }}</span> <span class="text-muted">{{ d.inNames.join(', ') }}</span></p>
+            <p v-if="d.maybeNames.length" class="break-words"><span class="font-medium text-warning">{{ t('compare.maybe') }}</span> <span class="text-muted">{{ d.maybeNames.join(', ') }}</span></p>
             <details v-if="d.outNames.length" class="break-words">
               <summary class="cursor-pointer text-muted">{{ t('compare.out', { n: d.outNames.length }) }}</summary>
               <p class="mt-1 text-dimmed">{{ d.outNames.join(', ') }}</p>
@@ -294,7 +342,7 @@ async function remove() {
         :data-on="myVote(v)"
       >
         <UBadge
-          v-if="placeBest > 0 && v.upvotes.length === placeBest"
+          v-if="placeTop(v)"
           color="warning"
           variant="solid"
           size="sm"
@@ -318,7 +366,7 @@ async function remove() {
             <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented" aria-hidden="true">
               <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${pct(v.upvotes.length, voted)}%` }" />
             </span>
-            <span class="shrink-0 text-xs text-muted tabular-nums">{{ t('poll.votes', v.upvotes.length) }} · {{ pct(v.upvotes.length, voted) }}%</span>
+            <span class="shrink-0 text-xs text-muted tabular-nums">{{ t('poll.votes', v.upvotes.length) }}<template v-if="v.maybe.length"> · {{ t('poll.maybeChosen', { n: v.maybe.length }) }}</template> · {{ pct(v.upvotes.length, voted) }}%</span>
           </span>
         </div>
         <UButton
@@ -331,7 +379,19 @@ async function remove() {
           class="shrink-0"
           :aria-pressed="myVote(v)"
           :aria-label="t('poll.voteFor', { name: v.name })"
-          @click="act(() => save({ venueIds: toggle(mine?.venueIds ?? [], v.id) }))"
+          @click="act(() => tapPlace(v.id, 'yes'))"
+        />
+        <UButton
+          v-if="!readOnly || myMaybeVote(v)"
+          :disabled="busy || readOnly"
+          :color="myMaybeVote(v) ? 'warning' : 'neutral'"
+          :variant="myMaybeVote(v) ? 'soft' : 'outline'"
+          :icon="myMaybeVote(v) ? 'i-lucide-check' : 'i-lucide-circle-help'"
+          :label="t('poll.ifNeedBe')"
+          class="shrink-0"
+          :aria-pressed="myMaybeVote(v)"
+          :aria-label="t('poll.ifNeedBeFor', { name: v.name })"
+          @click="act(() => tapPlace(v.id, 'maybe'))"
         />
         <UDropdownMenu v-if="can(role, 'removeVenue')" :items="[{ label: t('poll.removePlace'), icon: 'i-lucide-trash-2', color: 'error', onSelect: () => (removing = v) }]">
           <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-ellipsis-vertical" class="-mr-2 shrink-0" :aria-label="t('poll.placeActions', { name: v.name })" />

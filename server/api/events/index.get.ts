@@ -48,7 +48,13 @@ export default defineEventHandler(async (event) => {
       .from(responses)
       .where(
         and(
-          or(sql`cardinality(${responses.days}) > 0`, sql`cardinality(${responses.venueIds}) > 0`, eq(responses.status, 'no')),
+          or(
+            sql`cardinality(${responses.days}) > 0`,
+            sql`cardinality(${responses.venueIds}) > 0`,
+            sql`cardinality(${responses.maybeDays}) > 0`,
+            sql`cardinality(${responses.maybeVenueIds}) > 0`,
+            eq(responses.status, 'no')
+          ),
           inArray(responses.eventId, myEventIds)
         )
       )

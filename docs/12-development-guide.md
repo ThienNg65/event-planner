@@ -52,6 +52,26 @@ Add the key to `i18n/locales/vi.json` and `en.json` (every user-facing string, e
 
 VND is an integer; the share rounds up to 1,000. Times are stored as `timestamptz`, entered and shown in UTC+7; poll days are `YYYY-MM-DD` strings. Use `teamTime`, `teamDay`, `teamToday`; do not call `new Date(...)` on a bare day string for display.
 
+### Email settings
+
+Email is configured through `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL`, `NOTIFY_SECRET` and `ALLOWED_EMAIL_DOMAINS` (see `.env.example` and [13](13-email.md)). Leave them unset in development unless you are working on mail: the email UI stays hidden. For local work set `NOTIFY_SECRET` only: mails then go to the dev server's log (`LogSender`), never to Resend. Tests must never call the real Resend API.
+
+### Adding an event mail
+
+1. Add the kind to `NOTIFY_KINDS` in `shared/utils/notify.ts` **and** in `server/db/schema.ts` (also the check constraint; a test compares the two), to `MAIL_KINDS`, and `mail.<kind>.*` plus `mail.kinds.<kind>` to both locale files.
+2. Add a `queue…` helper in `server/utils/outbox.ts` with its fact and a guard that is true only in the state the batch writes; put it in the endpoint's `db.batch` and pass it to `commit(event, eventId, writes, outbox)` (a single-statement endpoint becomes a batch).
+3. Teach `audienceOf` who gets it and when it is stale, and add a case to `test/notify.test.ts`. Keep amounts out of everything but a personal mail.
+
+Full rules: [13](13-email.md#event-emails-the-outbox).
+
+### Scheduled tick
+
+Time-based work (notification sweep, "tomorrow" mails, payment reminders) runs from one hourly tick: `runTick(now)` in `server/utils/tick.ts` calls every job added with `registerTickJob(name, fn)`. A failing job is logged and reported in the summary but never stops the others. The jobs (`tomorrow`, `paymentReminders`, `repeat`, `sweep`) are registered in `server/plugins/tickJobs.ts` ([13](13-email.md#scheduled-mails-the-hourly-tick)). The pure helpers `isSendingHour` (09:00–20:59 Vietnam), `tomorrowWindowVN` and `reminderDue` (reminder 1 at day 2, reminder 2 at day 5, never more) are unit-tested in `test/tick.test.ts`.
+
+- **Cloudflare:** the cron trigger `0 * * * *` is written into the generated Wrangler config (`nuxt.config.ts`, `cloudflare.wrangler.triggers`). `server/plugins/cron.ts` runs the tick on the `cloudflare:scheduled` hook. If the trigger does not show up, add it in the dashboard: Worker, **Settings, Triggers, Cron Triggers**, `0 * * * *`.
+- **Netlify:** `netlify/functions/tick.mts` is a scheduled function (`@hourly`) that POSTs `APP_URL/api/cron/tick` with `x-cron-secret`. It needs `APP_URL` and `CRON_SECRET` in the site's environment.
+- **Secret:** `CRON_SECRET` (or `NUXT_CRON_SECRET`, `runtimeConfig.cronSecret`). Without it the endpoint answers 404 and the tick never runs through HTTP.
+
 ## Releases
 
 1. Bump `VERSION`.

@@ -12,6 +12,7 @@ const mine = computed(() => props.data.responses.find((r) => r.memberId === prop
 const shown = computed(() => (mine.value?.derived === 'reconfirm' ? null : (mine.value?.status ?? null)));
 const held = computed(() => props.data.held.includes(props.me?.id ?? -1));
 const heldUntil = computed(() => (props.data.event.reconfirmBy ? fmtDateTime(props.data.event.reconfirmBy, locale.value) : ''));
+const limit = computed(() => guestLimit(props.data.event));
 const guests = ref(0);
 // Guests save on their own, like the answer buttons; the pause sends a few taps on +/- as one write.
 // While a save is pending, the server's copy doesn't overwrite what is being typed.
@@ -78,8 +79,9 @@ async function answer(status: 'going' | 'maybe' | 'no') {
       </div>
       <div class="flex items-center justify-between gap-3">
         <span class="text-sm">{{ t('rsvp.guests') }}</span>
-        <UInputNumber v-model="guests" :min="0" :max="10" class="w-32" />
+        <UInputNumber v-model="guests" :min="0" :max="limit" class="w-32" />
       </div>
+      <p v-if="limit < MAX_GUESTS" class="text-xs text-muted">{{ t('rsvp.guestsMax', { n: limit }) }}</p>
       <p v-if="data.event.capacity && mine?.derived === 'going'" class="text-xs text-muted">{{ t('rsvp.guestsQueue') }}</p>
       <template v-if="mine">
         <p v-if="mine.status === 'going' && !mine.derived && data.event.capacity" class="text-xs text-muted">{{ t('rsvp.guestsHint') }}</p>

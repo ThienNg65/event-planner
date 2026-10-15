@@ -19,6 +19,7 @@ The bank fields are optional. They can also be set when creating the event (the 
 Entering the bill releases any seat still being held ([04](04-polling-and-locking.md#plan-changes-after-the-lock)) and freezes the plan.
 The move needs the event to have started (`notStarted` before that), and the UI offers "Enter bill" only then.
 Without a bill, a started event can be completed straight from `rsvp` ("Complete, no bill").
+With email on, entering the bill (or changing the total while in `bill`) mails every seat holder who still owes something their own amount and, when bank details are set, a VietQR link ([13](13-email.md#event-emails-the-outbox)). The amount is worked out when the mail is sent, from the same share maths as the page.
 
 ## 6.2 The split
 
@@ -62,6 +63,7 @@ Who may use them:
 
 A participant may report a payment only while holding a seat (confirmed in `rollCall(seated(...))`); otherwise `notAttending` (409). Organizers may record anyone.
 The server does **not** check the amount against what is owed: an overpayment is accepted and clamped on read (`left = 0`).
+When an organizer records a payment for someone else (`paid`, `addPaid` or `paidAmount` with a value; not when clearing it, not their own, not a participant's own report), that member gets a "payment recorded" mail with no amount in it ([13](13-email.md#event-emails-the-outbox)).
 
 ## 6.4 VietQR
 

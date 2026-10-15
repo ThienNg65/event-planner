@@ -119,7 +119,7 @@ const longNote = computed(() => (ev.value.note?.length ?? 0) > 150 || (ev.value.
 // "@Dong Le" in the note shows as a chip.
 const noteParts = computed(() => splitMentions(ev.value.note ?? ''));
 const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
-const voters = computed(() => data.value!.responses.filter((r) => r.days.length || r.venueIds.length).length);
+const voters = computed(() => data.value!.responses.filter(hasPicked).length);
 // Finished stages collapse to one line each.
 const done = computed(() => {
   const past = STAGES.indexOf(ev.value.stage);
@@ -260,6 +260,9 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
           <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
             <span class="hidden sm:inline">{{ t('edit.open') }}</span>
           </UButton>
+          <UButton v-if="role" icon="i-lucide-copy" color="neutral" variant="outline" :aria-label="t('event.duplicate')" :to="`/new?from=${id}`">
+            <span class="hidden sm:inline">{{ t('event.duplicate') }}</span>
+          </UButton>
           <EventHostMenu v-if="can(role, 'cancel')" :data="data!" :manage-key="key" @changed="refresh" />
         </template>
       </UDashboardNavbar>
@@ -339,6 +342,8 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
             :description="ev.cancelReason ?? undefined"
             :actions="restoreActions"
           />
+          <EventHandover :data="data" @changed="refresh" @rekeyed="key = $event" />
+          <EventSeries :data="data" />
           <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions" :ui="{ title: 'text-highlighted', description: 'text-default' }">
             <template #title>
               {{ t('event.noticeTitle') }}

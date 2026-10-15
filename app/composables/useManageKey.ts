@@ -69,3 +69,6 @@ export function useManageKey(id: number) {
   });
   return key;
 }
+
+/** The organizer key this browser stored for event `id`, or null (browser-only). */
+export const manageKeyOf = (id: number) => readKeys()[id] ?? null;
