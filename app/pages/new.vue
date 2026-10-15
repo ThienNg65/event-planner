@@ -88,7 +88,8 @@ async function prefillFrom(id: number) {
       venueMode: e.venue ? 'fixed' : 'poll',
       venue: e.venue ?? '',
       venueLink: e.venueLink ?? '',
-      capacity: e.capacity,
+      // The limit the event was planned with, not one the attendance check raised.
+      capacity: e.plannedCapacity ?? e.capacity,
       maxGuests: guestLimit(e),
       hideVotes: e.hideVotes,
       honorees: [...e.honorees],

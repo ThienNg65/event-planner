@@ -41,7 +41,7 @@ export async function createDueOccurrences(now: Date) {
       with made as (
         insert into events (title, note, stage, starts_at, venue, venue_link, capacity, max_guests, hide_votes, bank_id, bank_account, bank_holder,
           cover, honorees, theme, created_by, manage_key_hash, repeat, repeat_until, series_id)
-        select title, note, case when venue is null then 'poll' else 'rsvp' end, ${next.toISOString()}::timestamptz, venue, venue_link, capacity, max_guests,
+        select title, note, case when venue is null then 'poll' else 'rsvp' end, ${next.toISOString()}::timestamptz, venue, venue_link, coalesce(planned_capacity, capacity), max_guests,
           hide_votes, bank_id, bank_account, bank_holder, cover, honorees, theme, created_by,
           replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), repeat, repeat_until, series_id
         from events where id = ${r.id}

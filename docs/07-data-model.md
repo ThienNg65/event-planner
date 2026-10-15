@@ -47,6 +47,7 @@ One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the
 | `starts_at` | timestamptz | null while a day poll is unlocked |
 | `venue`, `venue_link` | text | fixed place (or the locked place's name and link) |
 | `capacity` | integer | null = unlimited; 1 to 500 (validated) |
+| `planned_capacity` | integer | the limit before the attendance check raised it to fit everyone who came; null = never raised. The page shows `seats/planned + extra` while `capacity > planned_capacity` |
 | `bill_total` | integer | VND; null = no bill |
 | `bank_id`, `bank_account`, `bank_holder` | text | VietQR destination |
 | `cover` | text | a preset key (`aurora`, `sunset`, `ocean`, `forest`, `candy`, `slate`) or an `https://` image URL; null = gradient chosen from `id % 6` |
@@ -91,8 +92,9 @@ Primary key `(event_id, member_id)`. **Each person writes only their own row** (
 | `paid_amount` | integer | check ≥ 0; **null with `paid_at` set means paid in full** |
 | `first_voted_at` | timestamptz | set once, on the first write of days or places |
 | `derived` | text | `going` or `reconfirm`; null = the member's own answer |
+| `no_show` | boolean not null, default false | had a seat but was unticked in the attendance check; cleared by any later status write |
 
-Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `derived in (...)`, and **`derived is null or status = 'going'`**.
+Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `derived in (...)`, **`derived is null or status = 'going'`** and **`not no_show or status = 'no'`**.
 
 ## `member_email`, `member_codes`, `mail_log` (R4)
 
@@ -138,5 +140,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`), `0014_slimy_pyro` (`member_email`, `member_codes`, `mail_log`), `0015_pretty_mister_fear` (`notifications`, `notification_sends`), `0016_scheduled_mail_kinds` (`tomorrow` and `paymentReminder` added to the `notifications_kind` check), `0017_repeating_events` (`repeat`, `repeat_until`, `series_id`).
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_damp_fallen_one` (`planned_capacity`, `no_show`), `0012_phase2_host_tools_email_repeat` (Phase 2 in one migration: `max_guests`, `hide_votes`, `handover_to`, `handover_at`, `repeat`, `repeat_until`, `series_id`, `maybe_days`, `maybe_venue_ids`, and the tables `member_email`, `member_codes`, `mail_log`, `notifications`, `notification_sends`).
 `netlify.toml` (and the Cloudflare build command in the README) runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

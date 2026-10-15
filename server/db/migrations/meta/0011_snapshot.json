@@ -1,5 +1,5 @@
 {
-  "id": "2f2ced0a-723a-41af-ba7a-18fdf6a8cc4f",
+  "id": "ff08255f-ebcc-4dd2-9011-4bc4049535d3",
   "prevId": "b31c6d84-8688-44de-af63-847a74fb48e5",
   "version": "7",
   "dialect": "postgresql",
@@ -183,18 +183,11 @@
           "primaryKey": false,
           "notNull": false
         },
-        "max_guests": {
-          "name": "max_guests",
+        "planned_capacity": {
+          "name": "planned_capacity",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
-        },
-        "hide_votes": {
-          "name": "hide_votes",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         },
         "bill_total": {
           "name": "bill_total",
@@ -332,10 +325,6 @@
         "events_stage": {
           "name": "events_stage",
           "value": "\"events\".\"stage\" in ('poll', 'rsvp', 'bill', 'settled')"
-        },
-        "events_max_guests": {
-          "name": "events_max_guests",
-          "value": "\"events\".\"max_guests\" between 0 and 10"
         }
       },
       "isRLSEnabled": false
@@ -536,6 +525,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "no_show": {
+          "name": "no_show",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
@@ -598,6 +594,10 @@
         "responses_derived_going": {
           "name": "responses_derived_going",
           "value": "\"responses\".\"derived\" is null or \"responses\".\"status\" = 'going'"
+        },
+        "responses_no_show": {
+          "name": "responses_no_show",
+          "value": "not \"responses\".\"no_show\" or \"responses\".\"status\" = 'no'"
         }
       },
       "isRLSEnabled": false

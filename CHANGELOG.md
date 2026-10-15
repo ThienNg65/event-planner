@@ -14,6 +14,11 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Organizers can duplicate an event: the Duplicate button opens the create form filled in from the earlier event (title, note, place, limits, cover, theme and honorees, plus bank details if you created it), and you only pick new dates.
 - Organizers can limit how many guests each person may bring (0 to 10). Anyone asking for more is told the limit; organizers can still set any number, and lowering the limit does not change answers already given.
 - Organizers can hide poll results until people have voted: others' votes and the order of places stay hidden until you pick your own, so early votes do not sway the rest. Organizers always see the results.
+
+## [0.11.0] - 2026-10-15
+
+### Added
+- When entering the bill, the organizer ticks who actually came. People who came without saying Going share the bill, people who said Going but didn't come owe nothing and show as "didn't come", and if more people came than the seat limit allowed, everyone still pays a share and the seat count shows "10 + 5" in red.
 - Signing out other devices and changing your PIN now ask for your current PIN, so someone who only got hold of your session or sign-in link cannot lock you out. Resetting a member's PIN also signs them out reliably, even if they sign out other devices at the same moment. A manage link that was replaced on another device is now forgotten and no longer offered for copying.
 - The app can also be deployed on Cloudflare Workers.
 - After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The message carries the joining link of your private event, and the link changes with each stage so chat apps show a fresh preview.
@@ -32,6 +37,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Buttons in the default look shrink slightly while pressed.
 - In the scrapbook look, cards no longer get stuck lifted after a tap on a touch screen.
 - The colour descriptions in the README and docs now match what the themes show (violet and pink in the default look, set per theme).
+
+### Fixed
+- Members without a PIN can sign out their other devices again (it was refused with an error).
 
 ## [0.10.0] - 2026-10-14
 

@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
         startsAt: events.startsAt,
         venue: events.venue,
         capacity: events.capacity,
+        plannedCapacity: events.plannedCapacity,
         cover: events.cover,
         theme: events.theme,
         billTotal: events.billTotal,

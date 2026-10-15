@@ -106,7 +106,8 @@
     "dayOptions": "Chưa chốt ngày · {n} ngày đề xuất",
     "addToCalendar": "Thêm vào lịch",
     "calendarFile": "Tệp lịch (.ics)",
-    "googleCalendar": "Google Calendar"
+    "googleCalendar": "Google Calendar",
+    "goingSuffix": " người đi"
   },
   "create": {
     "title": "Tạo sự kiện",
@@ -556,7 +557,13 @@
     "closeVsLock": "Đóng bình chọn: ngừng nhận phiếu, chưa chốt gì. Chốt: chọn ngày (và địa điểm), ai đã chọn sẽ được tính tham gia. Đến hạn, bình chọn tự đóng và chờ bạn chốt.",
     "billAfter": "Bạn có thể nhập hóa đơn khi sự kiện bắt đầu ({when}).",
     "lockOnly": "Bình chọn đã đóng. Chốt để chọn ngày (và địa điểm); ai đã chọn sẽ được tính tham gia.",
-    "leading": "Nhiều phiếu nhất: {day} ({n})"
+    "leading": "Nhiều phiếu nhất: {day} ({n})",
+    "checkTitle": "Ai đã thực sự đến?",
+    "checkHint": "Đánh dấu mọi người đã đến, kèm số bạn đi cùng. Người không được đánh dấu không phải trả.",
+    "checkNone": "Chưa trả lời",
+    "checkGuests": "Số bạn đi cùng {name}",
+    "checkShare": "{n} chỗ · {share} mỗi chỗ",
+    "checkOver": "Giới hạn {cap} chỗ + {n} người nữa. Giới hạn được nâng để mọi người đã đến cùng chia tiền."
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -640,7 +647,8 @@
     "save": "Lưu",
     "fromVote": "Theo phiếu bầu",
     "heldUntil": "Giữ đến {time}",
-    "declinedCount": "{n} không tham gia"
+    "declinedCount": "{n} không tham gia",
+    "noshow": "Báo đi nhưng không đến"
   },
   "host": {
     "menu": "Thao tác khác",
@@ -756,7 +764,9 @@
     "answeredOf": "{n}/{total} người",
     "votedL": "Đã bình chọn",
     "declinedL": "Không tham gia được",
-    "pendingL": "Chưa phản hồi"
+    "pendingL": "Chưa phản hồi",
+    "overLimit": "{cap} + {n}",
+    "overLimitHint": "Giới hạn ban đầu là {cap} chỗ; có thêm {n} người đến."
   },
   "invite": {
     "title": "Bạn được mời làm đồng tổ chức với tên {name}",

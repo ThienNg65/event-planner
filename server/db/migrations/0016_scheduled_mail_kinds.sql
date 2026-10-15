@@ -1,2 +1,0 @@
-ALTER TABLE "notifications" DROP CONSTRAINT "notifications_kind";--> statement-breakpoint
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_kind" CHECK ("notifications"."kind" in ('planSet', 'paymentRequested', 'paymentRecorded', 'cancelled', 'tomorrow', 'paymentReminder'));

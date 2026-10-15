@@ -173,6 +173,30 @@ function focusCancel(e: Event) {
 
 const billOpen = ref(false);
 const bill = reactive({ total: null as number | null, bankId: '', bankAccount: '', bankHolder: '' });
+// "Who actually came?": guests per ticked member, null = unticked. Pre-ticked with today's confirmed seats.
+const checkIn = ref<Record<number, number | null>>({});
+const isPaid = (r: { paidAt: unknown; paidAmount: number | null }) => !!r.paidAt || (r.paidAmount ?? 0) > 0;
+const checkRank = (r: { memberId: number; status: string | null }) => {
+  if (props.data.confirmed.includes(r.memberId)) return 0;
+  if (props.data.waitlist.includes(r.memberId)) return 1;
+  return ['maybe', null, 'no'].indexOf(r.status) + 2;
+};
+const checkRows = computed(() => [...props.data.responses].sort((a, b) => checkRank(a) - checkRank(b) || a.name.localeCompare(b.name)));
+const checkLabel = (r: { memberId: number; status: string | null }) => {
+  const place = props.data.waitlist.indexOf(r.memberId) + 1;
+  if (props.data.confirmed.includes(r.memberId)) return t('people.going');
+  if (place) return t('people.waitlist', { n: place });
+  return r.status ? t(`people.${r.status}`) : t('next.checkNone');
+};
+const attended = computed(() =>
+  Object.entries(checkIn.value)
+    .filter(([, g]) => g !== null)
+    .map(([id, g]) => ({ memberId: Number(id), guests: g ?? 0 }))
+);
+const checkSeen = computed(() => attendanceCheck(props.data.responses, props.data.confirmed, attended.value, ev.value.capacity));
+// Seats beyond the limit the event was planned with: shown, not refused (walk-ins came anyway).
+const plannedCap = computed(() => ev.value.plannedCapacity ?? ev.value.capacity);
+const checkOver = computed(() => (plannedCap.value === null ? 0 : Math.max(0, checkSeen.value.seats - plannedCap.value)));
 watch(billOpen, (o) => {
   if (!o) return;
   Object.assign(bill, {
@@ -181,10 +205,11 @@ watch(billOpen, (o) => {
     bankAccount: ev.value.bankAccount ?? '',
     bankHolder: ev.value.bankHolder ?? '',
   });
+  checkIn.value = Object.fromEntries(props.data.responses.map((r) => [r.memberId, props.data.confirmed.includes(r.memberId) ? r.guests : null]));
 });
 async function saveBill() {
   const { total, ...bank } = bill;
-  if (await patch({ billTotal: total, stage: 'bill', ...bank })) billOpen.value = false;
+  if (await patch({ billTotal: total, stage: 'bill', ...bank, attended: attended.value })) billOpen.value = false;
 }
 
 // An early look at the payment step: a throwaway total over today's confirmed seats. Nothing is saved and the stage stays rsvp.
@@ -407,9 +432,42 @@ async function complete() {
   <UModal v-model:open="billOpen" :title="t('next.action.bill')">
     <template #body>
       <div class="space-y-4">
-        <UFormField :label="t('manage.bill')" :hint="t('next.billHint', { n: data.seats })">
+        <UFormField :label="t('manage.bill')" :hint="t('next.billHint', { n: checkSeen.seats })">
           <UInputNumber v-model="bill.total" :min="0" :step="1000" :format-options="{ maximumFractionDigits: 0 }" class="w-48" />
         </UFormField>
+        <!-- A fieldset, not UFormField: the field's label would name every checkbox instead of the person. -->
+        <fieldset class="space-y-1">
+          <legend class="text-sm font-medium text-default">{{ t('next.checkTitle') }}</legend>
+          <p class="text-sm text-muted">{{ t('next.checkHint') }}</p>
+          <ul class="max-h-64 divide-y divide-default overflow-y-auto text-sm">
+            <li v-for="r in checkRows" :key="r.memberId" class="flex items-center gap-2 py-1.5">
+              <UCheckbox
+                :model-value="checkIn[r.memberId] != null"
+                :disabled="isPaid(r)"
+                :label="r.name"
+                class="min-w-0 flex-1"
+                @update:model-value="(v) => (checkIn[r.memberId] = v ? r.guests : null)"
+              />
+              <UBadge color="neutral" variant="subtle" size="sm" :label="checkLabel(r)" />
+              <UInputNumber
+                v-if="checkIn[r.memberId] != null"
+                v-model="checkIn[r.memberId]"
+                :min="0"
+                :max="10"
+                size="xs"
+                class="w-24"
+                :disabled="isPaid(r)"
+                :aria-label="t('next.checkGuests', { name: r.name })"
+              />
+            </li>
+          </ul>
+        </fieldset>
+        <p v-if="checkSeen.seats && bill.total !== null" class="text-sm text-muted">
+          {{ t('next.checkShare', { n: checkSeen.seats, share: fmtVnd(shareOf(bill.total, checkSeen.seats) ?? 0) }) }}
+        </p>
+        <p v-if="checkOver" class="flex items-center gap-1.5 text-sm text-error">
+          <UIcon name="i-lucide-info" class="size-4 shrink-0" />{{ t('next.checkOver', { cap: plannedCap, n: checkOver }) }}
+        </p>
         <UFormField :label="t('create.bank')" :hint="t('create.bankHint')">
           <div class="grid gap-2 sm:grid-cols-3">
             <UInput v-model="bill.bankId" :placeholder="t('create.bankId')" />

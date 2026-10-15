@@ -79,7 +79,7 @@ const status = computed(() => {
       <div v-if="event.stage !== 'poll'" class="mt-auto pt-3">
         <div class="mb-1 flex justify-between text-xs text-muted tabular-nums">
           <span>{{ t('event.seats') }}</span>
-          <span>{{ event.capacity ? `${event.seats}/${event.capacity}` : event.seats }}</span>
+          <SeatCount :seats="event.seats" :capacity="event.capacity" :planned-capacity="event.plannedCapacity" />
         </div>
         <UProgress v-if="event.capacity" :model-value="event.seats" :max="event.capacity" size="xs" />
       </div>

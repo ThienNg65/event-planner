@@ -64,13 +64,14 @@ Valid range: 1 to 500 or unlimited (`invalidCapacity`).
 
 People join through the joining link (`/e/:id?join=<key>`, shown in Share). "No reply yet", the voted/total count and the avatar strip use the participants (`participants` in the event response), not the whole team.
 
-`EventPeople.vue` ranks rows `going → waitlist → maybe → voted → no`, then by name. In the poll stage a row appears for anyone with a vote or "can't join".
+`EventPeople.vue` ranks rows `going → waitlist → maybe → voted → noshow → no`, then by name. In the poll stage a row appears for anyone with a vote or "can't join".
 
 A row's `kind`:
 
 - `going`: confirmed (has a seat)
 - `waitlist`: Going but waiting; shows the place number (#1, #2…)
 - `maybe`, `no`: the member's answer
+- `noshow`: `no` with `no_show` set by the attendance check (had a seat, didn't come; [06](06-bill-and-payments.md#attendance-check-who-actually-came)), ranked between `voted` and `no`
 - `voted`: counted from votes without an answer, or a held seat that has lapsed
 
 Organizers (`setOthers`) get a menu per row: set Going / Maybe / Can't (stages `rsvp` and `bill`, so a Maybe who came anyway can be added to the split) and, while paying, mark paid / set amount / mark unpaid.

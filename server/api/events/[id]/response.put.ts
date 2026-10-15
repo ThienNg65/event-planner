@@ -63,6 +63,8 @@ export default defineEventHandler(async (event) => {
     set.guests = guests;
     // An answer given by the member is explicit: it is no longer counted from their votes or held.
     set.derived = null;
+    // A fresh answer (or an organizer's fix) replaces the attendance check's "didn't come".
+    set.noShow = false;
     // Declining a poll withdraws the votes too, so they no longer count toward a day or place.
     if (pollDecline && b.status === 'no') Object.assign(set, { days: [], venueIds: [], maybeDays: [], maybeVenueIds: [] });
   }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, capacityImpact, guestLimit, hasPicked, hasVoted, planFit, hidesVotes, redactVotes, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, attendanceCheck, overLimit, capacityImpact, guestLimit, hasPicked, hasVoted, planFit, hidesVotes, redactVotes, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { pinProblem } from '../shared/utils/pin.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
@@ -50,6 +50,36 @@ test('share rounds up to 1,000 VND per seat', () => {
   assert.equal(shareOf(900_000, 3), 300_000);
   assert.equal(shareOf(1_000_000, 0), null);
   assert.equal(shareOf(null, 3), null);
+});
+
+const checkRow = (memberId: number, status: string | null, guests = 0, paidAt: Date | null = null) => ({ memberId, status, guests, paidAt });
+
+test('attendanceCheck: walk-ins go, seat holders who were unticked are no-shows, waitlisted ones are just dropped', () => {
+  // A and B confirmed, C maybe, D waitlisted; C came with a friend, B and D did not come.
+  const rows = [checkRow(1, 'going'), checkRow(2, 'going'), checkRow(3, 'maybe'), checkRow(4, 'going')];
+  const r = attendanceCheck(rows, [1, 2], [{ memberId: 1, guests: 0 }, { memberId: 3, guests: 1 }], 2);
+  assert.deepEqual(r.going, [{ memberId: 1, guests: 0 }, { memberId: 3, guests: 1 }]);
+  assert.deepEqual(r.noShow, [2]);
+  assert.deepEqual(r.dropped, [4]);
+  assert.equal(r.seats, 3);
+  assert.equal(r.capacity, 3, 'a party bigger than the limit raises it');
+});
+
+test('attendanceCheck: the limit only grows, unlimited stays unlimited, paid rows are left alone but count', () => {
+  const rows = [checkRow(1, 'going'), checkRow(2, 'going', 1, at(0))];
+  assert.equal(attendanceCheck(rows, [1, 2], [{ memberId: 1, guests: 0 }], 10).capacity, 10);
+  assert.equal(attendanceCheck(rows, [1, 2], [{ memberId: 1, guests: 0 }], null).capacity, null);
+  // Paid member 2 is unticked here, yet stays going: not a no-show, and their 2 seats still count.
+  const r = attendanceCheck(rows, [1, 2], [{ memberId: 1, guests: 0 }], null);
+  assert.deepEqual([r.noShow, r.dropped, r.seats], [[], [], 3]);
+  assert.deepEqual(attendanceCheck(rows, [1, 2], [{ memberId: 2, guests: 5 }], null).going, [], 'a paid row is never rewritten');
+});
+
+test('overLimit: seats beyond the planned limit, 0 when it was never raised', () => {
+  assert.equal(overLimit({ capacity: 15, plannedCapacity: 10 }), 5);
+  assert.equal(overLimit({ capacity: 10, plannedCapacity: null }), 0);
+  assert.equal(overLimit({ capacity: 8, plannedCapacity: 10 }), 0, 'lowered again in Edit');
+  assert.equal(overLimit({ capacity: null, plannedCapacity: 10 }), 0);
 });
 
 test('norm ignores case, diacritics, đ and extra spaces', () => {
