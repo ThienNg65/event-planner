@@ -65,7 +65,7 @@ Finished stages collapse to one summary line each ("12 voted", "8 seats").
 
 - Themes (`shared/utils/theme.ts`): `aurora` (default), `liquid`, `bento`, `brutal`, `acid`, `scrapbook`, `candy`. An event's `theme` re-skins its whole page (`useEventTheme`); the visitor's own default is the `app-theme` cookie (`useAppTheme`). CSS tokens: `app/assets/css/main.css`, `themes.css`; component defaults: `app/app.config.ts`.
 - Covers (`shared/utils/cover.ts`): six gradient presets or an `https://` image; the server share card uses the same colours as hex stops.
-- Brand colours come from the logo (indigo; amber for celebratory states). Light and dark mode via the sidebar toggle.
+- Colours are set per theme (`--ui-primary` / `--ui-secondary` in `themes.css`); `app.config.ts` (indigo / amber / zinc) only seeds Nuxt UI's shade scales. Aurora, the default: violet `#6d4aff` for primary actions and selected states, pink `#e11d74` as the accent (the Settled stage). Light and dark mode via the sidebar toggle.
 - Confetti (`app/utils/confetti.ts`) marks first vote, Going, paid, locked, settled; skipped under `prefers-reduced-motion`.
 - Avatars: two-letter initials and a colour per member (`MemberAvatar.vue`, `initials()`).
 

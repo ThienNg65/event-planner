@@ -410,11 +410,14 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
             <UIcon name="i-lucide-circle-check" class="size-4 text-success" />{{ line }}
           </p>
 
-          <Transition name="stage" mode="out-in">
-            <EventPoll v-if="ev.stage === 'poll'" :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
-            <EventRsvp v-else-if="ev.stage === 'rsvp'" :data="data" :me="me" :manage-key="key" @changed="refresh" />
-            <EventBill v-else :data="data" :me="me" :manage-key="key" @changed="refresh" />
-          </Transition>
+          <!-- A wrapper, so a stage swap is animated only by the stage transition, not by .rise. -->
+          <div>
+            <Transition name="stage" mode="out-in">
+              <EventPoll v-if="ev.stage === 'poll'" :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
+              <EventRsvp v-else-if="ev.stage === 'rsvp'" :data="data" :me="me" :manage-key="key" @changed="refresh" />
+              <EventBill v-else :data="data" :me="me" :manage-key="key" @changed="refresh" />
+            </Transition>
+          </div>
 
           <EventPeople :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>

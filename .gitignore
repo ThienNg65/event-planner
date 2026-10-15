@@ -6,3 +6,6 @@ dist
 .env
 .claude
 .wrangler
+
+.agents
+skills-lock.json

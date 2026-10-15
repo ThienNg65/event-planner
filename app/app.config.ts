@@ -1,4 +1,4 @@
-// Colors from the logo (two circles, violet and ink, pink where they overlap): indigo brand, amber "celebrate" accent, on neutral zinc.
+// Nuxt UI base palettes (seed the shade scales). Each theme in app/assets/css/themes.css sets the real --ui-primary / --ui-secondary.
 export default defineAppConfig({
   ui: {
     colors: { primary: 'indigo', secondary: 'amber', neutral: 'zinc' },

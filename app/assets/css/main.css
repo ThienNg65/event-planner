@@ -33,9 +33,16 @@
 }
 
 /* Motion: event stages slide and .rise children float in one after another (pages have no route transition: UDashboardPanel is a multi-root component). */
-.stage-enter-active,
+/* Strong ease-out for entrances (shared by .rise and .stage). Not named --ease-out: Tailwind's theme already defines that. */
+:root {
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.stage-enter-active {
+  transition: opacity 250ms var(--motion-ease-out), translate 250ms var(--motion-ease-out);
+}
 .stage-leave-active {
-  transition: opacity 0.25s ease, translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 150ms var(--motion-ease-out), translate 150ms var(--motion-ease-out);
 }
 .stage-enter-from {
   opacity: 0;
@@ -47,13 +54,11 @@
 }
 /* `translate` (not `transform`) and fill "backwards" so hover lifts and theme tilts still apply after the entrance. */
 .rise > * {
-  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation: rise 300ms var(--motion-ease-out) backwards;
 }
 .rise > :nth-child(2) { animation-delay: 50ms; }
 .rise > :nth-child(3) { animation-delay: 100ms; }
-.rise > :nth-child(4) { animation-delay: 150ms; }
-.rise > :nth-child(5) { animation-delay: 200ms; }
-.rise > :nth-child(n + 6) { animation-delay: 250ms; }
+.rise > :nth-child(n + 4) { animation-delay: 150ms; }
 @keyframes rise {
   from {
     opacity: 0;
@@ -67,6 +72,20 @@
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+  /* Keep the fades (they help follow what changed), drop the movement and the stagger. */
+  .rise > * {
+    animation-name: fade-in;
+    animation-duration: 200ms !important;
+    animation-delay: 0ms !important;
+  }
+  .stage-enter-active,
+  .stage-leave-active {
+    transition-duration: 150ms !important;
+  }
+  .stage-enter-from,
+  .stage-leave-to {
+    translate: none;
   }
 }
 

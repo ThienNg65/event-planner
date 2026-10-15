@@ -96,7 +96,7 @@ Each member writes only their own row per event (`responses`), and the waitlist 
 The UI is a dashboard built with Nuxt UI's dashboard components:
 
 - a collapsible sidebar, which becomes a slide-over on phones
-- colors from the logo: indigo brand, amber for "celebrate" moments (top pick, paid, settled), neutral zinc surfaces, and the Inter font. The logo is two overlapping circles (the overlap is the day everyone agrees): `public/logo.svg` is the master; `favicon.svg`, `favicon.png`, `apple-touch-icon.png` (full-bleed, iOS rounds it), `icon-512.png` (fallback share image) and `app-icon.png` are exports of it.
+- colours are set per theme; the default (aurora) uses violet for actions and selected states and pink as the accent, on neutral surfaces, with the Inter font. The logo is two overlapping circles (the overlap is the day everyone agrees): `public/logo.svg` is the master; `favicon.svg`, `favicon.png`, `apple-touch-icon.png` (full-bleed, iOS rounds it), `icon-512.png` (fallback share image) and `app-icon.png` are exports of it.
 - light and dark mode (toggle in the sidebar)
 - a "needs you" list and event cards with your own status on the home page, and on each event a header with the key facts, a next-step card and only the section for the current stage
 

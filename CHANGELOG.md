@@ -16,6 +16,14 @@ All notable changes to this project are documented here, following [Keep a Chang
 - After voting closes, participants see which day got the most votes while they wait for the date.
 - The create form says that bank details are visible to anyone with the event link, and that a fixed date without a place starts as a vote on the place.
 
+### Changed
+- Moving an event to its next stage now plays one smooth fade instead of two animations fighting each other, and it is quicker (the old section leaves fast, the new one eases in).
+- Pages settle faster when they open: blocks float in over 0.3 seconds instead of 0.45, with a shorter stagger.
+- With "reduce motion" turned on, content still fades in and out but no longer slides.
+- Buttons in the default look shrink slightly while pressed.
+- In the scrapbook look, cards no longer get stuck lifted after a tap on a touch screen.
+- The colour descriptions in the README and docs now match what the themes show (violet and pink in the default look, set per theme).
+
 ## [0.10.0] - 2026-10-14
 
 ### Added
