@@ -28,6 +28,8 @@ export default defineEventHandler(async (event) => {
       target: [responses.eventId, responses.memberId],
       set: {
         firstVotedAt: sql`COALESCE(${responses.firstVotedAt}, now())`,
+        // A yes replaces an "if need be" on the same day.
+        maybeDays: sql`array_remove(${responses.maybeDays}, ${day}::date)`,
         days: sql`ARRAY(SELECT DISTINCT d FROM unnest(${responses.days} || ${day}::date) AS d WHERE d = ANY(${current}) ORDER BY d)`,
       },
     })

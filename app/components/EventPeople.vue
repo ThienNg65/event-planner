@@ -19,11 +19,11 @@ const paying = computed(() => ev.value.stage === 'bill' || ev.value.stage === 's
 const ORDER = ['going', 'waitlist', 'maybe', 'voted', 'no'] as const;
 const rows = computed(() =>
   props.data.responses
-    .filter((r) => (ev.value.stage === 'poll' ? r.days.length || r.venueIds.length || r.status === 'no' : r.status))
+    .filter((r) => (ev.value.stage === 'poll' ? hasVoted(r) : r.status))
     .map((r) => {
       const waitPlace = props.data.waitlist.indexOf(r.memberId) + 1;
       // While polling, "can't join" is the only answer that counts (it withdraws the votes).
-      const declined = ev.value.stage === 'poll' && r.status === 'no' && !r.days.length && !r.venueIds.length;
+      const declined = ev.value.stage === 'poll' && r.status === 'no' && !hasPicked(r);
       const answered = ev.value.stage !== 'poll' || declined;
       // A held seat past its deadline is released: that person is back to "voted, no answer".
       const lost = r.derived === 'reconfirm' && !props.data.held.includes(r.memberId);

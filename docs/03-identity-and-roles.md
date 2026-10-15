@@ -96,7 +96,7 @@ Enforced in the API, not the UI:
 
 | Write | Participant | Organizer |
 |---|---|---|
-| Own votes (`days`, `venueIds`) | Only while voting is open and stage is `poll` | Any time in `poll`, on anyone's row |
+| Own votes (`days`, `venueIds`, `maybeDays`, `maybeVenueIds`) | Only while voting is open and stage is `poll` | Any time in `poll`, on anyone's row |
 | Suggest a day / place | Same window | Same |
 | Own RSVP status and guests | Stage `rsvp` (and "can't join" while polling) | Any stage, anyone's row |
 | Own payment | Stage `bill`; `addPaid` also in `settled`; only with a seat ([06](06-bill-and-payments.md#63-recording-payments)) | Both stages, anyone's row, any amount |

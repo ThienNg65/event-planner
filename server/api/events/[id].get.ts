@@ -40,9 +40,15 @@ export default defineEventHandler(async (event) => {
     if (joinedNow) rs = await answers();
   }
   const { confirmed, waitlist, seats } = rollCall(seated(rs, ev), ev.capacity);
+  // A day or place stored as both yes and "if need be" reads as yes.
+  rs = rs.map((r) => ({ ...r, maybeDays: r.maybeDays.filter((d) => !r.days.includes(d)), maybeVenueIds: r.maybeVenueIds.filter((v) => !r.venueIds.includes(v)) }));
   let venueList = vs
-    .map((v) => ({ ...v, upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId) }))
-    .sort((a, b) => b.upvotes.length - a.upvotes.length);
+    .map((v) => ({
+      ...v,
+      upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId),
+      maybe: rs.filter((r) => r.maybeVenueIds.includes(v.id)).map((r) => r.memberId),
+    }))
+    .sort((a, b) => b.upvotes.length - a.upvotes.length || b.maybe.length - a.maybe.length);
   // `voted` is read from the real rows, so a hidden poll still shows who has answered.
   let shown = rs.map((r) => ({ ...r, voted: hasVoted(r) }));
   const votesHidden = hidesVotes(ev, role, rs, me);

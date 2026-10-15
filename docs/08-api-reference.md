@@ -41,7 +41,7 @@ Every handler validates its own input (there is no shared schema layer): `server
 Also `joinedNow` (this visit made you a participant) and `participants` (`{ id, name }`, by name), which the UI uses for counts and the avatar strip. `PUT /response`, `POST /days` and `POST /venues` also go through `requireAccess`, and so do the organizer-only endpoints (PATCH, DELETE, cohost, venue delete) before their role check, so a stranger gets `notFound` rather than 403.
 
 `event` (all columns except the key hashes), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
-`hostName`, `hostKey` (the sent `x-manage-key` still matches the manage key), `votingOpen`, `responses` (every member's row plus `name` and `voted`; while `votesHidden` is true, other members' `days` and `venueIds` are emptied, see [04](04-polling-and-locking.md#47-hiding-results-until-you-vote)), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).
+`hostName`, `hostKey` (the sent `x-manage-key` still matches the manage key), `votingOpen`, `responses` (every member's row plus `name` and `voted`; while `votesHidden` is true, other members' `days`, `venueIds`, `maybeDays` and `maybeVenueIds` are emptied, see [04](04-polling-and-locking.md#47-hiding-results-until-you-vote)), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]` and `maybe: memberId[]` for "if need be", sorted by upvotes, then if need be).
 
 Events are private to organizers, joining-key holders and participants ([03](03-identity-and-roles.md#34-security-properties-worth-remembering)).
 
@@ -67,10 +67,10 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 
 | Method and path | Auth | Body | Purpose | Notable errors |
 |---|---|---|---|---|
-| `PUT /api/events/:id/response` | self | `memberId` + any of `days`, `venueIds`, `status` (+`guests`), `paid`, `addPaid`, `paidAmount` | Write the member's own row ([04](04-polling-and-locking.md), [05](05-rsvp-and-seats.md), [06](06-bill-and-payments.md)) | `unknownMember`, `notYou`, `cancelled`, `stageClosed`, `votingClosed`, `invalidDays`, `unknownVenue`, `invalidGuests`, `tooManyGuests`, `invalid`, `daysChanged`, `venuesChanged`, `notAttending` (participant paying without a seat) |
+| `PUT /api/events/:id/response` | self | `memberId` + any of `days`, `venueIds`, `maybeDays`, `maybeVenueIds`, `status` (+`guests`), `paid`, `addPaid`, `paidAmount` | Write the member's own row ([04](04-polling-and-locking.md), [05](05-rsvp-and-seats.md), [06](06-bill-and-payments.md)) | `unknownMember`, `notYou`, `cancelled`, `stageClosed`, `votingClosed`, `invalidDays`, `unknownVenue`, `invalidGuests`, `tooManyGuests`, `invalid`, `daysChanged`, `venuesChanged`, `notAttending` (participant paying without a seat) |
 | `POST /api/events/:id/days` | self | `memberId`, `day` | Suggest (or vote for) a day | `invalidDays`, `tooManyDays`, `daysChanged`, `stageClosed`, `votingClosed` |
 | `POST /api/events/:id/venues` | self | `addedBy`, `name`, `link?`, `note?` | Suggest a place (201) | `nameRequired`, `invalidLink`, `venueExists` (with `data.id`), `stageClosed` |
-| `DELETE /api/events/:id/venues/:venueId` | organizer | | Remove a place and its upvotes | `cancelled`, `notFound` |
+| `DELETE /api/events/:id/venues/:venueId` | organizer | | Remove a place and its votes (yes and if need be) | `cancelled`, `notFound` |
 | `GET /api/place-name?url=` | none | | The place name behind a `https://maps.app.goo.gl/…` short link (`{ name }`, `null` if unknown), to prefill a venue name. Fetches only that host, 3 s timeout. | none (always 200) |
 
 ## Co-hosts

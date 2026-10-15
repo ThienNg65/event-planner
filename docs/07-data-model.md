@@ -78,6 +78,8 @@ Primary key `(event_id, member_id)`. **Each person writes only their own row** (
 |---|---|---|
 | `days` | `date[]` not null, default `{}` | days the member can make |
 | `venue_ids` | `integer[]` not null, default `{}` | upvoted places (not a foreign key; the API prunes removed places) |
+| `maybe_days` | `date[]` not null, default `{}` | days the member could do "if need be"; kept apart from `days` (a day in both reads as yes). Pruned wherever `days` is |
+| `maybe_venue_ids` | `integer[]` not null, default `{}` | places the member could do "if need be"; pruned wherever `venue_ids` is |
 | `status` | text | `going`, `maybe`, `no`, or null |
 | `guests` | integer not null, default 0 | check 0 to 10 |
 | `going_at` | timestamptz | queue time |

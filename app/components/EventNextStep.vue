@@ -64,7 +64,7 @@ const copy = computed(() => {
 const bodyKey = computed(() => (copy.value === 'voteClosed' && canAdvance.value ? 'bodyHost' : 'body'));
 const when = computed(() => (ev.value.startsAt ? fmtDateTime(ev.value.startsAt, locale.value) : ''));
 const params = computed(() => ({
-  n: props.data.responses.filter((r) => r.days.length || r.venueIds.length).length,
+  n: props.data.responses.filter(hasPicked).length,
   when: when.value,
   deadline: ev.value.reconfirmBy ? fmtDateTime(ev.value.reconfirmBy, locale.value) : '',
   place: props.data.waitlist.indexOf(props.me?.id ?? -1) + 1,
@@ -103,7 +103,7 @@ async function patch(body: object) {
 
 // Finalize: days and places ranked by votes with the leader preselected, read when the dialog opens (votes keep coming in).
 const lockOpen = ref(false);
-const voted = computed(() => props.data.responses.filter((r) => r.days.length || r.venueIds.length).length);
+const voted = computed(() => props.data.responses.filter(hasPicked).length);
 const pending = computed(() => pendingVoters(props.data.participants, props.data.responses));
 const lock = reactive({ day: '', time: '19:00', venueId: undefined as number | undefined });
 // Same order as the organizer's comparison: votes, then honorees who can come, then earliest, so the preselected day is the tie-broken one.

@@ -5,8 +5,8 @@ const { t, locale } = useI18n();
 
 const ev = computed(() => props.data.event);
 const rs = computed(() => props.data.responses);
-const voted = computed(() => rs.value.filter((r) => r.days.length || r.venueIds.length).length);
-const declined = computed(() => rs.value.filter((r) => r.status === 'no' && !r.days.length && !r.venueIds.length).length);
+const voted = computed(() => rs.value.filter(hasPicked).length);
+const declined = computed(() => rs.value.filter((r) => r.status === 'no' && !hasPicked(r)).length);
 // A "can't join" is an answer too, so it counts toward progress.
 const answered = computed(() => voted.value + declined.value);
 const roster = computed(() => Math.max(props.data.participants.length, voted.value + declined.value));

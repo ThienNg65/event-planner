@@ -106,6 +106,9 @@ export const responses = pgTable(
       .references(() => members.id),
     days: date({ mode: 'string' }).array().notNull().default(sql`'{}'`),
     venueIds: integer().array().notNull().default(sql`'{}'`),
+    // "If need be" picks, kept apart from the yes picks above; a day or place in both counts as yes.
+    maybeDays: date({ mode: 'string' }).array().notNull().default(sql`'{}'`),
+    maybeVenueIds: integer().array().notNull().default(sql`'{}'`),
     status: text({ enum: STATUSES }),
     guests: integer().notNull().default(0),
     // Queue position for capacity: set when someone becomes "going" or adds guests.

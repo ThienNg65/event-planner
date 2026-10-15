@@ -178,8 +178,11 @@ export default defineEventHandler(async (event) => {
   const current = currentDays(ev.id);
   const prune = useDb()
     .update(responses)
-    .set({ days: sql`ARRAY(SELECT d FROM unnest(${responses.days}) AS d WHERE d = ANY(${current}))` })
-    .where(and(eq(responses.eventId, ev.id), sql`NOT (${responses.days} <@ ${current})`));
+    .set({
+      days: sql`ARRAY(SELECT d FROM unnest(${responses.days}) AS d WHERE d = ANY(${current}))`,
+      maybeDays: sql`ARRAY(SELECT d FROM unnest(${responses.maybeDays}) AS d WHERE d = ANY(${current}))`,
+    })
+    .where(and(eq(responses.eventId, ev.id), sql`NOT (${responses.days} <@ ${current} AND ${responses.maybeDays} <@ ${current})`));
   const [changed] = await useDb().batch([update.returning({ id: events.id }), prune]);
   if (ops && !changed.length) {
     // Nothing matched: work out why against the current state.

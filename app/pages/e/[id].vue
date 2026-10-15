@@ -119,7 +119,7 @@ const longNote = computed(() => (ev.value.note?.length ?? 0) > 150 || (ev.value.
 // "@Dong Le" in the note shows as a chip.
 const noteParts = computed(() => splitMentions(ev.value.note ?? ''));
 const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
-const voters = computed(() => data.value!.responses.filter((r) => r.days.length || r.venueIds.length).length);
+const voters = computed(() => data.value!.responses.filter(hasPicked).length);
 // Finished stages collapse to one line each.
 const done = computed(() => {
   const past = STAGES.indexOf(ev.value.stage);

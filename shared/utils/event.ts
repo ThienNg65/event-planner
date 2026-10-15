@@ -91,17 +91,29 @@ export const planFor = (
   venueIds: venues.filter((v) => v.name === venueName).map((v) => v.id),
 });
 
-type Vote = { days: string[]; venueIds: number[] };
+/** A member's picks: yes votes, plus the days and places they could do "if need be" (absent = none). */
+type Vote = { days: string[]; venueIds: number[]; maybeDays?: string[]; maybeVenueIds?: number[] };
+
+/** How well a member's votes fit the plan: all yes, at least one "if need be", or not at all. */
+export type Fit = 'yes' | 'maybe' | 'no';
 
 /**
- * Whether a member's votes fit the plan. A day poll needs the day; if places were polled too, a member who upvoted
- * places needs one of them (no place upvotes = the day alone). A place-only poll needs the chosen place.
+ * A day poll needs the day; if places were polled too, a member who picked places (yes or if need be) needs one of them
+ * (no place picks = the day alone). A place-only poll needs the chosen place. A yes beats an if-need-be on the same day or place;
+ * the weaker of the day and the place decides.
  */
-export function matchesPlan(r: Vote, plan: Plan) {
-  const placeOk = r.venueIds.some((v) => plan.venueIds.includes(v));
-  if (plan.day !== null) return r.days.includes(plan.day) && (!plan.venuePolled || !r.venueIds.length || placeOk);
-  return plan.venuePolled && placeOk;
+export function planFit(r: Vote, plan: Plan): Fit {
+  const inPlan = (ids: number[] = []) => ids.some((v) => plan.venueIds.includes(v));
+  const place: Fit = inPlan(r.venueIds) ? 'yes' : inPlan(r.maybeVenueIds) ? 'maybe' : 'no';
+  if (plan.day === null) return plan.venuePolled ? place : 'no';
+  const day: Fit = r.days.includes(plan.day) ? 'yes' : r.maybeDays?.includes(plan.day) ? 'maybe' : 'no';
+  const placePicked = r.venueIds.length > 0 || !!r.maybeVenueIds?.length;
+  if (day === 'no' || !plan.venuePolled || !placePicked) return day;
+  return place === 'no' ? 'no' : day === 'maybe' || place === 'maybe' ? 'maybe' : 'yes';
 }
+
+/** Whether a member's votes fully fit the plan; an "if need be" is not a fit (those members are asked to confirm). */
+export const matchesPlan = (r: Vote, plan: Plan) => planFit(r, plan) === 'yes';
 
 /** A held seat (derived `reconfirm`) is in force while the confirm-by deadline hasn't passed. */
 export const heldOk = (ev: { reconfirmBy?: string | Date | null }, now = Date.now()) =>
@@ -150,13 +162,12 @@ export function lockImpact<T extends DerivRow>(rows: T[], plan: Plan, capacity: 
   // Expired holds were released above, so every hold left in `after` is in time and keeps its spot.
   const { confirmed, waitlist } = rollCall(after.filter((r) => r.status === 'going'), capacity);
   const derivedIds = new Set(after.filter((r) => r.derived).map((r) => r.memberId));
-  const voted = (r: Vote) => r.days.length > 0 || r.venueIds.length > 0;
   return {
     going: confirmed.filter((r) => derivedIds.has(r.memberId)),
     waiting: waitlist.filter((r) => derivedIds.has(r.memberId)),
     hold: d.hold,
     released: d.release,
-    confirm: mode === 'lock' ? d.untouched.filter((r) => r.status === null && !r.paidAt && voted(r)) : [],
+    confirm: mode === 'lock' ? d.untouched.filter((r) => r.status === null && !r.paidAt && hasPicked(r)) : [],
   };
 }
 
@@ -174,14 +185,14 @@ export type Mine = {
   left: number;
 };
 
-type MyRow = PayRow & { days: string[]; venueIds: number[]; status: string | null; guests: number; derived?: string | null };
+type MyRow = PayRow & Picks & { status: string | null; guests: number; derived?: string | null };
 
 /** `row` is the member's response (absent if they never answered); only confirmed attendees owe a share. `held`: a seated hold. */
 export function mineOf(row: MyRow | undefined, confirmed: boolean, waitlisted: boolean, share: number | null, held = false): Mine {
   const owes = confirmed && share !== null ? share * (1 + row!.guests) : null;
   const pay = owes === null ? null : paymentOf(row, owes);
   return {
-    voted: !!row && (row.days.length > 0 || row.venueIds.length > 0),
+    voted: !!row && hasPicked(row),
     status: row?.status ?? null,
     derived: row?.derived ?? null,
     held,
@@ -301,8 +312,8 @@ export function capacityImpact<T extends QueueEntry>(responses: T[], from: numbe
   };
 }
 
-/** Roster members who have not answered yet (no day, no place picked, not declined), in roster order. */
-export const pendingVoters = <M extends { id: number }>(roster: M[], responses: { memberId: number; days: unknown[]; venueIds: unknown[]; status?: string | null }[]) => {
+/** Roster members who have not answered yet (no day or place picked, yes or if need be, not declined), in roster order. */
+export const pendingVoters = <M extends { id: number }>(roster: M[], responses: ({ memberId: number; status?: string | null } & Picks)[]) => {
   const voted = new Set(responses.filter(hasVoted).map((r) => r.memberId));
   return roster.filter((m) => !voted.has(m.id));
 };
@@ -315,7 +326,7 @@ export type Reminder = {
   confirm: string[];
 };
 
-type RemindRow = { memberId: number; days: unknown[]; venueIds: unknown[]; status?: string | null; derived?: string | null; guests: number } & PayRow;
+type RemindRow = Picks & { memberId: number; status?: string | null; derived?: string | null; guests: number } & PayRow;
 
 /**
  * Who to nudge at the current stage, for the organizer's reminder: poll = not voted, rsvp = not answered (`names`) or
@@ -363,19 +374,21 @@ export const stageKey = (ev: { stage: string; voteDeadline?: string | Date | nul
 };
 
 /**
- * Poll days for the organizer to compare: who can make each day, how many honorees can, ranked by voters, then by honorees
- * who can come, then earliest first. `tie` says what put the first day ahead of an equal-vote second: 'honorees', 'earlier', or null (no tie).
+ * Poll days for the organizer to compare: who can make each day (`yes`) or only if need be (`maybe`), how many honorees can,
+ * ranked by yes votes, then if-need-be votes, then honorees who can come, then earliest first. `tie` says what put the first day
+ * ahead of a second with the same yes and if-need-be votes: 'honorees', 'earlier', or null (no tie).
  */
-export function compareDays(days: string[], responses: { memberId: number; days: string[] }[], honorees: number[] = []) {
+export function compareDays(days: string[], responses: { memberId: number; days: string[]; maybeDays?: string[] }[], honorees: number[] = []) {
   const ranked = days
     .map((day) => {
       const yes = responses.filter((r) => r.days.includes(day)).map((r) => r.memberId);
-      return { day, n: yes.length, yes, honoreesIn: honorees.filter((h) => yes.includes(h)) };
+      const maybe = responses.filter((r) => !r.days.includes(day) && r.maybeDays?.includes(day)).map((r) => r.memberId);
+      return { day, n: yes.length, yes, maybe, honoreesIn: honorees.filter((h) => yes.includes(h)) };
     })
-    .sort((a, b) => b.n - a.n || b.honoreesIn.length - a.honoreesIn.length || a.day.localeCompare(b.day));
+    .sort((a, b) => b.n - a.n || b.maybe.length - a.maybe.length || b.honoreesIn.length - a.honoreesIn.length || a.day.localeCompare(b.day));
   const [a, b] = ranked;
   let tie: 'honorees' | 'earlier' | null = null;
-  if (a && b && a.n > 0 && a.n === b.n) tie = a.honoreesIn.length > b.honoreesIn.length ? 'honorees' : 'earlier';
+  if (a && b && a.n > 0 && a.n === b.n && a.maybe.length === b.maybe.length) tie = a.honoreesIn.length > b.honoreesIn.length ? 'honorees' : 'earlier';
   return { ranked, tie };
 }
 
@@ -385,21 +398,28 @@ export const MAX_GUESTS = 10;
 /** Most guests one member may bring to this event. */
 export const guestLimit = (ev: { maxGuests: number | null }) => ev.maxGuests ?? MAX_GUESTS;
 
-type VoteRow = { memberId: number; days: string[]; venueIds: number[]; status?: string | null };
+type VoteRow = Vote & { memberId: number; status?: string | null };
 
-/** Whether a member has answered the poll: picked a day or a place, or said they can't come. */
-export const hasVoted = (r: { days: unknown[]; venueIds: unknown[]; status?: string | null }) => r.days.length > 0 || r.venueIds.length > 0 || r.status === 'no';
+type Picks = { days: unknown[]; venueIds: unknown[]; maybeDays?: unknown[]; maybeVenueIds?: unknown[] };
+
+/** Whether a member picked any day or place, as a yes or an "if need be". */
+export const hasPicked = (r: Picks) => r.days.length > 0 || r.venueIds.length > 0 || !!r.maybeDays?.length || !!r.maybeVenueIds?.length;
+
+/** Whether a member has answered the poll: picked a day or a place (yes or if need be), or said they can't come. */
+export const hasVoted = (r: Picks & { status?: string | null }) => hasPicked(r) || r.status === 'no';
 
 /** Results are hidden from a visitor who is not an organizer and has not answered yet, while the poll runs on an event that asks for it. */
 export const hidesVotes = (ev: { hideVotes: boolean; stage: string }, role: Role, rows: VoteRow[], viewerId: number | null) =>
   ev.hideVotes && ev.stage === 'poll' && role === null && !rows.some((r) => r.memberId === viewerId && hasVoted(r));
 
 /** The poll as a visitor who must not see results gets it: other people's picks are emptied (honorees' days stay), counts are zero, places go by age. */
-export function redactVotes<R extends VoteRow, V extends { id: number; createdAt: Date | string; upvotes: number[] }>(rows: R[], venues: V[], viewerId: number | null, honorees: number[]) {
+export function redactVotes<R extends VoteRow, V extends { id: number; createdAt: Date | string; upvotes: number[]; maybe: number[] }>(rows: R[], venues: V[], viewerId: number | null, honorees: number[]) {
   return {
-    rows: rows.map((r) => (r.memberId === viewerId ? r : { ...r, days: honorees.includes(r.memberId) ? r.days : [], venueIds: [] })),
+    rows: rows.map((r) =>
+      r.memberId === viewerId ? r : { ...r, ...(honorees.includes(r.memberId) ? {} : { days: [], maybeDays: [] }), venueIds: [], maybeVenueIds: [] }
+    ),
     venues: venues
-      .map((v) => ({ ...v, upvotes: [] as number[] }))
+      .map((v) => ({ ...v, upvotes: [] as number[], maybe: [] as number[] }))
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id - b.id),
   };
 }
