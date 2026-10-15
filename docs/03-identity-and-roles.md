@@ -3,6 +3,8 @@
 There are **no passwords**, but each name has a **6-digit PIN**. Identity is "who this browser is signed in as", and event power is "which key this request carries".
 Two independent mechanisms exist and are combined in `roleOf`.
 
+> **Join sheet.** Anything that needs a name (tapping a day, answering RSVP, Create when signed out, "Your name?", the home sign-in link) calls `useJoin().ask(fn)`: signed in it runs `fn` at once, otherwise `JoinSheet.vue` (mounted once in the layout) opens, and after sign-in `fn` is replayed once. The picker is one combobox (type to filter, accent-insensitive, last row "Add “name”"), then the PIN, which signs in on the sixth digit.
+
 ## 3.1 Who am I? (member session)
 
 | Concept | Detail |
@@ -24,7 +26,7 @@ flowchart TD
     A[Visitor opens the app] --> B{Has a sid cookie?}
     B -- yes --> Z[Signed in as that member]
     B -- no --> C{Choice}
-    C -- "I'm new" --> D["POST /api/members {name, pin}"]
+    C -- "Add name" --> D["POST /api/members {name, pin}"]
     D -- name free --> Z
     D -- "409 nameTaken" --> E[Pick the existing name instead]
     C -- "Pick a name that has a PIN" --> P["POST /api/members/:id/signin {pin}"]
@@ -37,9 +39,10 @@ flowchart TD
     C -- Have a sign-in link --> I["POST /api/me/signin {token}"] --> Z
 ```
 
-- **I'm new** (`POST /api/members`): takes the name and a PIN. Trims and collapses whitespace in the name (max 50). The name is unique as an exact string; a 409 `nameTaken` means someone has it. The one exception is an archived name that was never claimed and created no event: adding it again reuses that member (signs in as it and un-archives it). The UI also asks "Is that you?" when a *similar* name exists (`norm()` ignores case and diacritics: Thien / Thiên / THIEN).
+- **Add name** (`POST /api/members`; in the UI the "＋ Add “name”" row of the join sheet): takes the name and a PIN. Trims and collapses whitespace in the name (max 50). The name is unique as an exact string; a 409 `nameTaken` means someone has it. The one exception is an archived name that was never claimed and created no event: adding it again reuses that member (signs in as it and un-archives it). The UI also asks "Is that you?" when a *similar* name exists (`norm()` ignores case and diacritics: Thien / Thiên / THIEN).
 - **Claim** (`POST /api/members/:id/claim {pin}`): for names added before sign-in existed (no token and no PIN yet); the claimer chooses the PIN. One conditional UPDATE lets only the first claimer win. A name that **created an event** can never be claimed, because claiming would hand over host rights (`nameOrganizer`).
 - **Move to another device**: pick your name and enter your PIN there. The older way still works: `POST /api/me/link` returns the current token (requires being signed in); open `/#signin=<token>` elsewhere. A leaked link, or a lost phone, is cut off with `POST /api/me/signout-others` (see 3.1); set a PIN first if you have none.
+- **Rename yourself** (`PATCH /api/me {name}`, signed in): same trimming and 50-character limit as adding a name; empty is `nameRequired`, a name another member has (exact match) is `nameTaken`, keeping your own name is fine. No PIN is asked: the session already proves who you are. Names are read on request, so the host line, people list and reminders show the new name at once; text already copied (chat messages) and `@mentions` inside an event note keep the old name. The account menu offers it as a pencil next to your name and warns about a similar name (`norm()`).
 - **Set or change a PIN** (`POST /api/me/pin {pin, currentPin}`, signed in): the first PIN needs only the session; changing an existing one needs `currentPin` too (same attempt counter and lockout as signing in), so a stolen session cannot take the name over. Members who signed in before PINs existed see a nudge in the account menu. A name that is claimed but has no PIN is not in the name list; it needs its sign-in link, or an organizer's reset.
 - **Reset a PIN** (`POST /api/members/:id/pin-reset`, signed in as someone who has created an event): returns a random new PIN, shown once to pass on privately. It also signs the member out everywhere (their sessions and old sign-in link stop working); the new PIN, the token wipe and the session delete are one batch, so a concurrent sign-out-others cannot leave a session alive. Refused for a member who has created an event (`pinResetOrganizer`): it would hand their hosting rights to another organizer; they sign in with their own PIN or sign-in link.
 - `GET /api/members` lists the roster (archived members left out) with `claimed` (token or PIN set, or creator of an event) and `hasPin`. `GET /api/me` returns the current member with `organizer` (has created an event) and `hasPin`, or `null`.
@@ -51,7 +54,7 @@ Members are team-wide and never deleted. To hide leftover or test names, anyone 
 
 - An archived member drops out of `GET /api/members`, so out of the name list, the roster avatars and every "no reply yet" count.
 - Their responses, votes and payments stay. Nothing else changes.
-- They come back when they sign in with their PIN or sign-in link (`/api/me/signin`, `/api/members/:id/signin` and a claim from the name list all clear `archivedAt`), or, if the name was never claimed, when someone adds the same name again (see **I'm new**). A browser still signed in by cookie stays hidden until then.
+- They come back when they sign in with their PIN or sign-in link (`/api/me/signin`, `/api/members/:id/signin` and a claim from the name list all clear `archivedAt`), or, if the name was never claimed, when someone adds the same name again (see **Add name**). A browser still signed in by cookie stays hidden until then.
 
 ## 3.2 What may I do on this event? (role)
 

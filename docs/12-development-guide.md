@@ -48,6 +48,12 @@ All stage moves live in `server/api/events/[id].patch.ts`. Keep multi-row writes
 
 Add the key to `i18n/locales/vi.json` and `en.json` (every user-facing string, every server error code). Server errors go out as `fail(status, 'code')` and come in via `errMsg()`.
 
+### Writing copy
+
+- Buttons: verb + object, at most 3 words. Headings are a question the user answers ("Which days?").
+- No sentence longer than 12 words outside confirm dialogs and error toasts; help text goes behind a help icon or in a placeholder.
+- Avoid words that change meaning when the accents drop (*mới* next to *mời*), *bỏ trống*, *nếu cần* and "(không bắt buộc)": use a switch or the "Options" group instead of saying "optional".
+
 ### Money and time
 
 VND is an integer; the share rounds up to 1,000. Times are stored as `timestamptz`, entered and shown in UTC+7; poll days are `YYYY-MM-DD` strings. Use `teamTime`, `teamDay`, `teamToday`; do not call `new Date(...)` on a bare day string for display.

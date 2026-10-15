@@ -11,17 +11,15 @@
   "home": {
     "title": "Events",
     "new": "New event",
-    "empty": "Events you create or join show here. Open a link from the host, or create one.",
     "planning": "Undecided",
     "upcoming": "Upcoming",
     "past": "Past",
     "search": "Search events or venues…",
     "all": "All",
     "noMatch": "No events match your filter.",
-    "emptyTitle": "Plan something fun together",
+    "emptyTitle": "Plan team outings",
     "todo": {
       "title": "Needs you",
-      "who": "Pick your name to see what needs you",
       "none": "You're all caught up ✨",
       "vote": "Vote for a day",
       "rsvp": "Are you coming?",
@@ -30,7 +28,8 @@
       "bill": "Enter the bill",
       "settle": "Mark as settled",
       "confirm": "Confirm you're coming"
-    }
+    },
+    "seeAll": "See all"
   },
   "stage": {
     "poll": "Voting",
@@ -54,33 +53,34 @@
   },
   "me": {
     "label": "Who are you?",
-    "pick": "Pick your name",
+    "pick": "Your name",
     "search": "Search names…",
-    "new": "I'm new",
-    "yourName": "Your display name",
-    "join": "Join",
+    "yourName": "Your name",
+    "join": "Continue",
     "isThisYou": "\"{name}\" is already on the list. Is that you?",
     "thatsMe": "Yes, that's me",
     "signedIn": "That's you",
     "copyLink": "Copy my sign-in link",
     "linkCopied": "Sign-in link copied",
     "linkHint": "Open this link on your other phone or computer to be you there too. Keep it to yourself: anyone with it can act as you.",
-    "otherDevice": "Used the app before? Pick your name from the list and enter your PIN.",
     "claimedName": "\"{name}\" is already taken. If that is you, open your sign-in link from your old device, or ask an organizer to reset your PIN.",
     "signOut": "Sign out",
     "signOutConfirm": "You can sign back in with your name and PIN. Organizer links opened on this device are forgotten too.",
-    "continue": "Continue",
     "noneToPick": "No names left to pick. If you have used the app before, open your sign-in link or ask an organizer to reset your PIN.",
     "signOutNoPin": "Set a PIN first, or copy your sign-in link: without one of them you cannot sign back in as yourself. Organizer links opened on this device are forgotten too.",
     "setPin": "Set a PIN",
     "changePin": "Change PIN",
     "noPinNudge": "Set a 6-digit PIN so you can sign in on any phone or computer.",
-    "otherDeviceNew": "Already have a name? Sign in from the account menu in the sidebar with your name and PIN.",
+    "otherDeviceNew": "Have a name? Sign in",
     "signOutOthers": "Sign out other devices",
     "signOutOthersConfirm": "Every other device where you are signed in will be signed out, and your old sign-in link stops working. This device stays signed in. Your PIN does not change.",
     "signOutOthersDo": "Sign them out",
     "othersOut": "Other devices signed out",
-    "othersOutHint": "The old sign-in link no longer works. Copy the new one if you need it."
+    "othersOutHint": "The old sign-in link no longer works. Copy the new one if you need it.",
+    "rename": "Rename",
+    "renamed": "Name changed",
+    "otherDevices": "Other devices",
+    "lookalike": "A similar name exists: \"{name}\"."
   },
   "event": {
     "dateTbd": "Date not set yet",
@@ -123,24 +123,20 @@
     "venue": "Venue name",
     "venueLink": "Link (Google Maps, website…)",
     "pollVenueHint": "Everyone can suggest and upvote venues.",
-    "capacity": "Max seats",
-    "capacityHint": "Leave empty for no limit",
+    "capacity": "Seat limit",
     "unlimited": "No limit",
-    "whoTitle": "Your name",
     "bank": "Bank account for payments",
-    "bankHint": "Optional, used for the VietQR code",
     "bankId": "Bank (e.g. VCB)",
     "bankAccount": "Account number",
     "bankHolder": "Account holder",
     "submit": "Create event",
-    "pickFirst": "Enter your name above first.",
     "needTitle": "Give the event a name.",
     "needDays": "Pick at least one day to vote on.",
     "needDate": "Pick the date and time.",
     "done": "Event created",
     "keyHint": "Now invite your team.",
-    "quickStart": "Quick start:",
-    "payment": "Payment details (optional)",
+    "quickStart": "Ideas:",
+    "payment": "Payout account",
     "paymentLater": "You can add these later, when the bill comes in.",
     "daysPicked": "{n} of {max} days picked",
     "templates": {
@@ -165,7 +161,10 @@
     "repeatUntil": "Repeat until",
     "repeatUntilHint": "Optional. The last day a new event may fall on.",
     "repeatNeeds": "Repeating needs a fixed date and a place.",
-    "repeatHint": "The next event is created automatically 14 days before its date (or once this one has started, if that is later), with the same details and organizers."
+    "repeatHint": "The next event is created automatically 14 days before its date (or once this one has started, if that is later), with the same details and organizers.",
+    "more": "Options",
+    "next7": "Next 7 days",
+    "people": "Guests"
   },
   "rsvp": {
     "title": "RSVP",
@@ -194,7 +193,8 @@
     "linkHint": "Anyone with this link can manage the event. Only share it with co-organizers.",
     "lock": "Lock the result",
     "bill": "Bill total (₫)",
-    "schedule": "Date & time"
+    "schedule": "Date & time",
+    "menu": "Manage"
   },
   "err": {
     "generic": "Something went wrong, please try again.",
@@ -280,7 +280,7 @@
     "confirmSave": "Delete votes and save"
   },
   "poll": {
-    "days": "Which days work for you?",
+    "days": "Which days?",
     "top": "Leading",
     "venues": "Where to?",
     "noVenues": "Suggest the first one for everyone to vote on.",
@@ -289,8 +289,7 @@
     "add": "Add suggestion",
     "tapHint": "Tap the days you can make",
     "placeQ": "Which place works?",
-    "pickName": "Pick your name above to vote",
-    "suggestDay": "Suggest a day",
+    "suggestDay": "Other day",
     "suggestPlace": "Suggest a place",
     "votesHidden": "Results are hidden until you vote.",
     "answeredOf": "{n} of {total} have answered",
@@ -312,7 +311,6 @@
     "maybeChosen": "{n} if need be",
     "picked": "You picked {n} of {total}",
     "chosen": "{n} picked",
-    "venuesHint": "Vote for the places you like, or suggest another.",
     "noVenuesTitle": "No places yet",
     "vote": "Vote",
     "myVote": "Voted",
@@ -421,23 +419,19 @@
   "next": {
     "organizers": "the organizers",
     "who": {
-      "title": "First, who are you?",
-      "link": "Is this you? Pick your name",
-      "body": "Pick your name or enter a new one so your votes count."
+      "title": "Your name?",
+      "link": "Is this you? Pick your name"
     },
     "vote": {
       "title": "You haven't voted yet",
-      "body": "Pick the days you can make below.",
       "cta": "Vote"
     },
     "voted": {
       "title": "Thanks for voting!",
-      "body": "{n} people have voted so far. If your days win, you're counted as going. The organizer will lock the result.",
       "cta": "Change my votes"
     },
     "declined": {
       "title": "Sad to miss you this time",
-      "body": "You won't be counted as going. Changed your mind? Pick days again any time before voting closes.",
       "cta": "I can come after all",
       "cannot": "Can't join"
     },
@@ -451,12 +445,10 @@
       "body": "See you {when}."
     },
     "waitlist": {
-      "title": "You're #{place} on the waitlist",
-      "body": "You'll move up automatically if a seat frees up."
+      "title": "You're #{place} on the waitlist"
     },
     "replied": {
       "title": "Thanks for replying",
-      "body": "You can change your answer until the organizer closes RSVP.",
       "cta": "Change"
     },
     "pay": {
@@ -497,7 +489,6 @@
     "billSave": "Save & split the bill",
     "voteVenue": {
       "title": "You haven't voted yet",
-      "body": "Pick the places you like below, or suggest another.",
       "cta": "Vote"
     },
     "voteClosed": {
@@ -554,16 +545,15 @@
     "completeAnywayBody": "These people still owe. They can keep paying after the event is completed.",
     "hostTitle": "For organizers",
     "allAnswered": "Everyone has replied. Lock it now?",
-    "closeVsLock": "Close voting: stop taking votes, nothing is decided. Lock: pick the day (and place); everyone who voted for it counts as going. At the deadline, voting closes by itself and waits for you to lock.",
     "billAfter": "You can enter the bill once the event starts ({when}).",
-    "lockOnly": "Voting is closed. Lock to pick the day (and place); everyone who voted for it counts as going.",
     "leading": "Most votes: {day} ({n})",
     "checkTitle": "Who actually came?",
     "checkHint": "Tick everyone who came, with the friends they brought. Unticked people owe nothing.",
     "checkNone": "No answer",
     "checkGuests": "Guests of {name}",
     "checkShare": "{n} seats · {share} per seat",
-    "checkOver": "Seat limit {cap} + {n} more. The limit is raised so everyone who came shares the bill."
+    "checkOver": "Seat limit {cap} + {n} more. The limit is raised so everyone who came shares the bill.",
+    "hostMore": "More"
   },
   "edit": {
     "open": "Edit",
@@ -648,10 +638,10 @@
     "fromVote": "From vote",
     "heldUntil": "Held until {time}",
     "declinedCount": "{n} can't make it",
-    "noshow": "Said going, didn't come"
+    "noshow": "Said going, didn't come",
+    "seeAll": "{n} people · See"
   },
   "host": {
-    "menu": "More actions",
     "reopen": "Reopen an earlier stage…",
     "cancel": "Cancel event…",
     "delete": "Delete event…",
@@ -837,7 +827,8 @@
     "copied": "Reminder copied, ready to paste into Zalo",
     "names": "With names",
     "count": "Count only",
-    "billNote": "The reminder never includes amounts."
+    "billNote": "The reminder never includes amounts.",
+    "collapsed": "{n} still to answer · Remind"
   },
   "keep": {
     "title": "Set a PIN to keep your access",
@@ -855,7 +846,6 @@
     "choose": "Choose a 6-digit PIN",
     "enterFor": "Enter the PIN for {name}.",
     "chooseFor": "{name} has no PIN yet. Choose one to sign in as {name}.",
-    "hintEnter": "Forgot it? Ask an organizer to reset it.",
     "hintNew": "You will use it to sign in on any device. Avoid 123456 or 111111.",
     "weak": "Too easy to guess. Avoid repeated digits and runs like 123456.",
     "go": "Sign in",
@@ -989,5 +979,18 @@
     "weekly": "every week",
     "biweekly": "every 2 weeks",
     "monthly": "every month"
+  },
+  "join": {
+    "title": "Your name?",
+    "add": "Add “{name}”",
+    "pinNew": "Pick a 6-digit PIN",
+    "pinWhy": "To sign in elsewhere",
+    "pinEnter": "{name}'s PIN"
+  },
+  "details": {
+    "title": "Details"
+  },
+  "hint": {
+    "tapDays": "Tap days you're free"
   }
 }

@@ -268,7 +268,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
         </UFormField>
         <p v-else-if="ev.stage === 'poll'" class="flex items-center gap-1.5 text-sm text-muted"><UIcon name="i-lucide-lock" class="size-4" />{{ t('edit.votingClosed') }}</p>
 
-        <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')" :error="errors.capacity">
+        <UFormField :label="t('create.capacity')" :error="errors.capacity">
           <UInputNumber v-model="form.capacity" :min="1" :max="500" class="w-40" />
         </UFormField>
         <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')" :error="errors.maxGuests">
@@ -307,7 +307,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
             :title="t('edit.shareChange', { from: fmtShare(shareChange.from), to: fmtShare(shareChange.to) })"
             :description="t('edit.shareChangeHint')"
           />
-          <UFormField :label="t('create.bank')" :hint="t('create.bankHint')" :error="errors.bank">
+          <UFormField :label="t('create.bank')" :error="errors.bank">
             <div class="grid gap-2 sm:grid-cols-3">
               <UInput v-model="form.bankId" :placeholder="t('create.bankId')" />
               <UInput v-model="form.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />

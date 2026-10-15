@@ -14,6 +14,8 @@ const picked = computed({
     if (next.length <= MAX) days.value = next;
   },
 });
+// One tap for the usual case: the next week, today included.
+const nextWeek = () => (days.value = Array.from({ length: 7 }, (_, i) => today.add({ days: i }).toString()));
 </script>
 
 <template>
@@ -26,6 +28,9 @@ const picked = computed({
       :aria-label="t('create.pollDates')"
       class="rounded-lg p-2 ring ring-default"
     />
-    <p class="text-sm text-muted">{{ t('create.daysPicked', { n: days.length, max: MAX }) }}</p>
+    <div class="flex flex-wrap items-center gap-3">
+      <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-calendar-range" :label="t('create.next7')" @click="nextWeek" />
+      <p class="text-sm text-muted">{{ t('create.daysPicked', { n: days.length, max: MAX }) }}</p>
+    </div>
   </div>
 </template>

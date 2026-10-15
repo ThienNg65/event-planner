@@ -1,7 +1,8 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const toast = useToast();
-const { meId, members } = useMe();
+const { me, members } = useMe();
+const join = useJoin();
 const route = useRoute();
 // Set when the page was opened from "Duplicate": the title of the event being copied.
 const copiedFrom = ref('');
@@ -39,9 +40,13 @@ usePlaceName(
 // The whole page previews the picked theme.
 useEventTheme(() => form.theme);
 const busy = ref(false);
+// The seat limit is a switch; its number only shows (and counts) while it is on.
+const limited = ref(false);
+watch(limited, (on) => {
+  if (!on) form.capacity = null;
+});
 // The first thing still missing, shown next to the disabled Create button so it never looks broken.
 const missing = computed(() => {
-  if (!meId.value) return 'create.pickFirst';
   if (!form.title.trim()) return 'create.needTitle';
   if (form.dateMode === 'poll' && !form.pollDays.length) return 'create.needDays';
   if (form.dateMode === 'fixed' && !form.startsAt) return 'create.needDate';
@@ -51,6 +56,16 @@ const missing = computed(() => {
 // Repeating needs a fixed date and a place (no polls); picking a poll switches it off.
 const canRepeat = computed(() => form.dateMode === 'fixed' && form.venueMode === 'fixed' && !!form.venue.trim());
 const repeating = computed(() => canRepeat.value && form.repeat !== 'none');
+
+// The optional settings: each is one line until tapped.
+const rows = computed(() => [
+  { label: t('create.where'), icon: 'i-lucide-map-pin', slot: 'where' },
+  { label: t('create.note'), icon: 'i-lucide-notebook-pen', slot: 'note' },
+  { label: t('theme.label'), icon: 'i-lucide-palette', slot: 'look' },
+  { label: t('create.people'), icon: 'i-lucide-users', slot: 'people' },
+  { label: t('create.repeat'), icon: 'i-lucide-repeat', slot: 'repeat' },
+  { label: t('create.payment'), icon: 'i-lucide-wallet', slot: 'payment' },
+]);
 
 // Quick starts: one tap fills a title (unless you typed your own) and a matching cover.
 const TEMPLATES = [
@@ -95,13 +110,17 @@ async function prefillFrom(id: number) {
       honorees: [...e.honorees],
       cover: e.cover,
       theme: themeOf(e.theme),
-      ...(meId.value === e.createdBy && { bankId: e.bankId ?? '', bankAccount: e.bankAccount ?? '', bankHolder: e.bankHolder ?? '' }),
+      ...(me.value?.id === e.createdBy && { bankId: e.bankId ?? '', bankAccount: e.bankAccount ?? '', bankHolder: e.bankHolder ?? '' }),
     });
+    limited.value = !!form.capacity;
     copiedFrom.value = e.title;
   } catch (err) {
     toast.add({ color: 'error', title: errMsg(err) });
   }
 }
+
+// Not signed in yet: the join sheet asks for a name and PIN, then this carries on.
+const submit = () => join.ask(create, { newOnly: true });
 
 async function create() {
   busy.value = true;
@@ -155,121 +174,103 @@ async function create() {
     </template>
 
     <template #body>
-      <!-- MemberPicker has its own <form>, so it stays outside the create form. -->
-      <UCard v-if="!meId" class="mx-auto w-full max-w-5xl shrink-0" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
-        <p class="font-semibold text-highlighted">{{ t('create.whoTitle') }}</p>
-        <MemberPicker new-only />
-      </UCard>
+      <UAlert v-if="copiedFrom" class="mx-auto w-full max-w-2xl" color="info" variant="subtle" icon="i-lucide-copy" :title="t('create.copiedFrom', { title: copiedFrom })" />
 
-      <UAlert v-if="copiedFrom" class="mx-auto w-full max-w-5xl" color="info" variant="subtle" icon="i-lucide-copy" :title="t('create.copiedFrom', { title: copiedFrom })" />
-
-      <div class="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-2">
-        <span class="text-sm text-muted">{{ t('create.quickStart') }}</span>
-        <UButton
-          v-for="(tpl, i) in TEMPLATES"
-          :key="tpl.key"
-          size="sm"
-          color="neutral"
-          variant="outline"
-          class="rounded-md"
-          :label="templateTitles[i]"
-          @click="applyTemplate(i)"
-        />
-      </div>
-
-      <UForm id="create-form" :state="form" class="mx-auto w-full max-w-5xl space-y-6" @submit="create">
-        <div class="grid items-start gap-6 lg:grid-cols-2">
-          <div class="space-y-6">
-            <UCard :ui="{ body: 'space-y-4' }">
-              <UFormField :label="t('create.name')" required>
-                <UInput v-model="form.title" :maxlength="100" :placeholder="t('create.namePlaceholder')" class="w-full" />
-              </UFormField>
-              <UFormField :label="t('create.note')">
-                <UTextarea v-model="form.note" :maxlength="500" :rows="3" class="w-full" />
-              </UFormField>
-              <UFormField :label="t('edit.honorees')" :hint="t('edit.honoreesHint')">
-                <USelectMenu v-model="form.honorees" :items="members" value-key="id" label-key="name" multiple :placeholder="t('edit.honoreesPick')" class="w-full" />
-              </UFormField>
-              <UFormField :label="t('cover.label')">
-                <CoverPicker v-model="form.cover" />
-              </UFormField>
-              <UFormField :label="t('theme.label')" :hint="t('theme.hint')">
-                <ThemePicker v-model="form.theme" :title="form.title" :cover="form.cover" />
-              </UFormField>
-            </UCard>
+      <UForm id="create-form" :state="form" class="mx-auto w-full max-w-2xl space-y-6" @submit="submit">
+        <UCard :ui="{ body: 'space-y-5' }">
+          <div class="space-y-2">
+            <UFormField :label="t('create.name')" required>
+              <UInput v-model="form.title" :maxlength="100" :placeholder="t('create.namePlaceholder')" class="w-full" />
+            </UFormField>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-sm text-muted">{{ t('create.quickStart') }}</span>
+              <UButton v-for="(tpl, i) in TEMPLATES" :key="tpl.key" size="sm" color="neutral" variant="outline" class="rounded-md" :label="templateTitles[i]" @click="applyTemplate(i)" />
+            </div>
           </div>
 
-          <div class="space-y-6">
-            <UCard :ui="{ body: 'space-y-5' }">
-              <UFormField :label="t('create.when')">
-                <UTabs
-                  v-model="form.dateMode"
-                  :content="false"
-                  size="sm"
-                  :items="[
-                    { label: t('create.pollDates'), value: 'poll', icon: 'i-lucide-vote' },
-                    { label: t('create.fixedDate'), value: 'fixed', icon: 'i-lucide-calendar' },
-                  ]"
-                  class="mb-3"
-                />
-                <DateTimeInput v-if="form.dateMode === 'fixed'" v-model="form.startsAt" class="w-full" />
-                <PollDaysInput v-else v-model="form.pollDays" />
-                <p v-if="form.dateMode === 'fixed' && (form.venueMode === 'poll' || !form.venue.trim())" class="mt-2 text-sm text-muted">{{ t('create.fixedDateNoVenue') }}</p>
-              </UFormField>
+          <UFormField :label="t('create.when')">
+            <UTabs
+              v-model="form.dateMode"
+              :content="false"
+              size="sm"
+              :items="[
+                { label: t('create.pollDates'), value: 'poll', icon: 'i-lucide-vote' },
+                { label: t('create.fixedDate'), value: 'fixed', icon: 'i-lucide-calendar' },
+              ]"
+              class="mb-3"
+            />
+            <DateTimeInput v-if="form.dateMode === 'fixed'" v-model="form.startsAt" class="w-full" />
+            <PollDaysInput v-else v-model="form.pollDays" />
+            <p v-if="form.dateMode === 'fixed' && (form.venueMode === 'poll' || !form.venue.trim())" class="mt-2 text-sm text-muted">{{ t('create.fixedDateNoVenue') }}</p>
+          </UFormField>
+        </UCard>
 
-              <UFormField :label="t('create.where')">
-                <UTabs
-                  v-model="form.venueMode"
-                  :content="false"
-                  size="sm"
-                  :items="[
-                    { label: t('create.fixedVenue'), value: 'fixed', icon: 'i-lucide-map-pin' },
-                    { label: t('create.pollVenue'), value: 'poll', icon: 'i-lucide-messages-square' },
-                  ]"
-                  class="mb-3"
-                />
-                <div v-if="form.venueMode === 'fixed'" class="space-y-2">
-                  <UInput v-model="form.venue" :maxlength="100" :placeholder="t('create.venue')" class="w-full" />
-                  <UInput v-model="form.venueLink" type="url" :placeholder="t('create.venueLink')" class="w-full" />
-                </div>
-                <p v-else class="text-sm text-muted">{{ t('create.pollVenueHint') }}</p>
-              </UFormField>
-            </UCard>
-
-            <UCard :ui="{ body: 'space-y-5' }">
-              <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')">
-                <UInputNumber v-model="form.capacity" :min="1" :max="500" :placeholder="t('create.unlimited')" class="w-44" />
-              </UFormField>
-
-              <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')">
-                <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-44" />
-              </UFormField>
+        <UCard :ui="{ body: 'space-y-3' }">
+          <h2 class="text-sm font-semibold text-highlighted">{{ t('create.more') }}</h2>
+          <div class="flex items-center justify-between gap-3">
+            <USwitch v-model="limited" :label="t('create.capacity')" />
+            <UInputNumber v-if="limited" v-model="form.capacity" :min="1" :max="500" :placeholder="t('create.unlimited')" :aria-label="t('create.capacity')" class="w-36" />
+          </div>
+          <UAccordion type="multiple" :items="rows">
+            <template #where-body>
+              <UTabs
+                v-model="form.venueMode"
+                :content="false"
+                size="sm"
+                :items="[
+                  { label: t('create.fixedVenue'), value: 'fixed', icon: 'i-lucide-map-pin' },
+                  { label: t('create.pollVenue'), value: 'poll', icon: 'i-lucide-messages-square' },
+                ]"
+                class="mb-3"
+              />
+              <div v-if="form.venueMode === 'fixed'" class="space-y-2">
+                <UInput v-model="form.venue" :maxlength="100" :placeholder="t('create.venue')" class="w-full" />
+                <UInput v-model="form.venueLink" type="url" :placeholder="t('create.venueLink')" class="w-full" />
+              </div>
+              <p v-else class="text-sm text-muted">{{ t('create.pollVenueHint') }}</p>
+            </template>
+            <template #note-body>
+              <UTextarea v-model="form.note" :maxlength="500" :rows="3" :aria-label="t('create.note')" class="w-full" />
+            </template>
+            <template #look-body>
+              <div class="space-y-4">
+                <UFormField :label="t('cover.label')"><CoverPicker v-model="form.cover" /></UFormField>
+                <UFormField :label="t('theme.label')" :hint="t('theme.hint')"><ThemePicker v-model="form.theme" :title="form.title" :cover="form.cover" /></UFormField>
+              </div>
+            </template>
+            <template #people-body>
+              <div class="space-y-4">
+                <UFormField :label="t('edit.honorees')" :hint="t('edit.honoreesHint')">
+                  <USelectMenu v-model="form.honorees" :items="members" value-key="id" label-key="name" multiple :placeholder="t('edit.honoreesPick')" class="w-full" />
+                </UFormField>
+                <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')">
+                  <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-44" />
+                </UFormField>
+                <UCheckbox v-model="form.hideVotes" :label="t('create.hideVotes')" :description="t('create.hideVotesHint')" />
+              </div>
+            </template>
+            <template #repeat-body>
               <RepeatFields v-model:repeat="form.repeat" v-model:until="form.repeatUntil" :disabled="!canRepeat" />
-              <UCheckbox v-model="form.hideVotes" :label="t('create.hideVotes')" :description="t('create.hideVotesHint')" />
-
-              <UCollapsible class="space-y-3">
-                <UButton color="neutral" variant="link" class="px-0" trailing-icon="i-lucide-chevron-down" :label="t('create.payment')" />
-                <template #content>
-                  <UFormField :label="t('create.bank')" :hint="t('create.bankHint')" :description="t('create.paymentLater')" :help="t('create.bankPublic')">
-                    <div class="grid gap-2 sm:grid-cols-3">
-                      <UInput v-model="form.bankId" :placeholder="t('create.bankId')" />
-                      <UInput v-model="form.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />
-                      <UInput v-model="form.bankHolder" :placeholder="t('create.bankHolder')" />
-                    </div>
-                    <BankQrPreview :bank-id="form.bankId" :bank-account="form.bankAccount" :bank-holder="form.bankHolder" class="mt-2" />
-                  </UFormField>
-                </template>
-              </UCollapsible>
-            </UCard>
-          </div>
-        </div>
+            </template>
+            <template #payment-body>
+              <UFormField :label="t('create.bank')" :description="t('create.paymentLater')" :help="t('create.bankPublic')">
+                <div class="grid gap-2 sm:grid-cols-3">
+                  <UInput v-model="form.bankId" :placeholder="t('create.bankId')" />
+                  <UInput v-model="form.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />
+                  <UInput v-model="form.bankHolder" :placeholder="t('create.bankHolder')" />
+                </div>
+                <BankQrPreview :bank-id="form.bankId" :bank-account="form.bankAccount" :bank-holder="form.bankHolder" class="mt-2" />
+              </UFormField>
+            </template>
+          </UAccordion>
+        </UCard>
       </UForm>
     </template>
 
     <!-- In the panel footer: always in reach, never over the form. The button submits the form by id. -->
     <template #footer>
       <div class="border-t border-default px-4 py-3 sm:px-6">
-        <div class="mx-auto flex w-full max-w-5xl items-center justify-end gap-3">
+        <div class="mx-auto flex w-full max-w-2xl items-center justify-end gap-3">
           <p v-if="missing" class="text-sm text-muted">{{ t(missing) }}</p>
           <UButton type="submit" form="create-form" size="lg" icon="i-lucide-sparkles" :loading="busy" :disabled="!!missing">
             {{ t('create.submit') }}

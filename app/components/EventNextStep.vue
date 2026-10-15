@@ -1,7 +1,9 @@
 <script setup lang="ts">
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
-const { t, locale } = useI18n();
+const { t, te, locale } = useI18n();
+const join = useJoin();
+const origin = useRequestURL().origin;
 const { busy, call } = useEventApi(
   () => props.data.event.id,
   () => props.manageKey
@@ -84,6 +86,29 @@ const lockKey = computed(() => {
   return places ? 'next.action.lockBoth' : 'next.action.lock';
 });
 const hostActions = computed(() => canAdvance.value && (!!next.value.action || ev.value.stage === 'bill' || ev.value.stage === 'rsvp'));
+
+// Secondary organizer moves: close or reopen voting, an early look at the bill, completing without a bill or with debts open.
+const hostMore = computed(() => {
+  const items: { label: string; icon: string; onSelect: () => void }[] = [];
+  if (next.value.action === 'lock') {
+    items.push({ label: t(votingClosed.value ? 'next.action.reopen' : 'next.action.close'), icon: votingClosed.value ? 'i-lucide-lock-open' : 'i-lucide-lock', onSelect: () => (votingClosed.value ? (reopenOpen.value = true) : (closeOpen.value = true)) });
+  }
+  if (ev.value.stage === 'rsvp' && next.value.action !== 'bill') items.push({ label: t('next.action.preview'), icon: 'i-lucide-eye', onSelect: () => (previewOpen.value = true) });
+  if (next.value.action === 'bill' && ev.value.billTotal === null) items.push({ label: t('next.action.completeFree'), icon: 'i-lucide-check', onSelect: () => (completeOpen.value = 'free') });
+  if (ev.value.stage === 'bill' && next.value.action !== 'settle') items.push({ label: t('next.action.completeAnyway'), icon: 'i-lucide-check', onSelect: () => (completeOpen.value = 'anyway') });
+  return items;
+});
+
+// Add to calendar sits with the answer it follows: once you are in (or asked to confirm) and the date is set.
+const calendar = computed(() => {
+  const e = ev.value;
+  if (!e.startsAt || e.cancelledAt || (next.value.step !== 'going' && next.value.step !== 'confirm')) return null;
+  const google = googleCalendarUrl({ ...e, startsAt: e.startsAt }, origin);
+  return [
+    { label: t('event.calendarFile'), icon: 'i-lucide-download', onSelect: () => window.location.assign(`/api/events/${e.id}/ics?j=${e.joinKey}`) },
+    { label: t('event.googleCalendar'), icon: 'i-lucide-external-link', onSelect: () => window.open(google, '_blank', 'noopener') },
+  ];
+});
 
 function jump(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -237,17 +262,8 @@ async function complete() {
 </script>
 
 <template>
-  <!-- After voting closes there is nothing to answer, so the big "who are you" card gives way to a small link below. -->
-  <UCard v-if="!me && !ev.cancelledAt && !votingClosed" id="who" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
-    <div class="flex items-start gap-3">
-      <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary"><UIcon name="i-lucide-hand-heart" class="size-5" /></span>
-      <div>
-        <p class="font-semibold text-highlighted">{{ t('next.who.title') }}</p>
-        <p class="text-sm text-muted">{{ t('next.who.body') }}</p>
-      </div>
-    </div>
-    <MemberPicker />
-  </UCard>
+  <!-- After voting closes there is nothing to answer, so this link gives way to a small one below. -->
+  <UButton v-if="!me && !ev.cancelledAt && !votingClosed" id="who" variant="link" icon="i-lucide-user-round" class="px-0" @click="join.ask()">{{ t('next.who.title') }}</UButton>
 
   <UCard v-if="next.step !== 'cancelled' && (me || canAdvance || votingClosed)" :ui="{ body: 'space-y-4' }">
     <!-- Your own answer -->
@@ -256,7 +272,7 @@ async function complete() {
         <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon v-if="ui.icon" :name="ui.icon" class="size-5" /><span v-else aria-hidden="true">😭</span></span>
         <div class="min-w-0">
           <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
-          <p class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
+          <p v-if="te(`next.${copy}.${bodyKey}`)" class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
           <p v-if="copy === 'voteClosed' && !canAdvance && leader" class="mt-1 text-sm font-medium text-highlighted">{{ t('next.leading', { day: leader.label, n: leader.n }) }}</p>
           <template v-if="!me && votingClosed">
             <button v-if="!whoOpen" type="button" class="mt-1 text-sm text-primary underline underline-offset-2" @click="whoOpen = true">{{ t('next.who.link') }}</button>
@@ -275,29 +291,23 @@ async function complete() {
         <UButton v-if="me && (next.step === 'vote' || next.step === 'voted')" color="neutral" variant="ghost" icon="i-lucide-circle-x" :loading="busy" @click="decline('no')">
           {{ t('next.declined.cannot') }}
         </UButton>
+        <UDropdownMenu v-if="calendar" :items="calendar" :content="{ align: 'end' }">
+          <UButton color="neutral" variant="ghost" icon="i-lucide-calendar-plus" trailing-icon="i-lucide-chevron-down">{{ t('event.addToCalendar') }}</UButton>
+        </UDropdownMenu>
         <UButton v-if="next.step === 'declined'" color="primary" icon="i-lucide-undo-2" :loading="busy" @click="decline(null)">{{ t('next.declined.cta') }}</UButton>
       </div>
     </div>
 
-    <!-- Organizer moves, kept apart from the visitor's own answer -->
+    <!-- Organizer moves, kept apart from the visitor's own answer: one main button, the rest behind the menu -->
     <div v-if="hostActions" class="flex flex-wrap items-center gap-2 border-t border-default pt-4">
       <p class="mr-auto flex items-center gap-1.5 text-xs font-medium text-muted"><UIcon name="i-lucide-shield-check" class="size-4" />{{ t('next.hostTitle') }}</p>
-      <UButton v-if="next.action === 'lock'" color="neutral" variant="ghost" :icon="votingClosed ? 'i-lucide-lock-open' : 'i-lucide-lock'" @click="votingClosed ? (reopenOpen = true) : (closeOpen = true)">
-        {{ t(votingClosed ? 'next.action.reopen' : 'next.action.close') }}
-      </UButton>
-      <UButton v-if="next.action === 'lock'" v-bind="hostMain" icon="i-lucide-calendar-check" @click="lockOpen = true">
-        {{ t(lockKey) }}
-      </UButton>
       <p v-if="next.action === 'lock' && allAnswered" class="basis-full text-sm font-medium text-success">{{ t('next.allAnswered') }}</p>
-      <!-- Close and lock look alike; one line says what each does and what the deadline does on its own. -->
-      <p v-if="next.action === 'lock'" class="basis-full text-xs text-muted">{{ t(votingClosed ? 'next.lockOnly' : 'next.closeVsLock') }}</p>
       <p v-if="ev.stage === 'rsvp' && next.action !== 'bill' && ev.startsAt" class="basis-full text-xs text-muted">{{ t('next.billAfter', { when: fmtDateTime(ev.startsAt, locale) }) }}</p>
-      <UButton v-if="ev.stage === 'rsvp' && next.action !== 'bill'" color="neutral" variant="ghost" icon="i-lucide-eye" @click="previewOpen = true">{{ t('next.action.preview') }}</UButton>
-      <UButton v-if="next.action === 'bill' && ev.billTotal === null" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'free'">{{ t('next.action.completeFree') }}</UButton>
+      <UDropdownMenu v-if="hostMore.length" :items="hostMore" :content="{ align: 'end' }">
+        <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis" :aria-label="t('next.hostMore')" />
+      </UDropdownMenu>
+      <UButton v-if="next.action === 'lock'" v-bind="hostMain" icon="i-lucide-calendar-check" @click="lockOpen = true">{{ t(lockKey) }}</UButton>
       <UButton v-if="next.action === 'bill'" v-bind="hostMain" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
-      <UButton v-if="ev.stage === 'bill' && next.action !== 'settle'" color="neutral" variant="ghost" icon="i-lucide-check" @click="completeOpen = 'anyway'">
-        {{ t('next.action.completeAnyway') }}
-      </UButton>
       <UButton v-if="next.action === 'settle'" v-bind="hostMain" icon="i-lucide-sparkles" :loading="busy" @click="settle">{{ t('next.action.settle') }}</UButton>
     </div>
   </UCard>
@@ -468,7 +478,7 @@ async function complete() {
         <p v-if="checkOver" class="flex items-center gap-1.5 text-sm text-error">
           <UIcon name="i-lucide-info" class="size-4 shrink-0" />{{ t('next.checkOver', { cap: plannedCap, n: checkOver }) }}
         </p>
-        <UFormField :label="t('create.bank')" :hint="t('create.bankHint')">
+        <UFormField :label="t('create.bank')">
           <div class="grid gap-2 sm:grid-cols-3">
             <UInput v-model="bill.bankId" :placeholder="t('create.bankId')" />
             <UInput v-model="bill.bankAccount" :placeholder="t('create.bankAccount')" inputmode="numeric" />

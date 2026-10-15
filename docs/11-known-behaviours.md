@@ -18,6 +18,9 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 7 | A member who signed in before PINs existed has no PIN and is not in the name list until they set one (from a device that is still signed in) or an organizer resets it. | Code | Transition. |
 | 8 | Email recovery (R4): removing an address and adding another skips the 72 h cool-down (only a replacement counts as a change), and a "not me" revert restores the old address but leaves the PIN alone, so someone who knows the PIN can sign in again until the owner recovers and picks a new one. Anyone can burn a colleague's recovery code with five wrong guesses (a new one can be asked for, 3 a day). A member without a verified email still needs an organizer to reset a PIN. | Code | Deliberate for a first version; the PIN is already needed to change the address. |
 
+- Renaming does not rewrite `@mentions` in an event note or messages already copied to a chat; they keep the old text ([03](03-identity-and-roles.md)).
+- Home hides its tabs and search until there are 6 events, and the "needs you" list shows 3 before "See all".
+
 ## Dates and stages
 
 | # | Behaviour | Evidence | Intent |

@@ -6,6 +6,7 @@ const lang = useCookie<typeof locale.value>('lang', { maxAge: 60 * 60 * 24 * 365
 const toast = useToast();
 const { me, meId, members, refreshMe, refresh: refreshMembers } = useMe();
 const whoOpen = ref(false);
+const join = useJoin();
 const appTheme = useAppTheme();
 const settingsOpen = ref(false);
 watch(meId, () => (whoOpen.value = false));
@@ -67,6 +68,7 @@ const newPin = ref('');
 const pinBusy = ref(false);
 watch(newPin, (v) => (newPin.value = v.replace(/\D/g, '')));
 watch(whoOpen, () => {
+  renaming.value = false;
   confirmSignOut.value = false;
   confirmOthers.value = false;
   pinEditing.value = false;
@@ -87,6 +89,32 @@ async function savePin() {
     toast.add({ color: 'error', title: errMsg(e) });
   } finally {
     pinBusy.value = false;
+  }
+}
+// Rename yourself: the session already proves who you are, so no PIN is asked.
+const renaming = ref(false);
+const nameDraft = ref('');
+const nameBusy = ref(false);
+const nameLookalike = computed(() => {
+  const n = norm(nameDraft.value);
+  return n ? members.value.find((m) => m.id !== me.value?.id && norm(m.name) === n) : undefined;
+});
+function startRename() {
+  nameDraft.value = me.value?.name ?? '';
+  renaming.value = true;
+}
+async function saveName() {
+  nameBusy.value = true;
+  try {
+    await $fetch('/api/me', { method: 'PATCH', body: { name: nameDraft.value } });
+    renaming.value = false;
+    // Event pages show the host's name too, so every loaded page is read again.
+    await Promise.all([refreshMe(), refreshMembers(), refreshNuxtData()]);
+    toast.add({ title: t('me.renamed') });
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  } finally {
+    nameBusy.value = false;
   }
 }
 async function signOut() {
@@ -185,7 +213,17 @@ const nav = computed<NavigationMenuItem[]>(() => [
               <div class="w-80 max-w-[calc(100vw-2rem)] space-y-2 p-3">
                 <p class="text-sm font-semibold text-highlighted">{{ t('me.label') }}</p>
                 <div v-if="me" class="space-y-2">
-                  <p class="text-sm">{{ me.name }}</p>
+                  <form v-if="renaming" class="space-y-1" @submit.prevent="saveName">
+                    <div class="flex gap-2">
+                      <UInput v-model="nameDraft" :maxlength="50" autofocus :aria-label="t('me.rename')" class="flex-1" />
+                      <UButton type="submit" :loading="nameBusy" :disabled="!nameDraft.trim()">{{ t('pin.save') }}</UButton>
+                    </div>
+                    <p v-if="nameLookalike" class="text-xs text-warning">{{ t('me.lookalike', { name: nameLookalike.name }) }}</p>
+                  </form>
+                  <div v-else class="flex items-center gap-2">
+                    <p class="min-w-0 flex-1 truncate text-sm">{{ me.name }}</p>
+                    <UButton icon="i-lucide-pencil" size="xs" color="neutral" variant="ghost" :aria-label="t('me.rename')" @click="startRename" />
+                  </div>
                   <p v-if="!me.hasPin && !pinEditing" class="text-xs text-warning">{{ t('me.noPinNudge') }}</p>
                   <form v-if="pinEditing" class="space-y-2" @submit.prevent="savePin">
                     <UInput v-if="me.hasPin" v-model="currentPin" type="password" inputmode="numeric" autocomplete="current-password" autofocus :maxlength="PIN_LENGTH" :placeholder="t('pin.current')" :aria-label="t('pin.current')" class="w-full" />
@@ -196,18 +234,25 @@ const nav = computed<NavigationMenuItem[]>(() => [
                   </form>
                   <p v-if="pinEditing" class="text-xs" :class="pinProblemKey ? 'text-error' : 'text-muted'">{{ pinProblemKey ? t('pin.weak') : t('pin.hintNew') }}</p>
                   <UButton v-else color="neutral" variant="outline" icon="i-lucide-key-round" @click="pinEditing = true">{{ t(me.hasPin ? 'me.changePin' : 'me.setPin') }}</UButton>
-                  <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
-                  <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
                   <MemberEmail v-if="me.emailEnabled && me.hasPin" />
-                  <div v-if="confirmOthers" class="space-y-2">
-                    <p class="text-xs text-warning">{{ t('me.signOutOthersConfirm') }}</p>
-                    <UInput v-if="me.hasPin" v-model="currentPin" type="password" inputmode="numeric" autocomplete="current-password" :maxlength="PIN_LENGTH" :placeholder="t('pin.current')" :aria-label="t('pin.current')" class="w-full" />
-                    <div class="flex gap-2">
-                      <UButton color="warning" size="sm" :disabled="me.hasPin && currentPin.length !== PIN_LENGTH" @click="signOutOthers">{{ t('me.signOutOthersDo') }}</UButton>
-                      <UButton ref="othersCancel" color="neutral" variant="ghost" size="sm" @click="confirmOthers = false">{{ t('cancel') }}</UButton>
-                    </div>
-                  </div>
-                  <UButton v-else color="neutral" variant="ghost" size="sm" icon="i-lucide-monitor-off" @click="confirmOthers = true">{{ t('me.signOutOthers') }}</UButton>
+                  <UCollapsible class="space-y-2">
+                    <UButton color="neutral" variant="ghost" size="sm" trailing-icon="i-lucide-chevron-down" :label="t('me.otherDevices')" />
+                    <template #content>
+                      <div class="space-y-2">
+                        <UButton color="neutral" variant="outline" icon="i-lucide-link" :disabled="!signInLink" @click="copyLink">{{ t('me.copyLink') }}</UButton>
+                        <p class="text-xs text-muted">{{ t('me.linkHint') }}</p>
+                        <div v-if="confirmOthers" class="space-y-2">
+                          <p class="text-xs text-warning">{{ t('me.signOutOthersConfirm') }}</p>
+                          <UInput v-if="me.hasPin" v-model="currentPin" type="password" inputmode="numeric" autocomplete="current-password" :maxlength="PIN_LENGTH" :placeholder="t('pin.current')" :aria-label="t('pin.current')" class="w-full" />
+                          <div class="flex gap-2">
+                            <UButton color="warning" size="sm" :disabled="me.hasPin && currentPin.length !== PIN_LENGTH" @click="signOutOthers">{{ t('me.signOutOthersDo') }}</UButton>
+                            <UButton ref="othersCancel" color="neutral" variant="ghost" size="sm" @click="confirmOthers = false">{{ t('cancel') }}</UButton>
+                          </div>
+                      </div>
+                      <UButton v-else color="neutral" variant="ghost" size="sm" icon="i-lucide-monitor-off" @click="confirmOthers = true">{{ t('me.signOutOthers') }}</UButton>
+                      </div>
+                    </template>
+                  </UCollapsible>
                   <UButton v-if="me.organizer" color="neutral" variant="ghost" size="sm" icon="i-lucide-users" @click="teamOpen = true">{{ t('team.manage') }}</UButton>
                   <div class="border-t border-default pt-2">
                     <div v-if="confirmSignOut" class="space-y-2">
@@ -220,7 +265,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
                     <UButton v-else color="neutral" variant="ghost" size="sm" icon="i-lucide-log-out" @click="confirmSignOut = true">{{ t('me.signOut') }}</UButton>
                   </div>
                 </div>
-                <MemberPicker v-else />
+                <UButton v-else block icon="i-lucide-user-round" @click="(whoOpen = false), join.ask()">{{ t('join.title') }}</UButton>
               </div>
             </template>
           </UPopover>
@@ -249,6 +294,8 @@ const nav = computed<NavigationMenuItem[]>(() => [
     </UDashboardSidebar>
 
     <slot />
+
+    <JoinSheet />
 
     <UModal v-model:open="teamOpen" :title="t('team.manage')" :description="t('team.hint')">
       <template #body>

@@ -11,17 +11,15 @@
   "home": {
     "title": "Sự kiện",
     "new": "Tạo sự kiện",
-    "empty": "Sự kiện bạn tạo hoặc tham gia sẽ hiện ở đây. Mở liên kết chủ sự kiện gửi, hoặc tạo sự kiện mới.",
     "planning": "Chưa chốt",
     "upcoming": "Sắp diễn ra",
     "past": "Đã qua",
     "search": "Tìm sự kiện hoặc địa điểm…",
     "all": "Tất cả",
     "noMatch": "Không có sự kiện nào phù hợp.",
-    "emptyTitle": "Cùng lên kế hoạch cho một buổi vui",
+    "emptyTitle": "Rủ team đi chơi dễ hơn",
     "todo": {
       "title": "Việc của bạn",
-      "who": "Chọn tên của bạn để xem việc cần làm",
       "none": "Bạn đã xong hết rồi ✨",
       "vote": "Bình chọn ngày",
       "rsvp": "Bạn có đi không?",
@@ -30,7 +28,8 @@
       "bill": "Nhập hoá đơn",
       "settle": "Đánh dấu đã xong",
       "confirm": "Xác nhận bạn có đi"
-    }
+    },
+    "seeAll": "Xem tất cả"
   },
   "stage": {
     "poll": "Đang bình chọn",
@@ -54,33 +53,34 @@
   },
   "me": {
     "label": "Bạn là ai?",
-    "pick": "Chọn tên của bạn",
+    "pick": "Tên bạn",
     "search": "Tìm tên…",
-    "new": "Tôi mới",
-    "yourName": "Tên hiển thị của bạn",
-    "join": "Tham gia",
+    "yourName": "Tên bạn",
+    "join": "Vào",
     "isThisYou": "Đã có \"{name}\" trong danh sách. Có phải bạn không?",
     "thatsMe": "Đúng, là tôi",
     "signedIn": "Là bạn",
     "copyLink": "Sao chép liên kết đăng nhập",
     "linkCopied": "Đã sao chép liên kết đăng nhập",
     "linkHint": "Mở liên kết này trên điện thoại hoặc máy tính khác để dùng cùng tên. Đừng gửi cho ai: có liên kết là dùng được tên bạn.",
-    "otherDevice": "Đã dùng app trước đây? Hãy chọn tên của bạn trong danh sách và nhập mã PIN.",
     "claimedName": "\"{name}\" đã có người dùng. Nếu là bạn, hãy mở liên kết đăng nhập từ thiết bị cũ, hoặc nhờ người tổ chức đặt lại mã PIN.",
     "signOut": "Đăng xuất",
     "signOutConfirm": "Bạn có thể đăng nhập lại bằng tên và mã PIN. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
-    "continue": "Tiếp tục",
     "noneToPick": "Không còn tên nào để chọn. Nếu bạn đã dùng app, hãy mở liên kết đăng nhập hoặc nhờ người tổ chức đặt lại mã PIN.",
     "signOutNoPin": "Hãy đặt mã PIN trước, hoặc sao chép liên kết đăng nhập: nếu không bạn sẽ không đăng nhập lại được. Các liên kết quản lý đã mở trên thiết bị này cũng bị xóa.",
     "setPin": "Đặt mã PIN",
     "changePin": "Đổi mã PIN",
     "noPinNudge": "Đặt mã PIN 6 số để đăng nhập trên mọi điện thoại hoặc máy tính.",
-    "otherDeviceNew": "Đã có tên? Hãy đăng nhập từ menu tài khoản ở thanh bên bằng tên và mã PIN.",
+    "otherDeviceNew": "Đã có tên? Đăng nhập",
     "signOutOthers": "Đăng xuất các thiết bị khác",
     "signOutOthersConfirm": "Mọi thiết bị khác đang đăng nhập sẽ bị đăng xuất và liên kết đăng nhập cũ hết hiệu lực. Thiết bị này vẫn đăng nhập. Mã PIN không đổi.",
     "signOutOthersDo": "Đăng xuất các thiết bị đó",
     "othersOut": "Đã đăng xuất các thiết bị khác",
-    "othersOutHint": "Liên kết đăng nhập cũ không còn dùng được. Hãy sao chép liên kết mới nếu cần."
+    "othersOutHint": "Liên kết đăng nhập cũ không còn dùng được. Hãy sao chép liên kết mới nếu cần.",
+    "rename": "Đổi tên",
+    "renamed": "Đã đổi tên",
+    "otherDevices": "Thiết bị khác",
+    "lookalike": "Đã có tên giống \"{name}\"."
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
@@ -123,24 +123,20 @@
     "venue": "Tên địa điểm",
     "venueLink": "Liên kết (Google Maps, trang web…)",
     "pollVenueHint": "Mọi người sẽ đề xuất và bình chọn địa điểm.",
-    "capacity": "Số chỗ tối đa",
-    "capacityHint": "Bỏ trống nếu không giới hạn",
+    "capacity": "Giới hạn chỗ",
     "unlimited": "Không giới hạn",
-    "whoTitle": "Tên của bạn",
     "bank": "Tài khoản nhận tiền",
-    "bankHint": "Không bắt buộc, dùng để tạo mã VietQR",
     "bankId": "Ngân hàng (VD: VCB)",
     "bankAccount": "Số tài khoản",
     "bankHolder": "Chủ tài khoản",
     "submit": "Tạo sự kiện",
-    "pickFirst": "Nhập tên của bạn ở trên trước.",
     "needTitle": "Hãy đặt tên cho sự kiện.",
     "needDays": "Chọn ít nhất một ngày để bình chọn.",
     "needDate": "Chọn ngày và giờ.",
     "done": "Đã tạo sự kiện",
     "keyHint": "Giờ hãy mời cả nhóm.",
-    "quickStart": "Bắt đầu nhanh:",
-    "payment": "Thông tin thanh toán (không bắt buộc)",
+    "quickStart": "Gợi ý:",
+    "payment": "Tài khoản nhận tiền",
     "paymentLater": "Bạn có thể thêm sau, khi có hoá đơn.",
     "daysPicked": "Đã chọn {n}/{max} ngày",
     "templates": {
@@ -165,7 +161,10 @@
     "repeatUntil": "Lặp đến hết ngày",
     "repeatUntilHint": "Không bắt buộc. Ngày cuối cùng một sự kiện mới được diễn ra.",
     "repeatNeeds": "Sự kiện lặp lại cần ngày giờ và địa điểm cố định.",
-    "repeatHint": "Sự kiện kế tiếp tự động được tạo 14 ngày trước ngày diễn ra (hoặc khi sự kiện này bắt đầu, nếu muộn hơn), với cùng thông tin và người tổ chức."
+    "repeatHint": "Sự kiện kế tiếp tự động được tạo 14 ngày trước ngày diễn ra (hoặc khi sự kiện này bắt đầu, nếu muộn hơn), với cùng thông tin và người tổ chức.",
+    "more": "Tuỳ chọn",
+    "next7": "7 ngày tới",
+    "people": "Khách mời"
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
@@ -194,7 +193,8 @@
     "linkHint": "Ai có liên kết này đều quản lý được sự kiện. Chỉ gửi cho người cùng tổ chức.",
     "lock": "Chốt kết quả",
     "bill": "Tổng hoá đơn (₫)",
-    "schedule": "Ngày giờ"
+    "schedule": "Ngày giờ",
+    "menu": "Quản lý"
   },
   "err": {
     "generic": "Có lỗi xảy ra, vui lòng thử lại.",
@@ -280,7 +280,7 @@
     "confirmSave": "Xoá phiếu và lưu"
   },
   "poll": {
-    "days": "Ngày nào bạn đi được?",
+    "days": "Ngày nào bạn rảnh?",
     "top": "Dẫn đầu",
     "venues": "Bạn muốn đi đâu?",
     "noVenues": "Hãy gợi ý địa điểm đầu tiên để mọi người cùng bình chọn.",
@@ -289,8 +289,7 @@
     "add": "Thêm gợi ý",
     "tapHint": "Chạm vào những ngày bạn đi được",
     "placeQ": "Bạn thích địa điểm nào?",
-    "pickName": "Chọn tên của bạn ở trên để bình chọn",
-    "suggestDay": "Gợi ý ngày",
+    "suggestDay": "Ngày khác",
     "suggestPlace": "Gợi ý địa điểm",
     "votesHidden": "Kết quả được ẩn cho đến khi bạn bình chọn.",
     "answeredOf": "{n}/{total} người đã trả lời",
@@ -312,7 +311,6 @@
     "maybeChosen": "{n} nếu cần",
     "picked": "Bạn chọn {n}/{total} ngày",
     "chosen": "{n} người chọn",
-    "venuesHint": "Bình chọn chỗ bạn thích, hoặc gợi ý thêm một chỗ.",
     "noVenuesTitle": "Chưa có địa điểm nào",
     "vote": "Bình chọn",
     "myVote": "Đã chọn",
@@ -421,23 +419,19 @@
   "next": {
     "organizers": "ban tổ chức",
     "who": {
-      "title": "Trước tiên, bạn là ai?",
-      "link": "Đây là bạn? Chọn tên của bạn",
-      "body": "Chọn tên của bạn hoặc nhập tên mới để phiếu được tính."
+      "title": "Bạn tên gì?",
+      "link": "Đây là bạn? Chọn tên của bạn"
     },
     "vote": {
       "title": "Bạn chưa bình chọn",
-      "body": "Chọn những ngày bạn đi được ở bên dưới.",
       "cta": "Bình chọn"
     },
     "voted": {
       "title": "Cảm ơn bạn đã bình chọn!",
-      "body": "Đã có {n} người bình chọn. Nếu một ngày bạn chọn được chốt, bạn được tính là tham gia.",
       "cta": "Sửa lựa chọn"
     },
     "declined": {
       "title": "Tiếc quá, lần này bạn không đi được",
-      "body": "Bạn sẽ không được tính là tham gia. Nếu đổi ý, cứ chọn lại ngày bất cứ lúc nào trước khi đóng bình chọn.",
       "cta": "Đổi ý, mình đi được",
       "cannot": "Không tham gia được"
     },
@@ -451,12 +445,10 @@
       "body": "Hẹn gặp bạn {when}."
     },
     "waitlist": {
-      "title": "Bạn đang ở vị trí #{place} trong danh sách chờ",
-      "body": "Bạn sẽ tự động được lên nếu có chỗ trống."
+      "title": "Bạn đang ở vị trí #{place} trong danh sách chờ"
     },
     "replied": {
       "title": "Cảm ơn bạn đã trả lời",
-      "body": "Bạn có thể đổi câu trả lời cho đến khi ban tổ chức đóng đăng ký.",
       "cta": "Đổi"
     },
     "pay": {
@@ -497,7 +489,6 @@
     "billSave": "Lưu & chia tiền",
     "voteVenue": {
       "title": "Bạn chưa bình chọn",
-      "body": "Chọn những địa điểm bạn thích ở bên dưới, hoặc gợi ý thêm.",
       "cta": "Bình chọn"
     },
     "voteClosed": {
@@ -554,16 +545,15 @@
     "completeAnywayBody": "Những người này vẫn còn nợ. Họ có thể tiếp tục thanh toán sau khi sự kiện hoàn tất.",
     "hostTitle": "Dành cho ban tổ chức",
     "allAnswered": "Mọi người đã phản hồi. Chốt luôn?",
-    "closeVsLock": "Đóng bình chọn: ngừng nhận phiếu, chưa chốt gì. Chốt: chọn ngày (và địa điểm), ai đã chọn sẽ được tính tham gia. Đến hạn, bình chọn tự đóng và chờ bạn chốt.",
     "billAfter": "Bạn có thể nhập hóa đơn khi sự kiện bắt đầu ({when}).",
-    "lockOnly": "Bình chọn đã đóng. Chốt để chọn ngày (và địa điểm); ai đã chọn sẽ được tính tham gia.",
     "leading": "Nhiều phiếu nhất: {day} ({n})",
     "checkTitle": "Ai đã thực sự đến?",
     "checkHint": "Đánh dấu mọi người đã đến, kèm số bạn đi cùng. Người không được đánh dấu không phải trả.",
     "checkNone": "Chưa trả lời",
     "checkGuests": "Số bạn đi cùng {name}",
     "checkShare": "{n} chỗ · {share} mỗi chỗ",
-    "checkOver": "Giới hạn {cap} chỗ + {n} người nữa. Giới hạn được nâng để mọi người đã đến cùng chia tiền."
+    "checkOver": "Giới hạn {cap} chỗ + {n} người nữa. Giới hạn được nâng để mọi người đã đến cùng chia tiền.",
+    "hostMore": "Thêm"
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -648,10 +638,10 @@
     "fromVote": "Theo phiếu bầu",
     "heldUntil": "Giữ đến {time}",
     "declinedCount": "{n} không tham gia",
-    "noshow": "Báo đi nhưng không đến"
+    "noshow": "Báo đi nhưng không đến",
+    "seeAll": "{n} người · Xem"
   },
   "host": {
-    "menu": "Thao tác khác",
     "reopen": "Mở lại một bước trước…",
     "cancel": "Huỷ sự kiện…",
     "delete": "Xoá sự kiện…",
@@ -837,7 +827,8 @@
     "copied": "Đã sao chép lời nhắc, dán vào Zalo là xong",
     "names": "Kèm tên",
     "count": "Chỉ số lượng",
-    "billNote": "Lời nhắc không bao giờ ghi số tiền."
+    "billNote": "Lời nhắc không bao giờ ghi số tiền.",
+    "collapsed": "{n} người chưa xong · Nhắc"
   },
   "keep": {
     "title": "Đặt mã PIN để giữ quyền truy cập",
@@ -855,7 +846,6 @@
     "choose": "Chọn mã PIN 6 số",
     "enterFor": "Nhập mã PIN của {name}.",
     "chooseFor": "{name} chưa có mã PIN. Hãy chọn một mã để đăng nhập là {name}.",
-    "hintEnter": "Quên mã? Hãy nhờ người tổ chức đặt lại.",
     "hintNew": "Bạn sẽ dùng mã này để đăng nhập trên mọi thiết bị. Tránh 123456 hoặc 111111.",
     "weak": "Quá dễ đoán. Tránh số lặp và dãy như 123456.",
     "go": "Đăng nhập",
@@ -989,5 +979,18 @@
     "weekly": "hằng tuần",
     "biweekly": "2 tuần một lần",
     "monthly": "hằng tháng"
+  },
+  "join": {
+    "title": "Bạn tên gì?",
+    "add": "Thêm “{name}”",
+    "pinNew": "Chọn mã PIN 6 số",
+    "pinWhy": "Để vào lại trên máy khác",
+    "pinEnter": "Mã PIN của {name}"
+  },
+  "details": {
+    "title": "Chi tiết"
+  },
+  "hint": {
+    "tapDays": "Chạm ngày bạn rảnh"
   }
 }

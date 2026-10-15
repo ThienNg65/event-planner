@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const { meId } = useMe();
+const join = useJoin();
 const { data: events, refresh } = await useFetch('/api/events', { default: () => [] });
 // Personal status follows the signed-in member, so signing in reloads the list.
 watch(meId, () => refresh());
@@ -46,6 +47,14 @@ const todos = computed(() =>
   })
 );
 
+// The first few to-dos; the rest are one tap away.
+const TODO_CAP = 3;
+const allTodos = ref(false);
+const shownTodos = computed(() => (allTodos.value ? todos.value : todos.value.slice(0, TODO_CAP)));
+
+// Tabs and search only earn their place once the list is long.
+const LONG_LIST = 6;
+
 const filter = ref<'all' | Bucket>('all');
 const q = ref('');
 const shown = computed(() => {
@@ -71,16 +80,13 @@ const tabs = computed(() =>
       <UDashboardNavbar :title="t('home.title')">
         <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
-          <UButton to="/new" icon="i-lucide-plus">{{ t('home.new') }}</UButton>
+          <!-- The empty state has its own big button: never two solid ones. -->
+          <UButton to="/new" icon="i-lucide-plus" :variant="events.length ? 'solid' : 'ghost'">{{ t('home.new') }}</UButton>
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
-      <UCard v-if="!meId" :ui="{ root: 'ring-2 ring-primary/40', body: 'space-y-3' }">
-        <p class="font-semibold text-highlighted">{{ t('home.todo.who') }}</p>
-        <MemberPicker />
-      </UCard>
       <section v-if="meId && events.length" :aria-label="t('home.todo.title')">
         <div v-if="todos.length" class="space-y-2">
           <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
@@ -89,7 +95,7 @@ const tabs = computed(() =>
           </h2>
           <div class="rise grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <NuxtLink
-              v-for="td in todos"
+              v-for="td in shownTodos"
               :key="td.key"
               :to="`/e/${td.event.id}`"
               class="themed-tile flex items-center gap-3 p-3 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
@@ -104,13 +110,14 @@ const tabs = computed(() =>
               <UIcon name="i-lucide-chevron-right" class="size-4 shrink-0 text-dimmed" />
             </NuxtLink>
           </div>
+          <UButton v-if="todos.length > TODO_CAP && !allTodos" color="neutral" variant="link" size="sm" class="px-0" @click="allTodos = true">{{ t('home.seeAll') }}</UButton>
         </div>
         <p v-else class="flex items-center gap-2 text-sm text-muted">
           <UIcon name="i-lucide-sparkles" class="text-secondary" />{{ t('home.todo.none') }}
         </p>
       </section>
 
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div v-if="events.length >= LONG_LIST" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <UTabs v-model="filter" :items="tabs" :content="false" size="sm" class="w-full sm:w-auto" />
         <UInput v-model="q" icon="i-lucide-search" :placeholder="t('home.search')" class="w-full sm:w-72" />
       </div>
@@ -118,8 +125,8 @@ const tabs = computed(() =>
       <div v-if="!events.length" class="grid place-items-center gap-3 rounded-xl border border-dashed border-default py-16 text-center">
         <img src="/logo.svg" alt="" class="size-20" />
         <p class="font-semibold text-highlighted">{{ t('home.emptyTitle') }}</p>
-        <p class="max-w-sm text-sm text-muted">{{ t('home.empty') }}</p>
         <UButton to="/new" icon="i-lucide-plus" size="lg">{{ t('home.new') }}</UButton>
+        <UButton v-if="!meId" variant="link" color="neutral" size="sm" @click="join.ask()">{{ t('me.otherDeviceNew') }}</UButton>
       </div>
       <p v-else-if="!shown.length" class="py-10 text-center text-muted">{{ t('home.noMatch') }}</p>
       <div v-else class="rise grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

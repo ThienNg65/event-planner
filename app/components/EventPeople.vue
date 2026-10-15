@@ -11,6 +11,8 @@ const ev = computed(() => props.data.event);
 type Row = EventDetail['responses'][number];
 const COLLAPSED = 8;
 const showAll = ref(false);
+// The list starts closed: "12 people · See".
+const listOpen = ref(false);
 const canSet = computed(() => can(props.role, 'setOthers') && !ev.value.cancelledAt);
 const paying = computed(() => ev.value.stage === 'bill' || ev.value.stage === 'settled');
 
@@ -82,12 +84,15 @@ async function saveAmount() {
 <template>
   <section class="space-y-3 border-t border-default pt-6">
     <h2 class="flex items-center gap-2 text-lg font-semibold text-highlighted">
-      {{ t('people.title') }}
+      <button type="button" class="flex items-center gap-2" :aria-expanded="listOpen" @click="listOpen = !listOpen">
+        {{ rows.length ? t('people.seeAll', { n: rows.length }) : t('people.title') }}
+        <UIcon :name="listOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="size-4 text-muted" />
+      </button>
       <!-- Declined people sort last and may sit behind "show all", so the count is up here. -->
       <UBadge v-if="declinedCount" color="error" variant="subtle" icon="i-lucide-circle-slash" :label="t('people.declinedCount', { n: declinedCount })" />
     </h2>
     <p v-if="!rows.length" class="text-sm text-muted">{{ t('people.empty') }}</p>
-    <ul v-else class="divide-y divide-default">
+    <ul v-else-if="listOpen" class="divide-y divide-default">
       <li v-for="row in shown" :key="row.r.memberId" class="flex items-center gap-3 py-2">
         <MemberAvatar :id="row.r.memberId" :name="row.r.name" :class="row.kind === 'no' && 'opacity-60'" />
         <span class="min-w-0 flex-1 truncate" :class="row.kind === 'no' && 'text-muted'">
@@ -118,7 +123,7 @@ async function saveAmount() {
         </UDropdownMenu>
       </li>
     </ul>
-    <UButton v-if="rows.length > COLLAPSED" color="neutral" variant="outline" size="sm" block :trailing-icon="showAll ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" @click="showAll = !showAll">
+    <UButton v-if="listOpen && rows.length > COLLAPSED" color="neutral" variant="outline" size="sm" block :trailing-icon="showAll ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" @click="showAll = !showAll">
       {{ showAll ? t('people.showLess') : t('people.showAll', { n: rows.length }) }}
     </UButton>
 

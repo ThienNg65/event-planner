@@ -4,6 +4,15 @@ All notable changes to this project are documented here, following [Keep a Chang
 
 ## [Unreleased]
 
+### Changed
+- First visit made simpler: tap a day and a small "Your name?" sheet asks for your name (type it and pick or add it), then a 6-digit PIN that signs you in on the last digit, and your tapped day is saved right away. Creating an event while signed out works the same way. The "I'm new" button is gone.
+- The event page shows less at first: organizers get one **Manage** menu (edit, post update, organizers, duplicate, reopen, cancel, delete) and one main button on the next-step card with the rest behind "…"; the people list, reminder and host details start closed; "Add to calendar" moves to the card once you are going; help paragraphs sit behind a help icon.
+- Home and Create show less: a first-time visitor sees one big Create button, tabs and search appear from 6 events, and the create form keeps title and days up front with seat limit, place, note, look, guests, repeat and payout account one tap away. A "Next 7 days" chip fills the poll days.
+- Clearer labels: no more "leave blank" on the seat limit, "Payout account" instead of "Payment details (optional)", and shorter wording throughout.
+
+### Added
+- You can rename yourself from the account menu (pencil next to your name). A name another person already has is refused.
+
 ### Added
 - Events can repeat every week, every 2 weeks or every month, optionally until a date. The next event is created automatically once the previous one has started, with the same details, organizers and bank account but no answers, and the event page links to the previous and next event. Cancelling one event skips only that date; turning repeat off stops the whole series. Repeating needs a fixed date and place.
 - Members with a verified email now get event emails: when the date or place is set or changed, when the bill arrives (each person with their own amount and a VietQR link), when an organizer records their payment, and when the event is cancelled. Every mail has a "stop these emails" link, and the profile has a switch for each kind. Nothing is sent until email is set up, and the consent text now mentions these emails.

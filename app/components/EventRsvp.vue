@@ -36,6 +36,12 @@ const OPTIONS = [
   { value: 'no', icon: 'i-lucide-circle-x', color: 'neutral' },
 ] as const;
 
+const join = useJoin();
+// A visitor is asked for a name first, then the tapped answer is sent.
+function tap(status: 'going' | 'maybe' | 'no') {
+  join.ask(() => answer(status));
+}
+
 async function answer(status: 'going' | 'maybe' | 'no') {
   if (!props.me) return;
   // A tapped answer replaces a guest save still waiting to go out.
@@ -58,7 +64,7 @@ async function answer(status: 'going' | 'maybe' | 'no') {
       <span class="text-sm text-muted">{{ data.responses.filter((r) => r.status).length }} {{ t('rsvp.replies') }}</span>
     </div>
 
-    <div v-if="open && me" class="space-y-3">
+    <div v-if="open" class="space-y-3">
       <UAlert v-if="mine?.derived === 'going'" color="success" variant="subtle" icon="i-lucide-vote" :title="t('rsvp.fromVote')" />
       <UAlert v-else-if="mine?.derived === 'reconfirm' && held" color="warning" variant="subtle" icon="i-lucide-calendar-clock" :title="t('rsvp.held', { deadline: heldUntil })" />
       <UAlert v-else-if="mine?.derived === 'reconfirm'" color="warning" variant="subtle" icon="i-lucide-calendar-x" :title="t('rsvp.released')" />
@@ -74,14 +80,14 @@ async function answer(status: 'going' | 'maybe' | 'no') {
           :aria-pressed="shown === o.value"
           :disabled="busy"
           :label="t(`rsvp.${o.value}`)"
-          @click="answer(o.value)"
+          @click="tap(o.value)"
         />
       </div>
-      <div class="flex items-center justify-between gap-3">
+      <div v-if="me" class="flex items-center justify-between gap-3">
         <span class="text-sm">{{ t('rsvp.guests') }}</span>
         <UInputNumber v-model="guests" :min="0" :max="limit" class="w-32" />
       </div>
-      <p v-if="limit < MAX_GUESTS" class="text-xs text-muted">{{ t('rsvp.guestsMax', { n: limit }) }}</p>
+      <p v-if="me && limit < MAX_GUESTS" class="text-xs text-muted">{{ t('rsvp.guestsMax', { n: limit }) }}</p>
       <p v-if="data.event.capacity && mine?.derived === 'going'" class="text-xs text-muted">{{ t('rsvp.guestsQueue') }}</p>
       <template v-if="mine">
         <p v-if="mine.status === 'going' && !mine.derived && data.event.capacity" class="text-xs text-muted">{{ t('rsvp.guestsHint') }}</p>

@@ -52,14 +52,43 @@ const days = computed(() => {
   return rows.map((r) => ({ ...r, top: best > 0 && r.names.length === best && r.maybeNames.length === bestMaybe }));
 });
 
-/** Runs `fn` for a signed-in, allowed visitor; otherwise points to the "who are you" card instead of a silent no-op. */
-function act(fn: () => unknown) {
+const join = useJoin();
+// The day tapped before signing in stays marked while the join sheet is open.
+const pendingDay = ref<string | null>(null);
+watch(join.open, (o) => !o && (pendingDay.value = null));
+const on = (day: string) => myDays.value.includes(day) || pendingDay.value === day;
+// One-time nudge for a first-time visitor: pulse a line over the days until they tap.
+const HINT = 'te:hint:tapDays';
+const hintTap = ref(false);
+onMounted(() => {
+  try {
+    hintTap.value = !props.me && !localStorage.getItem(HINT);
+  } catch {
+    /* storage blocked: no hint */
+  }
+});
+function endHint() {
+  hintTap.value = false;
+  try {
+    localStorage.setItem(HINT, '1');
+  } catch {
+    /* hint may show again */
+  }
+}
+
+/** Runs `fn` for a signed-in, allowed visitor; otherwise opens the join sheet and replays it after sign-in unless `already` says it holds by then. */
+function act(fn: () => unknown, opts: { day?: string; already?: () => boolean } = {}) {
   // Closed: say why the tap does nothing.
   if (readOnly.value) return toast.add({ title: t(ev.value.cancelledAt ? 'poll.closedCancelled' : 'poll.closedDeadline') });
   if (!props.me) {
-    // The "who are you" card is gone once voting closes (an organizer with a manage key can still edit): say so instead.
-    const who = document.getElementById('who');
-    return who ? who.scrollIntoView({ behavior: 'smooth', block: 'start' }) : toast.add({ title: t('next.who.link') });
+    endHint();
+    pendingDay.value = opts.day ?? null;
+    return join.ask(async () => {
+      // The member may already have voted from another device: read the truth before acting.
+      await refreshNuxtData(`event-${ev.value.id}`);
+      await nextTick();
+      if (!opts.already?.()) await fn();
+    });
   }
   return fn();
 }
@@ -204,9 +233,7 @@ async function remove() {
         :title="t('poll.votesHidden')"
         :description="t('poll.answeredOf', { n: data.responses.filter((r) => r.voted).length, total: data.participants.length })"
       />
-      <p v-if="!me && !closed" class="text-sm">
-        <button type="button" class="text-primary underline underline-offset-2" @click="act(() => {})">{{ t('poll.pickName') }}</button>
-      </p>
+      <p v-if="hintTap && !closed" class="text-sm font-medium text-primary motion-safe:animate-pulse">👆 {{ t('hint.tapDays') }}</p>
     </div>
 
     <div v-if="ev.pollDays.length" class="space-y-3">
@@ -214,19 +241,18 @@ async function remove() {
         <div class="flex min-w-0 gap-3 sm:flex-1">
           <UIcon name="i-lucide-calendar-days" class="mt-1 size-5 shrink-0 text-highlighted" />
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold text-highlighted">{{ t(closed ? 'poll.daysResult' : 'poll.days') }}</h2>
-            <p v-if="!closed" class="text-sm text-muted">{{ t('poll.daysHint') }}</p>
+            <h2 class="flex items-center gap-1 text-lg font-semibold text-highlighted">
+              {{ t(closed ? 'poll.daysResult' : 'poll.days') }}
+              <UPopover v-if="!closed">
+                <UButton icon="i-lucide-circle-help" color="neutral" variant="link" size="xs" :aria-label="t('poll.daysHint')" />
+                <template #content><p class="max-w-xs p-3 text-sm text-muted">{{ t('poll.daysHint') }}</p></template>
+              </UPopover>
+            </h2>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <UBadge v-if="me" :color="myDays.length ? 'primary' : 'neutral'" variant="soft" class="rounded-full px-2.5 tabular-nums" :label="t('poll.picked', { n: myDays.length, total: ev.pollDays.length })" />
           <UButton v-if="can(role, 'edit')" size="sm" variant="outline" color="neutral" icon="i-lucide-calendar-cog" @click="daysOpen = true">{{ t('days.edit') }}</UButton>
-          <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
-            <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-plus" :loading="busy">{{ t('poll.suggestDay') }}</UButton>
-            <template #content>
-              <UCalendar :min-value="today" :week-starts-on="1" :aria-label="t('poll.suggestDay')" class="p-2" @update:model-value="suggestDay" />
-            </template>
-          </UPopover>
         </div>
       </div>
       <div class="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
@@ -239,18 +265,18 @@ async function remove() {
             :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : myMaybe.includes(d.day) ? 'poll.ifNeedBeState' : 'poll.notSelected') })"
             class="themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
             :class="myMaybe.includes(d.day) && 'border-dashed'"
-            :data-on="myDays.includes(d.day)"
-            @click="act(() => tapDay(d.day))"
+            :data-on="on(d.day)"
+            @click="act(() => tapDay(d.day), { day: d.day, already: () => myDays.includes(d.day) })"
           >
             <UBadge v-if="d.top" color="warning" variant="solid" size="sm" icon="i-lucide-crown" :label="t('poll.top')" class="absolute -top-2.5 left-3 shadow-sm" />
             <!-- Closed: no empty checkbox inviting a tap, only the check on days you picked. -->
             <span
               v-if="!readOnly || myDays.includes(d.day)"
               class="absolute top-3 right-3 grid size-5 place-items-center rounded-full transition"
-              :class="myDays.includes(d.day) ? 'bg-primary text-inverted' : 'ring-1 ring-accented ring-inset'"
+              :class="on(d.day) ? 'bg-primary text-inverted' : 'ring-1 ring-accented ring-inset'"
               aria-hidden="true"
             >
-              <UIcon v-if="myDays.includes(d.day)" name="i-lucide-check" class="size-3.5" />
+              <UIcon v-if="on(d.day)" name="i-lucide-check" class="size-3.5" />
             </span>
             <span class="text-xs font-medium text-muted">{{ d.weekday }}</span>
             <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
@@ -287,6 +313,14 @@ async function remove() {
           @click="act(() => tapDay(d.day, 'maybe'))"
         />
         </div>
+        <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
+          <button type="button" class="themed-tile flex min-h-24 w-full items-center justify-center gap-1.5 border-dashed p-4 text-sm text-muted focus-visible:outline-2 focus-visible:outline-primary">
+            <UIcon name="i-lucide-plus" class="size-4" />{{ t('poll.suggestDay') }}
+          </button>
+          <template #content>
+            <UCalendar :min-value="today" :week-starts-on="1" :aria-label="t('poll.suggestDay')" class="p-2" @update:model-value="suggestDay" />
+          </template>
+        </UPopover>
       </div>
 
       <section v-if="compare" class="space-y-3 rounded-xl border border-default p-4" :aria-label="t('compare.title')">
@@ -321,10 +355,8 @@ async function remove() {
           <UIcon name="i-lucide-map-pin" class="mt-1 size-5 shrink-0 text-highlighted" />
           <div class="min-w-0">
             <h2 class="text-lg font-semibold text-highlighted">{{ closed ? t('poll.venuesResult') : ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}</h2>
-            <p v-if="!closed" class="text-sm text-muted">{{ t('poll.venuesHint') }}</p>
           </div>
         </div>
-        <UButton v-if="!readOnly && me && data.venues.length" size="sm" color="neutral" variant="outline" icon="i-lucide-plus" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
       </div>
 
       <div v-if="!data.venues.length" class="flex flex-col gap-3 themed-tile p-4 sm:flex-row sm:items-center">
@@ -333,7 +365,7 @@ async function remove() {
           <p class="font-medium text-highlighted">{{ t('poll.noVenuesTitle') }}</p>
           <p class="text-sm text-muted">{{ t('poll.noVenues') }}</p>
         </div>
-        <UButton v-if="!readOnly && me" size="sm" color="primary" variant="outline" icon="i-lucide-plus" class="self-start sm:self-center" @click="showForm = true">{{ t('poll.suggestPlace') }}</UButton>
+        <UButton v-if="!readOnly" size="sm" color="primary" variant="outline" icon="i-lucide-plus" class="self-start sm:self-center" @click="act(() => (showForm = true))">{{ t('poll.suggestPlace') }}</UButton>
       </div>
       <div
         v-for="v in data.venues"
@@ -379,7 +411,7 @@ async function remove() {
           class="shrink-0"
           :aria-pressed="myVote(v)"
           :aria-label="t('poll.voteFor', { name: v.name })"
-          @click="act(() => tapPlace(v.id, 'yes'))"
+          @click="act(() => tapPlace(v.id, 'yes'), { already: () => myVote(v) })"
         />
         <UButton
           v-if="!readOnly || myMaybeVote(v)"
@@ -397,6 +429,7 @@ async function remove() {
           <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-ellipsis-vertical" class="-mr-2 shrink-0" :aria-label="t('poll.placeActions', { name: v.name })" />
         </UDropdownMenu>
       </div>
+      <UButton v-if="!readOnly && data.venues.length" size="sm" color="neutral" variant="ghost" icon="i-lucide-plus" @click="act(() => (showForm = true))">{{ t('poll.suggestPlace') }}</UButton>
     </div>
 
     <UModal v-model:open="showForm" :title="t('poll.suggestPlace')">

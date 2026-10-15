@@ -239,3 +239,35 @@ describe('signing out other devices', () => {
     assert.equal((await api('/api/me/signout-others', { method: 'POST' })).message, 'signInFirst');
   });
 });
+
+describe('renaming yourself', () => {
+  const rename = (me: number | undefined, name: unknown) => api('/api/me', { method: 'PATCH', me, body: { name } });
+  const tag = () => `zz-test-${Math.random().toString(16).slice(2, 8)}`;
+
+  it('needs a session', async () => {
+    assert.equal((await rename(undefined, 'X')).message, 'signInFirst');
+  });
+
+  it('saves the new name, tidied, and the host label follows', async () => {
+    const ev = await event();
+    const n = tag();
+    const res = await rename(ev.createdBy, `  ${n}   Two `);
+    assert.equal(res.status, 200);
+    assert.equal((await api('/api/me', { me: ev.createdBy })).body.name, `${n} Two`);
+    assert.equal((await api(`/api/events/${ev.id}`, { me: ev.createdBy })).body.hostName, `${n} Two`);
+  });
+
+  it('refuses another member\'s exact name, but keeping your own is fine', async () => {
+    const a = await member();
+    const b = await member();
+    const nameOfA = (await api('/api/me', { me: a })).body.name as string;
+    assert.equal((await rename(b, nameOfA)).message, 'nameTaken');
+    assert.equal((await rename(a, nameOfA)).status, 200);
+  });
+
+  it('refuses a name that is only whitespace', async () => {
+    const res = await rename(await member(), '   ');
+    assert.equal(res.status, 400);
+    assert.equal(res.message, 'nameRequired');
+  });
+});

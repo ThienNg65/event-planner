@@ -113,9 +113,9 @@ async function answerInvite(accept: boolean) {
     inviteBusy.value = false;
   }
 }
-// Long notes show three lines and expand on request.
+// Long notes show two lines and expand on request.
 const noteOpen = ref(false);
-const longNote = computed(() => (ev.value.note?.length ?? 0) > 150 || (ev.value.note?.split('\n').length ?? 0) > 3);
+const longNote = computed(() => (ev.value.note?.length ?? 0) > 100 || (ev.value.note?.split('\n').length ?? 0) > 2);
 // "@Dong Le" in the note shows as a chip.
 const noteParts = computed(() => splitMentions(ev.value.note ?? ''));
 const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
@@ -210,8 +210,7 @@ watch(
   { immediate: true }
 );
 const declined = computed(() => new Set(data.value!.responses.filter((r) => r.status === 'no').map((r) => r.memberId)));
-// Any stage, as long as the date is set and the event still happens.
-const googleCalendar = computed(() => (ev.value.startsAt && !ev.value.cancelledAt ? googleCalendarUrl({ ...ev.value, startsAt: ev.value.startsAt }, origin) : null));
+const detailsOpen = ref(false);
 const sharing = ref(false);
 const share = () => (sharing.value = true);
 
@@ -241,7 +240,7 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
         <template #leading><UDashboardSidebarCollapse /></template>
         <!-- The navbar centre shows only on lg+; smaller screens get the stage badge in the header instead. -->
         <UStepper
-          v-if="data && !ev.cancelledAt"
+          v-if="data && role && !ev.cancelledAt"
           :items="steps"
           :model-value="STAGES.indexOf(ev.stage)"
           :color="STAGE_COLOR[ev.stage]"
@@ -251,19 +250,10 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
           class="w-full max-w-xl"
         />
         <template #right>
-          <UButton v-if="data && canPost && !ev.notice" icon="i-lucide-megaphone" color="neutral" variant="outline" :aria-label="t('post.open')" @click="openNotice">
-            <span class="hidden sm:inline">{{ t('post.open') }}</span>
-          </UButton>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
             <span class="hidden sm:inline">{{ t('event.share') }}</span>
           </UButton>
-          <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
-            <span class="hidden sm:inline">{{ t('edit.open') }}</span>
-          </UButton>
-          <UButton v-if="role" icon="i-lucide-copy" color="neutral" variant="outline" :aria-label="t('event.duplicate')" :to="`/new?from=${id}`">
-            <span class="hidden sm:inline">{{ t('event.duplicate') }}</span>
-          </UButton>
-          <EventHostMenu v-if="can(role, 'cancel')" :data="data!" :manage-key="key" @changed="refresh" />
+          <EventHostMenu v-if="data && role" :data="data" :manage-key="key" :role="role" @changed="refresh" @edit="editing = true" @post="openNotice" @organizers="organizing = true" />
         </template>
       </UDashboardNavbar>
     </template>
@@ -287,8 +277,8 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
               </UButton>
             </div>
             <div class="min-w-0 flex-1 space-y-3">
-              <!-- lg+ shows the stage in the navbar stepper instead. -->
-              <div class="flex" :class="!ev.cancelledAt && 'lg:hidden'">
+              <!-- Organizers get the stage in the navbar stepper on lg+. -->
+              <div class="flex" :class="!ev.cancelledAt && role && 'lg:hidden'">
                 <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" class="rounded-full px-2.5" />
                 <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${stageKey(ev)}`)" class="rounded-full px-2.5" />
               </div>
@@ -310,21 +300,8 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
                   <VenueMap :name="ev.venue" :link="ev.venueLink" />
                 </p>
               </div>
-              <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-                <span class="flex items-center gap-1.5"><UIcon name="i-lucide-user-round" />{{ t('event.hostedBy', { name: data.hostName }) }}</span>
-                <span v-if="ev.stage !== 'poll'" class="flex items-center gap-1.5">
-                  <UIcon name="i-lucide-users" />
-                  <template v-if="overLimit(ev)"><SeatCount :seats="data.seats" :capacity="ev.capacity" :planned-capacity="ev.plannedCapacity" />{{ t('event.goingSuffix') }}</template>
-                  <template v-else>{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}</template>
-                </span>
-              </p>
-              <p v-if="googleCalendar" class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                <span class="flex items-center gap-1.5 text-muted"><UIcon name="i-lucide-calendar-plus" />{{ t('event.addToCalendar') }}</span>
-                <a :href="`/api/events/${id}/ics?j=${ev.joinKey}`" download class="text-primary underline-offset-2 hover:underline">{{ t('event.calendarFile') }}</a>
-                <ULink :href="googleCalendar" target="_blank" rel="noopener noreferrer" class="text-primary">{{ t('event.googleCalendar') }}</ULink>
-              </p>
               <div v-if="ev.note" class="text-sm text-toned">
-                <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-3'">
+                <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-2'">
                   <template v-for="(part, i) in noteParts" :key="i"><span v-if="i % 2" class="rounded bg-primary/10 px-1 font-medium text-primary">{{ part }}</span><template v-else>{{ part }}</template></template>
                 </p>
                 <button v-if="longNote" type="button" class="mt-1 text-primary underline underline-offset-2" :aria-expanded="noteOpen" @click="noteOpen = !noteOpen">
@@ -382,12 +359,25 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
           <!-- The message holds the page's own origin, which only the browser knows. -->
           <ClientOnly>
             <EventReminder v-if="reminding" :data="data" />
-            <template #fallback><div v-if="reminding" class="min-h-48" aria-hidden="true" /></template>
+            <template #fallback><div v-if="reminding" class="min-h-10" aria-hidden="true" /></template>
           </ClientOnly>
         </div>
 
         <!-- order-last: on phones the stats come after the stage section, so the action is first. -->
-        <aside class="rise order-last grid content-start gap-3 sm:grid-cols-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:grid-cols-1 lg:self-start lg:sticky lg:top-0">
+        <aside class="rise order-last space-y-3 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:sticky lg:top-0">
+          <!-- One "Details" panel: closed on phones, always open in the rail. -->
+          <UButton class="lg:hidden" color="neutral" variant="outline" block :trailing-icon="detailsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" :aria-expanded="detailsOpen" @click="detailsOpen = !detailsOpen">
+            {{ t('details.title') }}
+          </UButton>
+          <div class="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-1" :class="!detailsOpen && 'hidden lg:grid'">
+          <p class="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-sm text-muted sm:col-span-2 lg:col-span-1">
+            <span class="flex items-center gap-1.5"><UIcon name="i-lucide-user-round" />{{ t('event.hostedBy', { name: data.hostName }) }}</span>
+            <span v-if="ev.stage !== 'poll'" class="flex items-center gap-1.5">
+              <UIcon name="i-lucide-users" />
+              <template v-if="overLimit(ev)"><SeatCount :seats="data.seats" :capacity="ev.capacity" :planned-capacity="ev.plannedCapacity" />{{ t('event.goingSuffix') }}</template>
+              <template v-else>{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}</template>
+            </span>
+          </p>
           <EventOverview :data="data" :role="role" @invite="share" />
           <section v-if="people.length" class="space-y-2.5 themed-surface p-4" :aria-label="t('members.title')">
             <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">
@@ -410,6 +400,7 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
             </div>
           </section>
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
+          </div>
         </aside>
 
         <div class="rise min-w-0 space-y-6 lg:col-start-1">

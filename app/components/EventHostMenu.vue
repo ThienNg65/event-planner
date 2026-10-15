@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const props = defineProps<{ data: EventDetail; manageKey: string | null }>();
-const emit = defineEmits<{ changed: [] }>();
+const props = defineProps<{ data: EventDetail; manageKey: string | null; role: Role }>();
+const emit = defineEmits<{ changed: []; edit: []; post: []; organizers: [] }>();
 const { t } = useI18n();
 const { call } = useEventApi(
   () => props.data.event.id,
@@ -12,6 +12,24 @@ const ev = computed(() => props.data.event);
 const earlier = computed(() => STAGES.slice(0, STAGES.indexOf(ev.value.stage)).map((s) => ({ label: t(`stage.${s}`), value: s })));
 
 const { meId } = useMe();
+// A dot on the menu until it has been opened once on this browser.
+const HINT = 'te:hint:manage';
+const hint = ref(false);
+onMounted(() => {
+  try {
+    hint.value = !localStorage.getItem(HINT);
+  } catch {
+    /* storage blocked: no dot */
+  }
+});
+function seen() {
+  hint.value = false;
+  try {
+    localStorage.setItem(HINT, '1');
+  } catch {
+    /* the dot may come back */
+  }
+}
 const view = ref<'reopen' | 'cancel' | 'delete' | 'handover' | null>(null);
 const open = computed({
   get: () => view.value !== null,
@@ -49,17 +67,31 @@ function show(v: 'reopen' | 'cancel' | 'delete' | 'handover') {
   view.value = v;
 }
 
-const items = computed(() => [
-  [
-    ...(!ev.value.cancelledAt && earlier.value.length ? [{ label: t('host.reopen'), icon: 'i-lucide-history', onSelect: () => show('reopen') }] : []),
-    ev.value.cancelledAt
-      ? { label: t('edit.restore'), icon: 'i-lucide-undo-2', onSelect: restore }
-      : { label: t('host.cancel'), icon: 'i-lucide-ban', onSelect: () => show('cancel') },
-  ],
-  // Only the signed-in creator can hand the event over (a manage link alone cannot).
-  ...(meId.value === ev.value.createdBy && !ev.value.cancelledAt ? [[{ label: t('host.handover'), icon: 'i-lucide-key-round', onSelect: () => show('handover') }]] : []),
-  [{ label: t('host.delete'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => show('delete') }],
-]);
+// The one organizer menu: what a co-host may do first, then what only the host may.
+const items = computed(() => {
+  const cancelled = !!ev.value.cancelledAt;
+  const groups = [];
+  if (can(props.role, 'edit') && !cancelled) {
+    groups.push([
+      { label: t('edit.open'), icon: 'i-lucide-pencil', onSelect: () => emit('edit') },
+      { label: t(ev.value.notice ? 'post.edit' : 'post.open'), icon: 'i-lucide-megaphone', onSelect: () => emit('post') },
+    ]);
+  }
+  groups.push([
+    { label: t('org.title'), icon: 'i-lucide-shield-check', onSelect: () => emit('organizers') },
+    { label: t('event.duplicate'), icon: 'i-lucide-copy', to: `/new?from=${ev.value.id}` },
+  ]);
+  if (can(props.role, 'cancel')) {
+    groups.push([
+      ...(!cancelled && earlier.value.length ? [{ label: t('host.reopen'), icon: 'i-lucide-history', onSelect: () => show('reopen') }] : []),
+      cancelled ? { label: t('edit.restore'), icon: 'i-lucide-undo-2', onSelect: restore } : { label: t('host.cancel'), icon: 'i-lucide-ban', onSelect: () => show('cancel') },
+    ]);
+    // Only the signed-in creator can hand the event over (a manage link alone cannot).
+    if (meId.value === ev.value.createdBy && !cancelled) groups.push([{ label: t('host.handover'), icon: 'i-lucide-key-round', onSelect: () => show('handover') }]);
+    groups.push([{ label: t('host.delete'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => show('delete') }]);
+  }
+  return groups;
+});
 
 // Each confirm shows its own failure inline and stays open, so nothing typed is lost.
 async function run(method: 'PATCH' | 'DELETE', body?: object) {
@@ -117,8 +149,12 @@ function focusCancel(e: Event) {
 </script>
 
 <template>
-  <UDropdownMenu :items="items" :content="{ align: 'end' }">
-    <UButton icon="i-lucide-ellipsis" color="neutral" variant="outline" :aria-label="t('host.menu')" />
+  <UDropdownMenu :items="items" :content="{ align: 'end' }" @update:open="seen">
+    <UChip :show="hint" inset>
+      <UButton icon="i-lucide-settings-2" trailing-icon="i-lucide-chevron-down" color="neutral" variant="outline" :aria-label="t('manage.menu')">
+        <span class="hidden sm:inline">{{ t('manage.menu') }}</span>
+      </UButton>
+    </UChip>
   </UDropdownMenu>
 
   <UModal
