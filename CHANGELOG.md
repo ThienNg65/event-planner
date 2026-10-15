@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.11.0] - 2026-10-15
 
 ### Added
 - When entering the bill, the organizer ticks who actually came. People who came without saying Going share the bill, people who said Going but didn't come owe nothing and show as "didn't come", and if more people came than the seat limit allowed, everyone still pays a share and the seat count shows "10 + 5" in red.
@@ -24,6 +24,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Buttons in the default look shrink slightly while pressed.
 - In the scrapbook look, cards no longer get stuck lifted after a tap on a touch screen.
 - The colour descriptions in the README and docs now match what the themes show (violet and pink in the default look, set per theme).
+
+### Fixed
+- Members without a PIN can sign out their other devices again (it was refused with an error).
 
 ## [0.10.0] - 2026-10-14
 
