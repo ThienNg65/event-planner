@@ -82,6 +82,10 @@ export default defineEventHandler(async (event) => {
   await requireMembers(f.honorees);
   if (frozen && ('startsAt' in f || 'venue' in f || 'venueLink' in f)) fail(409, 'planFrozen');
   if (f.pollDays && !f.pollDays.length && ev.stage === 'poll') fail(400, 'daysRequired');
+  // Repeat settings belong to the whole series: switching repeat off clears the end date, and the check runs on the event as it would be.
+  const repeatEdit = 'repeat' in f || 'repeatUntil' in f;
+  if (f.repeat === null) f.repeatUntil = null;
+  if (repeatEdit) requireRepeatable({ ...ev, ...f });
   if (f.stage && f.stage !== ev.stage) {
     const jump = STAGES.indexOf(f.stage) - STAGES.indexOf(ev.stage);
     requireCan(role, jump > 0 ? 'advance' : 'reopen');
@@ -147,6 +151,12 @@ export default defineEventHandler(async (event) => {
       }
     }
     extras.push(...writes);
+  }
+
+  // The other events of the series follow, in the same batch.
+  if (repeatEdit && ev.seriesId !== null) {
+    const sib = { repeat: f.repeat === undefined ? ev.repeat : f.repeat, repeatUntil: f.repeatUntil === undefined ? ev.repeatUntil : f.repeatUntil };
+    extras.push(useDb().update(events).set(sib).where(eq(events.seriesId, ev.seriesId)));
   }
 
   // Emails announcing this change, queued in the same batch (docs/13): the plan was set or moved, or the bill was requested or changed.

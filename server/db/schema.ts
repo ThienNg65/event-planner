@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { boolean, check, date, index, integer, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
+export const REPEAT_KINDS = ['weekly', 'biweekly', 'monthly'] as const;
 export const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 export const STATUSES = ['going', 'maybe', 'no'] as const;
 // How a "going" answer came about when the member didn't give it: counted from their votes, or held after a plan change.
@@ -71,6 +72,11 @@ export const events = pgTable(
     // Cancelled is an overlay, not a stage, so restoring returns to the exact stage it was in.
     cancelledAt: timestamp({ withTimezone: true }),
     cancelReason: text(),
+    // Repeating events: how often the next one is created, and the last Vietnam day it may fall on. Applies to the whole series.
+    repeat: text({ enum: REPEAT_KINDS }),
+    repeatUntil: date({ mode: 'string' }),
+    // The id of the first event of the series (that event points at itself); null for an event that does not repeat.
+    seriesId: integer(),
     notice: text(),
     noticeAt: timestamp({ withTimezone: true }),
     // Seats held after a plan change are released at this time.
@@ -80,6 +86,8 @@ export const events = pgTable(
   (t) => [
     check('events_stage', sql`${t.stage} in ('poll', 'rsvp', 'bill', 'settled')`),
     check('events_max_guests', sql`${t.maxGuests} between 0 and 10`),
+    check('events_repeat', sql`${t.repeat} in ('weekly', 'biweekly', 'monthly')`),
+    uniqueIndex('events_series_starts').on(t.seriesId, t.startsAt),
   ]
 );
 

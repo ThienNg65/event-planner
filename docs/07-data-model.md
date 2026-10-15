@@ -56,6 +56,7 @@ One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the
 | `theme` | text not null, default `aurora` | one of `aurora, liquid, bento, brutal, acid, scrapbook, candy` |
 | `created_by` | integer FK → members, not null | the host by identity |
 | `manage_key_hash` | text not null | SHA-256 of the host key |
+| `repeat`, `repeat_until`, `series_id` | text (check `events_repeat`), date, integer | repeating events, see [04](04-polling-and-locking.md#48-repeating-events); `series_id` is the first event's own id (no foreign key), unique together with `starts_at` (`events_series_starts`) |
 | `handover_to`, `handover_at` | integer FK → members (set null), timestamptz | pending offer to hand the event to a co-host, see [03](03-identity-and-roles.md#35-handing-an-event-over); both null when none |
 | `co_host_key_hash` | text | legacy shared co-host key |
 | `join_key` | text not null, default random 128-bit | secret in the joining link (`/e/:id?join=…`); stored readable so the link can be shared again |
@@ -137,5 +138,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`), `0014_slimy_pyro` (`member_email`, `member_codes`, `mail_log`), `0015_pretty_mister_fear` (`notifications`, `notification_sends`), `0016_scheduled_mail_kinds` (`tomorrow` and `paymentReminder` added to the `notifications_kind` check).
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`), `0014_slimy_pyro` (`member_email`, `member_codes`, `mail_log`), `0015_pretty_mister_fear` (`notifications`, `notification_sends`), `0016_scheduled_mail_kinds` (`tomorrow` and `paymentReminder` added to the `notifications_kind` check), `0017_repeating_events` (`repeat`, `repeat_until`, `series_id`).
 `netlify.toml` (and the Cloudflare build command in the README) runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

@@ -1,4 +1,17 @@
-import { asc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, gt, lt, sql } from 'drizzle-orm';
+
+/** The events before and after this one in its series, and when the series started (the anchor of the monthly day). */
+async function seriesLinks(seriesId: number, startsAt: Date) {
+  const { events } = schema;
+  const one = (where: ReturnType<typeof and>, order: ReturnType<typeof asc>) =>
+    useDb().select({ id: events.id, startsAt: events.startsAt }).from(events).where(where).orderBy(order).limit(1);
+  const [[prev], [next], [first]] = await Promise.all([
+    one(and(eq(events.seriesId, seriesId), lt(events.startsAt, startsAt)), desc(events.startsAt)),
+    one(and(eq(events.seriesId, seriesId), gt(events.startsAt, startsAt)), asc(events.startsAt)),
+    one(eq(events.seriesId, seriesId), asc(events.startsAt)),
+  ]);
+  return { prev: prev ?? null, next: next ?? null, firstAt: first?.startsAt ?? startsAt };
+}
 
 export default defineEventHandler(async (event) => {
   const { events, responses, members, venues, cohosts } = schema;
@@ -33,6 +46,7 @@ export default defineEventHandler(async (event) => {
   const role = await roleOf(event, { id, createdBy: ev.createdBy, manageKeyHash, coHostKeyHash });
   const joined = me !== null && rs.some((r) => r.memberId === me);
   await requireAccess(event, ev, role, joined);
+  const series = ev.seriesId === null || !ev.startsAt ? null : await seriesLinks(ev.seriesId, ev.startsAt);
   // Opening the joining link signed in makes you a participant: an empty answer row ("no reply yet"). Crawlers carry no session, so they never join.
   let joinedNow = false;
   if (me !== null && !joined && sameKey(getHeader(event, 'x-join-key'), ev.joinKey)) {
@@ -72,6 +86,7 @@ export default defineEventHandler(async (event) => {
         invitedAt: c.invitedAt,
         status: c.status === 'invited' && Date.now() - c.invitedAt.getTime() > INVITE_TTL_MS ? ('expired' as const) : c.status,
       })),
+    series,
     handover,
     // Co-hosts the creator may offer the event to (active, with a PIN); empty for everyone else.
     handoverOptions: me !== null && me === ev.createdBy && !ev.cancelledAt ? co.filter((c) => c.status === 'active' && c.hasPin).map((c) => ({ memberId: c.memberId, name: c.name })) : [],

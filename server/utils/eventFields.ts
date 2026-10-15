@@ -58,6 +58,14 @@ export function eventFields(b: Record<string, unknown>) {
     if (typeof b.hideVotes !== 'boolean') fail(400, 'invalid');
     out.hideVotes = b.hideVotes;
   }
+  if ('repeat' in b) {
+    if (b.repeat !== null && !REPEATS.includes(b.repeat as never)) fail(400, 'invalidRepeat');
+    out.repeat = b.repeat as EventFields['repeat'];
+  }
+  if ('repeatUntil' in b) {
+    if (b.repeatUntil !== null && !isDay(b.repeatUntil)) fail(400, 'invalidRepeat');
+    out.repeatUntil = b.repeatUntil as string | null;
+  }
   if ('billTotal' in b) {
     if (b.billTotal !== null && !intIn(b.billTotal, 0, 1_000_000_000)) fail(400, 'invalidBill');
     out.billTotal = b.billTotal as number | null;

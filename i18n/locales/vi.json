@@ -155,7 +155,16 @@
     "maxGuestsHint": "Mỗi người được mang tối đa bấy nhiêu khách (0 đến 10)",
     "hideVotes": "Ẩn kết quả cho đến khi bình chọn",
     "hideVotesHint": "Mỗi người chỉ thấy kết quả sau khi đã chọn ngày hoặc địa điểm của mình. Người tổ chức luôn thấy.",
-    "copiedFrom": "Sao chép từ \"{title}\". Chọn ngày mới rồi tạo sự kiện."
+    "copiedFrom": "Sao chép từ \"{title}\". Chọn ngày mới rồi tạo sự kiện.",
+    "repeat": "Lặp lại",
+    "repeatNone": "Không lặp lại",
+    "repeatWeekly": "Hằng tuần",
+    "repeatBiweekly": "2 tuần một lần",
+    "repeatMonthly": "Hằng tháng",
+    "repeatUntil": "Lặp đến hết ngày",
+    "repeatUntilHint": "Không bắt buộc. Ngày cuối cùng một sự kiện mới được diễn ra.",
+    "repeatNeeds": "Sự kiện lặp lại cần ngày giờ và địa điểm cố định.",
+    "repeatHint": "Sự kiện kế tiếp tự động được tạo sau khi sự kiện này bắt đầu, với cùng thông tin và người tổ chức."
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
@@ -251,7 +260,9 @@
     "mailFailed": "Không gửi được email. Hãy thử lại sau.",
     "codeInvalid": "Mã sai hoặc đã hết hạn.",
     "revertInvalid": "Liên kết này không còn hiệu lực.",
-    "unsubscribeInvalid": "Liên kết hủy nhận thư này không hợp lệ."
+    "unsubscribeInvalid": "Liên kết hủy nhận thư này không hợp lệ.",
+    "invalidRepeat": "Chọn tần suất lặp lại và một ngày kết thúc hợp lệ.",
+    "repeatNeedsFixedPlan": "Sự kiện lặp lại cần ngày giờ và địa điểm cố định, không dùng bình chọn."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -958,5 +969,15 @@
       "body": "{title} đã bị người tổ chức hủy. Bạn có tên trong danh sách tham dự.\n\nTrang sự kiện có thông tin chi tiết.",
       "action2": "Mở sự kiện"
     }
+  },
+  "series": {
+    "repeats": "Lặp lại {every}",
+    "next": "lần tới {when}",
+    "until": "đến {day}",
+    "prev": "Sự kiện trước",
+    "nextEvent": "Sự kiện kế tiếp",
+    "weekly": "hằng tuần",
+    "biweekly": "2 tuần một lần",
+    "monthly": "hằng tháng"
   }
 }

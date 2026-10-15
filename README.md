@@ -13,7 +13,7 @@ Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
   3. **Splitting the bill**: once the event has started, the organizer enters the total. Each seat pays `ceil(total / seats / 1000) × 1000` ₫. People with a seat see their amount and a VietQR code and tap "I've paid".
   4. **Settled**.
 
-  The organizer can turn on **hide results until you vote**: during the poll, people see the day and place results only after picking their own (organizers always see them). **Duplicate** (organizer button on the event page) opens the create form prefilled from an earlier event, without dates or answers.
+  The organizer can turn on **hide results until you vote**: during the poll, people see the day and place results only after picking their own (organizers always see them). **Duplicate** (organizer button on the event page) opens the create form prefilled from an earlier event, without dates or answers. **Repeat** (weekly, every 2 weeks or monthly, optionally until a date) creates the next event automatically once the previous one has started; it needs a fixed date and place.
 
   **Honorees** (who the event is for, e.g. birthday people) are picked in Edit; every proposed day shows whether each can come. Organizers also see the leading days side by side (who can come, who can't, who hasn't replied). When days tie on votes, the day more honorees can make is suggested, then the earlier one; the lock dialog preselects it and says why. Once everyone has replied, organizers are nudged to lock.
 
@@ -105,7 +105,7 @@ Netlify runs `netlify/functions/tick.mts` every hour. Cloudflare gets the cron t
 |---|---|
 | Shell (sidebar, who-you-are, language, dark mode) | `app/layouts/default.vue` |
 | Pages | `app/pages/index.vue` (dashboard), `calendar.vue` (month and agenda), `new.vue` (create), `e/[id].vue` (event) |
-| Event blocks | `app/components/EventNextStep.vue` (what to do now), `EventPoll.vue`, `EventRsvp.vue`, `EventBill.vue`, `EventEdit.vue` (details panel), `EventHostMenu.vue` (reopen, cancel, delete), `EventCorrectDialog.vue` (correct date or place), `EventOverview.vue` and `EventOrganizers.vue` (the status rail), `EventOrganizersDialog.vue` (roles, manage and co-host links), `EventCard.vue`, `CoverPicker.vue`, `PollDaysInput.vue` |
+| Event blocks | `app/components/EventNextStep.vue` (what to do now), `EventPoll.vue`, `EventRsvp.vue`, `EventBill.vue`, `EventEdit.vue` (details panel), `EventHostMenu.vue` (reopen, cancel, delete), `EventCorrectDialog.vue` (correct date or place), `EventOverview.vue`, `EventSeries.vue` and `EventOrganizers.vue` (the status rail), `EventOrganizersDialog.vue` (roles, manage and co-host links), `EventCard.vue`, `CoverPicker.vue`, `PollDaysInput.vue` |
 | API | `server/api/members.*`, `server/api/events/**` (roles in `server/utils/http.ts`; bulk attendance writes in `server/utils/attendance.ts`) |
 | Schema and migrations | `server/db/schema.ts`, `server/db/migrations/` |
 | Waitlist, split, payments, voting window, attendance from votes (`matchesPlan`, `deriveAttendance`, `seated`), frozen plan, next step, name match, VietQR | `shared/utils/event.ts` (tested in `test/event.test.ts`) |

@@ -120,6 +120,13 @@
       "when": 1792039391668,
       "tag": "0016_scheduled_mail_kinds",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792040884732,
+      "tag": "0017_repeating_events",
+      "breakpoints": true
     }
   ]
 }

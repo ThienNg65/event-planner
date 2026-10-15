@@ -21,6 +21,8 @@ const form = reactive({
   capacity: null as number | null,
   maxGuests: MAX_GUESTS as number,
   hideVotes: false,
+  repeat: 'none',
+  repeatUntil: '',
   honorees: [] as number[],
   bankId: '',
   bankAccount: '',
@@ -45,6 +47,10 @@ const missing = computed(() => {
   if (form.dateMode === 'fixed' && !form.startsAt) return 'create.needDate';
   return null;
 });
+
+// Repeating needs a fixed date and a place (no polls); picking a poll switches it off.
+const canRepeat = computed(() => form.dateMode === 'fixed' && form.venueMode === 'fixed' && !!form.venue.trim());
+const repeating = computed(() => canRepeat.value && form.repeat !== 'none');
 
 // Quick starts: one tap fills a title (unless you typed your own) and a matching cover.
 const TEMPLATES = [
@@ -114,6 +120,8 @@ async function create() {
         capacity: form.capacity || null,
         maxGuests: form.maxGuests,
         hideVotes: form.hideVotes,
+        repeat: repeating.value ? form.repeat : null,
+        repeatUntil: repeating.value && form.repeatUntil ? form.repeatUntil : null,
         honorees: form.honorees,
         cover: form.cover,
         theme: form.theme,
@@ -235,6 +243,7 @@ async function create() {
               <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')">
                 <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-44" />
               </UFormField>
+              <RepeatFields v-model:repeat="form.repeat" v-model:until="form.repeatUntil" :disabled="!canRepeat" />
               <UCheckbox v-model="form.hideVotes" :label="t('create.hideVotes')" :description="t('create.hideVotesHint')" />
 
               <UCollapsible class="space-y-3">

@@ -80,6 +80,7 @@ The amount appears only in the personal `paymentRequested` and `paymentReminder`
 
 - **`tomorrow`** queues one row per event starting tomorrow, with the start time in ms as its fact: an event moved to another day is announced again, and the same event is never queued twice. `audienceOf` drops it if the start moved, the event went back to the poll, or it was cancelled.
 - **`paymentReminders`** finds bill-stage events, the first `paymentRequested` row whose fact ends in the current total, and the number of reminders already queued for that total (`<total>#1`, `<total>#2`); `reminderDue` decides whether reminder 1 (day 2) or 2 (day 5) is due. A changed total starts the count again from its own request. Because the reminders hang off the outbox rows, an event billed while email was off gets no reminders. A fully paid event queues a reminder that mails no one.
+- **`repeat`** is not a mail job and runs with email off too: it creates the next event of repeating series ([04](04-polling-and-locking.md#48-repeating-events)). It queues nothing: a new occurrence is not announced by email.
 - **`sweep`** runs `dispatch()` for any event, two notifications per tick (Workers allow 50 requests per run), so leftovers from Netlify's 3-second cap, budget waits and retries go out.
 
 Scheduled mails are only queued between 09:00 and 20:59 Vietnam time (`isSendingHour`); the first tick in that window queues them and later ones find them already queued, so a missed tick only delays them.

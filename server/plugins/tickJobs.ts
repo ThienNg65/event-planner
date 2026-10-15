@@ -38,7 +38,7 @@ async function queuePaymentReminders(now: Date) {
   }
 }
 
-// The hourly jobs (docs/13). Nothing runs while email is off; scheduled mails are only queued in daytime (`isSendingHour`).
+// The hourly jobs (docs/13). The mail jobs do nothing while email is off, `repeat` does not need email; scheduled mails are only queued in daytime (`isSendingHour`).
 export default defineNitroPlugin(() => {
   registerTickJob('tomorrow', async (now) => {
     if (emailEnabled() && isSendingHour(now)) await queueTomorrow(now);
@@ -46,6 +46,7 @@ export default defineNitroPlugin(() => {
   registerTickJob('paymentReminders', async (now) => {
     if (emailEnabled() && isSendingHour(now)) await queuePaymentReminders(now);
   });
+  registerTickJob('repeat', createDueOccurrences);
   registerTickJob('sweep', async () => {
     if (emailEnabled()) await dispatch(undefined, SWEEP_PER_TICK);
   });

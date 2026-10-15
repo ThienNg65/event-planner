@@ -155,7 +155,16 @@
     "maxGuestsHint": "Most guests one person may bring (0 to 10)",
     "hideVotes": "Hide results until people vote",
     "hideVotesHint": "Each person sees the results only after they have picked their own days or places. Organizers always see them.",
-    "copiedFrom": "Copied from \"{title}\". Pick new dates, then create the event."
+    "copiedFrom": "Copied from \"{title}\". Pick new dates, then create the event.",
+    "repeat": "Repeat",
+    "repeatNone": "Does not repeat",
+    "repeatWeekly": "Every week",
+    "repeatBiweekly": "Every 2 weeks",
+    "repeatMonthly": "Every month",
+    "repeatUntil": "Repeat until",
+    "repeatUntilHint": "Optional. The last day a new event may fall on.",
+    "repeatNeeds": "Repeating needs a fixed date and a place.",
+    "repeatHint": "The next event is created automatically once this one has started, with the same details and organizers."
   },
   "rsvp": {
     "title": "RSVP",
@@ -251,7 +260,9 @@
     "mailFailed": "The email could not be sent. Try again later.",
     "codeInvalid": "That code is wrong or has expired.",
     "revertInvalid": "This link is no longer valid.",
-    "unsubscribeInvalid": "This unsubscribe link is not valid."
+    "unsubscribeInvalid": "This unsubscribe link is not valid.",
+    "invalidRepeat": "Pick how often it repeats, and a real end date.",
+    "repeatNeedsFixedPlan": "A repeating event needs a fixed date and a place, not a vote."
   },
   "days": {
     "edit": "Edit days",
@@ -958,5 +969,15 @@
       "body": "{title} was cancelled by its organizer. You had a place on its guest list.\n\nThe event page has the details.",
       "action2": "Open the event"
     }
+  },
+  "series": {
+    "repeats": "Repeats {every}",
+    "next": "next on {when}",
+    "until": "until {day}",
+    "prev": "Previous event",
+    "nextEvent": "Next event",
+    "weekly": "every week",
+    "biweekly": "every 2 weeks",
+    "monthly": "every month"
   }
 }

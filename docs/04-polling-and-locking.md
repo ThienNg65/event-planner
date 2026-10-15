@@ -131,3 +131,13 @@ attendance is re-derived in mode **`edit`**:
 - the response carries `votesHidden: true` and each row's `voted` flag, so the UI can say how many people have answered.
 
 The decision is `hidesVotes`. Organizers always see everything, and the data returns as soon as the visitor votes (declining counts). Known limits: it is a nudge, not secrecy (see [11](11-known-behaviours.md)).
+
+## 4.8 Repeating events
+
+A series is the set of events sharing `events.series_id` (the first event points at itself); `repeat` and `repeat_until` are kept equal on every event of the series. Turning repeat on needs a fixed date, no day poll and a place (`repeatNeedsFixedPlan`), so a series never has a vote to run again.
+
+The tick job `repeat` (`createDueOccurrences` in `server/utils/series.ts`, not gated on email) looks at the **latest event of each series** by `starts_at`, cancelled or not (so cancelling skips only that date). `nextInSeries` in `shared/utils/repeat.ts` gives the next start: +7 days, +14 days, or the same day next month (Vietnam time), clamped to the month's last day while keeping the first event's day of the month (31 Jan, 28 Feb, 31 Mar). It is created once the latest event has started **and** no earlier than 14 days before the next one; an occurrence already in the past is skipped, and one later than `repeat_until` (inclusive) ends the series. At most 10 events per tick.
+
+The new event copies title, note, place, capacity, max guests, hide votes, bank details, cover, theme, honorees, creator, repeat settings and series, starts in `rsvp`, and gets a new join link and a random manage key nobody holds: the signed-in creator gets in as host, and every **active co-host** is copied as an active co-host with a fresh key (they get in through their sign-in). Responses, notice, bill and cancellation are not copied; the creator gets an empty response row. One statement (`INSERT ... ON CONFLICT (series_id, starts_at) DO NOTHING` with the response and co-host rows) makes it atomic and safe for overlapping ticks.
+
+`PATCH` with `repeat` / `repeatUntil` (organizers) writes both to every event of the series in the same batch; `repeat: null` also clears `repeatUntil`. The event page shows "Repeats ... next on ..." and links to the previous and next event (`series` in `GET /api/events/:id`).
