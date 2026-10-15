@@ -1,5 +1,7 @@
 /** One-time codes are this many digits. */
 export const EMAIL_CODE_LENGTH = 6;
+/** A code as typed: exactly EMAIL_CODE_LENGTH digits. */
+export const isCodeFormat = (code: string) => code.length === EMAIL_CODE_LENGTH && /^\d+$/.test(code);
 export const EMAIL_CODE_TTL_MS = 15 * 60_000;
 /** Wrong codes allowed before the code is burned. */
 export const EMAIL_CODE_MAX_FAILS = 5;

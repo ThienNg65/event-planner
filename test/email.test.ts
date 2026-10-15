@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { domainAllowed, mailAllowed, mailLimit, normalizeEmail, parseDomains, previousAddress } from '../shared/utils/email.ts';
+import { domainAllowed, isCodeFormat, mailAllowed, mailLimit, normalizeEmail, parseDomains, previousAddress } from '../shared/utils/email.ts';
 import { hashCode, newCode, sameHash, signToken, verifyToken } from '../server/utils/mailCrypto.ts';
 import { readFileSync } from 'node:fs';
 import { MAIL_KINDS, renderMail } from '../server/utils/mailTemplates.ts';
@@ -89,4 +89,10 @@ test('every mail template and email error code exists in both languages', () => 
       assert.ok(d.err[code], `${lang} err.${code}`);
     }
   }
+});
+
+test('code format: exactly six digits, and every code newCode makes passes', () => {
+  assert.ok(isCodeFormat('800115') && isCodeFormat('000000'));
+  for (const bad of ['', '80011', '8001150', 'dddddd', '80011a', ' 800115']) assert.equal(isCodeFormat(bad), false, bad);
+  for (let i = 0; i < 50; i++) assert.ok(isCodeFormat(newCode()));
 });

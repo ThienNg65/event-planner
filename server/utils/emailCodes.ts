@@ -34,7 +34,7 @@ export async function consumeCode(memberId: number, purpose: Purpose, given: unk
   const { memberCodes } = schema;
   const db = useDb();
   const code = clean(given, 20);
-  if (!new RegExp(`^\d{${EMAIL_CODE_LENGTH}}$`).test(code)) fail(400, 'codeInvalid');
+  if (!isCodeFormat(code)) fail(400, 'codeInvalid');
   const mine = and(eq(memberCodes.memberId, memberId), eq(memberCodes.purpose, purpose));
   const [row] = await db
     .update(memberCodes)
