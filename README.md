@@ -61,7 +61,7 @@ Open http://localhost:3000.
 
 ## Email (optional, off by default)
 
-Members can add a verified email to reset their own forgotten PIN. It stays switched off, and its screens hidden, until you configure [Resend](https://resend.com). Copy `.env.example` for the list; set these as environment variables on the host (on Cloudflare as Worker variables/secrets):
+Members can add a verified email to reset their own forgotten PIN and to get event emails: the date or place is set or changed, a payment is requested (their own amount and a VietQR link) or recorded by the organizer, or the event is cancelled. Each mail has a "stop these emails" link and each kind can be switched off in the profile. Email stays switched off, and its screens hidden, until you configure [Resend](https://resend.com). Copy `.env.example` for the list; set these as environment variables on the host (on Cloudflare as Worker variables/secrets):
 
 | Variable | Meaning |
 |---|---|
@@ -102,6 +102,7 @@ Members consent when they add an address (the text names Resend as a processor o
 | Calendar file and Google Calendar link | `shared/utils/ics.ts` (tested in `test/ics.test.ts`) |
 | Roles and permissions table (`can()`) | `shared/utils/roles.ts` |
 | Email: addresses, one-time codes, mail sending and templates | `server/utils/mail.ts`, `emailCodes.ts`, `mailCrypto.ts`, `mailTemplates.ts`, `shared/utils/email.ts` (tested in `test/email.test.ts`) |
+| Event emails: outbox, dispatch, unsubscribe, who gets what | `server/utils/outbox.ts`, `unsubscribe.ts`, `server/api/unsubscribe.*`, `shared/utils/notify.ts` (tested in `test/notify.test.ts`) |
 | Confetti | `app/utils/confetti.ts` |
 | Cover presets | `shared/utils/cover.ts` |
 | Strings | `i18n/locales/vi.json`, `en.json` |

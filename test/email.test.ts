@@ -79,7 +79,7 @@ test('every mail template and email error code exists in both languages', () => 
     const d = JSON.parse(readFileSync(new URL(`../i18n/locales/${lang}.json`, import.meta.url), 'utf8'));
     for (const kind of MAIL_KINDS) {
       assert.ok(d.mail[kind].subject && d.mail[kind].body, `${lang} mail.${kind}`);
-      const m = renderMail((k, p = {}) => k.split('.').reduce((o, x) => o?.[x], d).replace(/\{(\w+)\}/g, (_, n) => String(p[n])), kind, { code: '123456', email: 'a@x.vn', name: 'T', ...(kind === 'emailChanged' && { link: 'https://x.test/l' }) });
+      const m = renderMail((k, p = {}) => k.split('.').reduce((o, x) => o?.[x], d).replace(/\{(\w+)\}/g, (_, n) => String(p[n])), kind, { code: '123456', email: 'a@x.vn', name: 'T', title: 'T', when: 'W', place: 'P', amount: '1', ...(kind === 'emailChanged' && { link: 'https://x.test/l' }) });
       assert.ok(!m.text.includes('undefined'), `${lang} ${kind}`);
       if (kind === 'verifyCode' || kind === 'recoverCode') assert.ok(m.text.includes('123456'));
       if (kind === 'emailChanged') assert.ok(m.text.includes('https://x.test/l') && m.text.includes('a@x.vn'));

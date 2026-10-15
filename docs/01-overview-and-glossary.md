@@ -53,7 +53,7 @@ The app is **team-internal and public inside the team**: every event is visible 
 
 ## What the app deliberately does not have
 
-- No passwords, no email, no push notifications or reminders. Everything is pull-based; the home page lists what needs you.
+- No passwords and no push notifications. Email is optional and ships switched off ([13](13-email.md)); with it on, a few events send a mail (date or place set, payment asked or recorded, cancellation), but the home page stays the main nudge and there are no reminders yet.
 - No per-event privacy or invitations: the roster is the audience.
 - No member deletion in the product (only the API tests' cleanup removes members).
 - No payment processing: VietQR is an image link; "paid" is self- or organizer-reported.

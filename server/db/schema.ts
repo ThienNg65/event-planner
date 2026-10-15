@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, date, integer, pgTable, primaryKey, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, check, date, index, integer, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 export const STATUSES = ['going', 'maybe', 'no'] as const;
@@ -205,3 +205,49 @@ export const mailLog = pgTable('mail_log', {
   kind: text().notNull(),
   sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+export const NOTIFY_KINDS = ['planSet', 'paymentRequested', 'paymentRecorded', 'cancelled'] as const;
+
+// Outbox of event emails: a row is written in the same batch as the state change it announces, and sent after the commit.
+// `fact` names what is announced (see shared/utils/notify.ts), so the same news is never queued twice; `memberId` is set when
+// the mail is for one person (the payer), null when it goes to everyone concerned. Recipients are worked out when it is sent.
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: serial().primaryKey(),
+    kind: text({ enum: NOTIFY_KINDS }).notNull(),
+    eventId: integer()
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    memberId: integer().references(() => members.id, { onDelete: 'cascade' }),
+    fact: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    doneAt: timestamp({ withTimezone: true }),
+    attempts: integer().notNull().default(0),
+    nextAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    // A sender that claimed the row works on it until then; a crashed one is taken over after it.
+    claimedUntil: timestamp({ withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex('notifications_once').on(t.kind, t.eventId, sql`coalesce(${t.memberId}, 0)`, t.fact),
+    index('notifications_due').on(t.nextAt).where(sql`${t.doneAt} is null`),
+    check('notifications_kind', sql`${t.kind} in ('planSet', 'paymentRequested', 'paymentRecorded', 'cancelled')`),
+  ]
+);
+
+// One row per mail a notification handed to a recipient, written BEFORE the mail is sent: a crash in between loses that mail
+// instead of sending it twice (at most once). `error` is set when the provider refused it.
+export const notificationSends = pgTable(
+  'notification_sends',
+  {
+    notificationId: integer()
+      .notNull()
+      .references(() => notifications.id, { onDelete: 'cascade' }),
+    memberId: integer()
+      .notNull()
+      .references(() => members.id, { onDelete: 'cascade' }),
+    sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    error: text(),
+  },
+  (t) => [primaryKey({ columns: [t.notificationId, t.memberId] })]
+);

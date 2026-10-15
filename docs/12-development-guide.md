@@ -56,6 +56,14 @@ VND is an integer; the share rounds up to 1,000. Times are stored as `timestampt
 
 Email is configured through `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL`, `NOTIFY_SECRET` and `ALLOWED_EMAIL_DOMAINS` (see `.env.example` and [13](13-email.md)). Leave them unset in development unless you are working on mail: the email UI stays hidden. For local work set `NOTIFY_SECRET` only: mails then go to the dev server's log (`LogSender`), never to Resend. Tests must never call the real Resend API.
 
+### Adding an event mail
+
+1. Add the kind to `NOTIFY_KINDS` in `shared/utils/notify.ts` **and** in `server/db/schema.ts` (also the check constraint; a test compares the two), to `MAIL_KINDS`, and `mail.<kind>.*` plus `mail.kinds.<kind>` to both locale files.
+2. Add a `queue…` helper in `server/utils/outbox.ts` with its fact and a guard that is true only in the state the batch writes; put it in the endpoint's `db.batch` and pass it to `commit(event, eventId, writes, outbox)` (a single-statement endpoint becomes a batch).
+3. Teach `audienceOf` who gets it and when it is stale, and add a case to `test/notify.test.ts`. Keep amounts out of everything but a personal mail.
+
+Full rules: [13](13-email.md#event-emails-the-outbox).
+
 ## Releases
 
 1. Bump `VERSION`.

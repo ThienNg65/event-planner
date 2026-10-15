@@ -56,7 +56,7 @@ export function requireEmailEnabled() {
 }
 
 const LOCALES = { vi, en } as const;
-const translator = (locale: string) => (key: string, params: Record<string, unknown> = {}) => {
+export const mailTranslator = (locale: string) => (key: string, params: Record<string, unknown> = {}) => {
   const raw = key.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], LOCALES[locale === 'en' ? 'en' : 'vi']);
   return typeof raw === 'string' ? raw.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? '')) : key;
 };
@@ -80,15 +80,15 @@ async function reserveMail(kind: MailKind) {
   return rows.length > 0;
 }
 
-type Mail = { kind: MailKind; to: string; template: MailTemplate; locale: string; params?: Record<string, unknown> };
+type Mail = { kind: MailKind; to: string; template: MailTemplate; locale: string; params?: Record<string, unknown>; headers?: Record<string, string> };
 
 /** Reserves budget and sends one templated mail. 429 `mailBudget` when the day's budget is used up, 502 `mailFailed` when the provider refuses. */
-export async function sendMail({ kind, to, template, locale, params = {} }: Mail) {
+export async function sendMail({ kind, to, template, locale, params = {}, headers }: Mail) {
   const c = requireEmailEnabled();
   if (!(await reserveMail(kind))) fail(429, 'mailBudget');
   const sender = c.apiKey && c.from ? new ResendSender(c.apiKey, c.from) : new LogSender();
   try {
-    await sender.send([{ to, ...renderMail(translator(locale), template, params) }]);
+    await sender.send([{ to, ...renderMail(mailTranslator(locale), template, params), ...(headers && { headers }) }]);
   } catch (e) {
     console.error('[mail] send failed', e);
     fail(502, 'mailFailed');
@@ -97,5 +97,8 @@ export async function sendMail({ kind, to, template, locale, params = {} }: Mail
 
 /** Like `sendMail` for notices that must not fail the request they follow. */
 export const trySendMail = (mail: Mail) => sendMail(mail).catch(() => undefined);
+
+/** Site address and secret, for code that builds links in mails. */
+export const mailConfig = config;
 
 export const mailLocale = (v: unknown): 'vi' | 'en' => (v === 'en' ? 'en' : 'vi');

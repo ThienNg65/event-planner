@@ -22,8 +22,13 @@ export default defineEventHandler(async (event) => {
   // Cancel and restore are host-only and exclusive: Cancelled is an overlay, so restoring keeps the stage.
   if (b.restore === true || 'cancel' in b) {
     requireCan(role, 'cancel');
-    const set = b.restore === true ? { cancelledAt: null, cancelReason: null } : { cancelledAt: new Date(), cancelReason: clean(b.cancel, 200) || null };
-    await useDb().update(events).set(set).where(eq(events.id, ev.id));
+    const at = new Date();
+    const reason = clean(b.cancel, 200) || null;
+    // Cancelling an event that is already cancelled only changes the reason: the time stays and it is not announced again.
+    const set = b.restore === true ? { cancelledAt: null, cancelReason: null } : ev.cancelledAt ? { cancelReason: reason } : { cancelledAt: at, cancelReason: reason };
+    const update = useDb().update(events).set(set).where(eq(events.id, ev.id));
+    const outbox = b.restore === true || ev.cancelledAt ? [] : queueCancelled(ev.id, at);
+    await commit(event, ev.id, [update], outbox);
     return { ok: true };
   }
   if (ev.cancelledAt) fail(409, 'cancelled');
@@ -41,7 +46,9 @@ export default defineEventHandler(async (event) => {
     if ('startsAt' in c && !c.startsAt) fail(400, 'invalidDate');
     // In the RSVP stage the plan is frozen only because the start has passed: a corrected start must stay in the past.
     if (ev.stage === 'rsvp' && c.startsAt && c.startsAt > now) fail(400, 'invalidDate');
-    await useDb().update(events).set({ ...c, noticeAt: now }).where(eq(events.id, ev.id));
+    const next = { ...ev, ...c };
+    const moved = next.startsAt?.getTime() !== ev.startsAt?.getTime() || next.venue !== ev.venue;
+    await commit(event, ev.id, [useDb().update(events).set({ ...c, noticeAt: now }).where(eq(events.id, ev.id))], moved ? queuePlanSet(ev.id, ev, next) : []);
     return { ok: true };
   }
 
@@ -142,6 +149,10 @@ export default defineEventHandler(async (event) => {
     extras.push(...writes);
   }
 
+  // Emails announcing this change, queued in the same batch (docs/13): the plan was set or moved, or the bill was requested or changed.
+  const billed = next.stage === 'bill' && next.billTotal !== null && ((f.stage === 'bill' && ev.stage === 'rsvp') || ('billTotal' in f && f.billTotal !== ev.billTotal));
+  const outbox = [...(lock || planMoved ? queuePlanSet(ev.id, ev, next) : []), ...(billed ? queuePaymentRequested(ev.id, ev.billTotal, next.billTotal!) : [])];
+
   const nextDays = ops
     ? sql`ARRAY(SELECT DISTINCT d FROM unnest(${events.pollDays} || ${sqlArray(addDays, 'date')}) AS d WHERE d <> ALL(${sqlArray(removeDays, 'date')}) ORDER BY d)`
     : f.pollDays && sqlArray(f.pollDays, 'date');
@@ -160,18 +171,17 @@ export default defineEventHandler(async (event) => {
     .where(
       ops
         ? and(eq(events.id, ev.id), eq(events.stage, 'poll'), sql`cardinality(${nextDays}) BETWEEN 1 AND ${MAX_DAYS}`)
-        : extras.length || before.length
+        : extras.length || before.length || outbox.length
           ? and(eq(events.id, ev.id), eq(events.stage, ev.stage))
           : eq(events.id, ev.id)
     );
   if (!nextDays) {
-    if (!extras.length && !before.length) {
+    if (!extras.length && !before.length && !outbox.length) {
       await update;
       return { ok: true };
     }
-    const batch = [...before, update.returning({ id: events.id }), ...extras] as [BatchItem<'pg'>, ...BatchItem<'pg'>[]];
-    const changed = ((await useDb().batch(batch)) as { id: number }[][])[before.length];
-    if (!changed!.length) fail(409, 'stageClosed');
+    const changed = (await commit(event, ev.id, [...before, update.returning({ id: events.id }), ...extras], outbox))[before.length] as { id: number }[];
+    if (!changed.length) fail(409, 'stageClosed');
     return { ok: true };
   }
   // Drop votes for days that are no longer candidates in the same batch, or a member's next vote would be rejected as invalidDays.

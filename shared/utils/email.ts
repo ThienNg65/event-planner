@@ -14,7 +14,7 @@ export const RECOVER_CODES_GLOBAL_DAY = 15;
 export const MAIL_BUDGET_CODES = 95;
 export const MAIL_BUDGET_NOTIFY = 70;
 /** Bump when the consent wording changes; stored with each member's consent. */
-export const EMAIL_CONSENT_VERSION = '2026-10';
+export const EMAIL_CONSENT_VERSION = '2026-10.2';
 
 /** The address trimmed and lower-cased, or null when it is not a plausible single address. */
 export function normalizeEmail(v: unknown) {

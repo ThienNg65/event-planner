@@ -61,7 +61,11 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | # | Behaviour | Evidence | Intent |
 |---|---|---|---|
 | 26 | Deleting an event cascades to its responses, places and co-hosts; the members stay. | Code | Deliberate. |
-| 27 | There are no notifications of any kind. People only learn something changed by opening the app; the home to-do list is the nudge. | Code | Deliberate for now. |
+| 27 | Without email switched on, there are no notifications: people only learn something changed by opening the app; the home to-do list is the nudge. With it on, only the four event mails of [13](13-email.md#event-emails-the-outbox) exist. | Code | Deliberate. |
+| 37 | Event mails are at most once: a crash or a refusal by the provider between "recipient recorded" and "sent" loses that one mail, which is not retried. A mail over the day's budget (70 notifications in 24 h) is held until the next day, and is dropped then if it is no longer true. | Code | Deliberate. |
+| 38 | Date or place mails go to people who have a seat or a place on the waitlist (including a live held seat), not to voters who were only asked to confirm. A cancellation of an event nobody has a seat in (still polling) mails no one. Promotion from the waitlist is not mailed. | Code | Undecided. |
+| 39 | The fact of a plan or bill mail is "from → to", so A→B→A is announced again, but A→B repeated a third time after B→A is not (the same fact was already queued). Re-locking the same plan after a reopen announces it only the first time. | Code | Deliberate. |
+| 40 | Payment-request mails go out when the bill is entered or its total changes, and only to seat holders who owe something at that moment: someone who gets a seat later (promoted from the waitlist) is not mailed. | Code | Undecided. |
 | 36 | After a handover the old host is an ordinary co-host: no longer protected by `organizes()` (unless they created other events), so another organizer can reset their PIN, like any co-host. There is no way to take the event back except the new host handing it over again. A handover needs the target to have a PIN, and a pending offer does not expire. | Code | Undecided. |
 
 When you decide one of the "Undecided" items, change the behaviour *and* move the line here to the relevant chapter (or delete it).

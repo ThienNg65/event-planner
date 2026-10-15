@@ -27,6 +27,9 @@ Every handler validates its own input (there is no shared schema layer): `server
 | `POST /api/me/email/verify` `{code, locale}` | signed in | Confirm the code: saves the address and consent; a replaced address starts the 72 h cool-down and gets the "not me" mail | `emailOff`, `signInFirst`, `codeInvalid` (400; 5 wrong tries burn the code) |
 | `DELETE /api/me/email` `{currentPin}` | signed in | Remove the address and any pending code | `emailOff`, `signInFirst`, `pinWrong`, `pinLocked` |
 | `POST /api/me/email/revert` `{token}` | none (signed token) | The "not me" button: restore the previous address, sign the member out everywhere, rotate the token. The page `/email/revert#t=` only shows the button | `emailOff`, `revertInvalid` |
+| `POST /api/me/email/mute` `{kind, muted}` | signed in | Switch one kind of event email (`planSet`, `paymentRequested`, `paymentRecorded`, `cancelled`) off or on for this member | `emailOff`, `signInFirst`, `invalid` |
+| `GET /api/unsubscribe?t=&l=` | none (signed token) | The link in every event mail: an HTML page that asks to confirm. Changes nothing | `emailOff`, `unsubscribeInvalid` |
+| `POST /api/unsubscribe?t=&l=` | none (signed token) | Mutes the kind the token names, for its member; the confirm page's button and the `List-Unsubscribe-Post` one-click target. Answers an HTML page either way | `emailOff`, `unsubscribeInvalid` |
 | `POST /api/members/:id/recover` | none | Mail a recovery code to the verified address (or, in the 72 h cool-down, the previous one). Always `{ sent: true }`; caps 1/60 s and 3/day per member, 15/day overall | `emailOff`, `unknownMember` (bad id format only), `mailBudget` |
 | `POST /api/members/:id/recover/confirm` `{code, newPin}` | none | Set a new PIN with the code, sign in here, sign out elsewhere, send a "PIN was reset" notice. Open to organizers | `emailOff`, `pinFormat`, `pinWeak`, `codeInvalid` |
 
@@ -69,7 +72,7 @@ The handler tests, in this order:
 | any of `title, note, pollDays, startsAt, venue, venueLink, capacity, maxGuests, hideVotes, billTotal, bankId, bankAccount, bankHolder, cover, theme, honorees, notice, voteDeadline, reconfirmBy` | Field edits, validated by `eventFields` | organizer | `planFrozen` for date/place once frozen; `startsInPast` for a changed `startsAt` in the past; `votingClosed` for a deadline edit on a closed poll |
 | `acknowledgePayments:true` | Required when reopening to `poll` with payments | host | `hasPayments` |
 
-Multi-row effects (attendance derivation, hold release) run in one `db.batch` together with the event UPDATE, guarded on the event still being in the stage the decision was made in; a lost race returns `stageClosed`.
+Multi-row effects (attendance derivation, hold release) run in one `db.batch` together with the event UPDATE, guarded on the event still being in the stage the decision was made in; a lost race returns `stageClosed`. The same batch carries the notification rows for a lock, a date or place change, a bill request and a cancellation ([13](13-email.md#event-emails-the-outbox)); mails go out after the commit, so the response can be a moment slower (at most about 3 s on Netlify).
 
 ## Answers, suggestions
 
@@ -116,6 +119,7 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `mailBudget`, `mailFailed` | 429, 502 | The 24 h mail budget is used up; the provider refused the mail |
 | `codeInvalid` | 400 | Wrong, expired, burned or missing one-time code (deliberately one answer) |
 | `revertInvalid` | 400 | "Not me" token malformed, forged, used, or past its 72 h |
+| `unsubscribeInvalid` | 400 | Unsubscribe link malformed or forged |
 | `cancelled` | 409 | The event is cancelled |
 | `stageClosed` | 409 | The step is not open in the event's current stage (also a lost batch race) |
 | `votingClosed` | 409 | Deadline passed (participants only) |

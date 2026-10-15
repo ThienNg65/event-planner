@@ -249,7 +249,8 @@
     "mailBudget": "Email cannot be sent right now. Try again tomorrow.",
     "mailFailed": "The email could not be sent. Try again later.",
     "codeInvalid": "That code is wrong or has expired.",
-    "revertInvalid": "This link is no longer valid."
+    "revertInvalid": "This link is no longer valid.",
+    "unsubscribeInvalid": "This unsubscribe link is not valid."
   },
   "days": {
     "edit": "Edit days",
@@ -860,14 +861,14 @@
   },
   "email": {
     "title": "Email",
-    "intro": "Add a verified email so you can reset your own PIN if you forget it.",
+    "intro": "Add a verified email to reset your own PIN if you forget it and to get emails about your events.",
     "add": "Add email",
     "change": "Change email",
     "remove": "Remove email",
     "current": "Your email: {email}",
     "cooldown": "You changed your address recently. Until {until}, PIN recovery codes still go to your previous address.",
     "label": "Email address",
-    "consent": "I agree that Team Events keeps my email address to send me one-time codes (to confirm this address and to reset my PIN) and security notices. Mails are sent for us by Resend, a service outside Vietnam, so my address is sent abroad. I can withdraw this at any time by removing my email here.",
+    "consent": "I agree that Team Events keeps my email address to send me one-time codes (to confirm this address and to reset my PIN) and security notices, and emails about events I take part in (date or place set or changed, payment requests and recorded payments, cancellations), which I can switch off one by one in my profile. Mails are sent for us by Resend, a service outside Vietnam, so my address is sent abroad. I can withdraw this at any time by removing my email here.",
     "send": "Send code",
     "codeSent": "We sent a 6-digit code to {email}. It works for 15 minutes.",
     "code": "6-digit code",
@@ -886,7 +887,9 @@
     "revertBody": "Your address was replaced on a Team Events account. If you did not do this, put it back: the account will be signed out everywhere, and you can then reset its PIN with a code sent to this address.",
     "revertDo": "Not me: restore this address",
     "revertDone": "Done. The previous address is back and the account is signed out everywhere.",
-    "revertMissing": "This link is incomplete. Open it again from the email."
+    "revertMissing": "This link is incomplete. Open it again from the email.",
+    "notifyTitle": "Event emails",
+    "notifyIntro": "Choose which event emails you get. Every one has a link to stop it."
   },
   "mail": {
     "footer": "Team Events. This is an automatic message, please do not reply.",
@@ -906,6 +909,40 @@
     "pinReset": {
       "subject": "Team Events: your PIN was reset",
       "body": "The PIN of {name} was reset with an email code, and every other device was signed out.\n\nIf this was you, there is nothing more to do. If it was not, someone may have access to this inbox: secure your email account and ask a Team Events organizer for help."
+    },
+    "stop": "Stop these emails",
+    "kinds": {
+      "planSet": "Date or place set or changed",
+      "paymentRequested": "Payment requests",
+      "paymentRecorded": "Payment recorded by the organizer",
+      "cancelled": "Event cancelled"
+    },
+    "unsubscribe": {
+      "title": "Stop these emails?",
+      "body": "You will no longer get Team Events emails about: {what}. You can switch them back on in your profile.",
+      "button": "Stop these emails",
+      "done": "Done. You will no longer get Team Events emails about: {what}."
+    },
+    "planSet": {
+      "subject": "{title}: date or place set",
+      "body": "The date or place of {title} was set or changed.\n\nWhen: {when}\nWhere: {place}\n\nPlease check that it still suits you and update your answer if it does not.",
+      "action2": "Open the event"
+    },
+    "paymentRequested": {
+      "subject": "{title}: your share is {amount}",
+      "body": "Hi {name}, the bill for {title} is in. Your share is {amount}.\n\nPay by bank transfer, then tap \"I've paid\" on the event page so the organizer can see it.",
+      "action": "Open the VietQR code",
+      "action2": "Open the event"
+    },
+    "paymentRecorded": {
+      "subject": "{title}: your payment was recorded",
+      "body": "The organizer recorded your payment for {title}. There is nothing more to do.",
+      "action2": "Open the event"
+    },
+    "cancelled": {
+      "subject": "{title} was cancelled",
+      "body": "{title} was cancelled by its organizer. You had a place on its guest list.\n\nThe event page has the details.",
+      "action2": "Open the event"
     }
   }
 }

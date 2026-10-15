@@ -95,11 +95,19 @@ Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `deriv
 
 ## `member_email`, `member_codes`, `mail_log` (R4)
 
-`member_email` (PK `member_id` to members, cascade): `email`, `verified_at`, `consent_at`, `consent_version`, `locale` (`vi` or `en`, language of mails), `muted_kinds` (text[], for R5), `prev_email`, `prev_until`, `recovery_after` (set together after a change: the cool-down, [13](13-email.md)). No unique index on `email`: two members may share an address. Never returned except to its owner.
+`member_email` (PK `member_id` to members, cascade): `email`, `verified_at`, `consent_at`, `consent_version`, `locale` (`vi` or `en`, language of mails), `muted_kinds` (text[]: the notification kinds the member switched off, see `notifications`), `prev_email`, `prev_until`, `recovery_after` (set together after a change: the cool-down, [13](13-email.md)). No unique index on `email`: two members may share an address. Never returned except to its owner.
 
 `member_codes` (PK `(member_id, purpose)`, purpose `verify` or `recover`): `target_email`, `code_hash` (keyed HMAC, never the code), `expires_at`, `fails`, `sent_at`, `sends_today` and `sends_day` (the daily caps).
 
 `mail_log` (`id`, `kind`, `sent_at`): one row per mail handed to the provider; the 24-hour budget is counted from it and rows older than two days are deleted.
+
+## `notifications`, `notification_sends` (R5)
+
+The outbox of event emails ([13](13-email.md#event-emails-the-outbox)).
+
+`notifications`: `id`, `kind` (`planSet`, `paymentRequested`, `paymentRecorded`, `cancelled`; check), `event_id` (cascade), `member_id` (null = everyone concerned; the payer for `paymentRecorded`), `fact` (what is announced, so the same news is queued once), `created_at`, `done_at`, `attempts`, `next_at` (not before; the 24 h wait of a mail over budget), `claimed_until` (a sender holds the row until then). Unique `(kind, event_id, coalesce(member_id, 0), fact)`; partial index on `next_at` where `done_at is null`.
+
+`notification_sends` (PK `(notification_id, member_id)`, both cascade): one row per recipient, written before the mail goes out; `error` is set when the provider refused it. A row means "do not send again".
 
 ## `cohosts`
 
@@ -129,5 +137,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`), `0014_slimy_pyro` (`member_email`, `member_codes`, `mail_log`).
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`), `0014_slimy_pyro` (`member_email`, `member_codes`, `mail_log`), `0015_pretty_mister_fear` (`notifications`, `notification_sends`).
 `netlify.toml` (and the Cloudflare build command in the README) runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

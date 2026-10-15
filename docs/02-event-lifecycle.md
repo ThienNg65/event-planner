@@ -69,6 +69,10 @@ Only the host may go backwards, and to any earlier stage.
 While `cancelledAt` is set, nearly every write fails with `cancelled` (409): stage moves, edits, votes, RSVPs, payments, suggestions,
 co-host invites. Only **restore** (and delete) work. The home page files a cancelled event under "Past".
 
+### Emails the lifecycle sends
+
+When email is switched on ([13](13-email.md#event-emails-the-outbox)), four changes queue a mail in the same batch as the change itself: **locking** the plan or **editing** the date or place in `rsvp` (and a notice-backed correction) → `planSet`; **entering the bill** (from `rsvp`) or **changing the total** while in `bill` → `paymentRequested`; **cancelling** → `cancelled` (restoring sends nothing; cancelling an already cancelled event only changes the reason). Everything else is silent. With email off nothing is queued.
+
 ## Voting window (stage `poll` only)
 
 `votingOpen(ev)` = stage is `poll`, not cancelled, and (no `voteDeadline` or now is before it).

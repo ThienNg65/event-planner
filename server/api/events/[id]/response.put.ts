@@ -113,7 +113,9 @@ export default defineEventHandler(async (event) => {
       },
     });
   if (!Object.keys(picks).length) {
-    await upsert;
+    // A payment an organizer records for someone else is mailed to that member (the member's own report is not).
+    const outbox = role !== null && set.paidAt && member.id !== (await meOf(event)) ? queuePaymentRecorded(ev.id, member.id, set.paidAt) : [];
+    await commit(event, ev.id, [upsert], outbox);
     return { ok: true };
   }
   // The share lock waits for an edit of the days or places in flight (voters don't block each other), so the filter sees its result.

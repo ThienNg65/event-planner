@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// The email section of the account menu: add or change the address (consent, PIN, then a mailed code) or remove it.
+// The email section of the account menu: add or change the address (consent, PIN, then a mailed code) or remove it, and
+// switch each kind of event email on or off.
 // Rendered only when the server reports email as enabled and the member has a PIN.
 const { t, locale } = useI18n();
 const toast = useToast();
@@ -45,6 +46,11 @@ const verify = () =>
     await refreshMe();
     toast.add({ title: t('email.saved') });
   });
+const setMuted = (kind: NotifyKind, muted: boolean) =>
+  run(async () => {
+    await $fetch('/api/me/email/mute', { method: 'POST', body: { kind, muted } });
+    await refreshMe();
+  });
 const remove = () =>
   run(async () => {
     await $fetch('/api/me/email', { method: 'DELETE', body: { currentPin: pin.value } });
@@ -64,6 +70,19 @@ const remove = () =>
       <div class="flex flex-wrap gap-2">
         <UButton color="neutral" variant="outline" size="sm" icon="i-lucide-mail" @click="step = 'form'">{{ t(me?.email ? 'email.change' : 'email.add') }}</UButton>
         <UButton v-if="me?.email" color="neutral" variant="ghost" size="sm" icon="i-lucide-trash-2" @click="step = 'remove'">{{ t('email.remove') }}</UButton>
+      </div>
+      <div v-if="me?.email" class="space-y-1.5 border-t border-default pt-2">
+        <p class="text-xs font-semibold text-highlighted">{{ t('email.notifyTitle') }}</p>
+        <p class="text-xs text-muted">{{ t('email.notifyIntro') }}</p>
+        <USwitch
+          v-for="kind in NOTIFY_KINDS"
+          :key="kind"
+          size="sm"
+          :label="t(`mail.kinds.${kind}`)"
+          :model-value="!me.email.muted.includes(kind)"
+          :disabled="busy"
+          @update:model-value="(on: boolean) => setMuted(kind, !on)"
+        />
       </div>
     </template>
 
