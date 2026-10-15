@@ -19,7 +19,8 @@ const paying = computed(() => ev.value.stage === 'bill' || ev.value.stage === 's
 const ORDER = ['going', 'waitlist', 'maybe', 'voted', 'no'] as const;
 const rows = computed(() =>
   props.data.responses
-    .filter((r) => (ev.value.stage === 'poll' ? hasVoted(r) : r.status))
+    // `voted` is computed on the server before hidden results are emptied, so the list still shows who answered.
+    .filter((r) => (ev.value.stage === 'poll' ? r.voted : r.status))
     .map((r) => {
       const waitPlace = props.data.waitlist.indexOf(r.memberId) + 1;
       // While polling, "can't join" is the only answer that counts (it withdraws the votes).

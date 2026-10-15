@@ -164,7 +164,7 @@
     "repeatUntil": "Repeat until",
     "repeatUntilHint": "Optional. The last day a new event may fall on.",
     "repeatNeeds": "Repeating needs a fixed date and a place.",
-    "repeatHint": "The next event is created automatically once this one has started, with the same details and organizers."
+    "repeatHint": "The next event is created automatically 14 days before its date (or once this one has started, if that is later), with the same details and organizers."
   },
   "rsvp": {
     "title": "RSVP",

@@ -164,7 +164,7 @@
     "repeatUntil": "Lặp đến hết ngày",
     "repeatUntilHint": "Không bắt buộc. Ngày cuối cùng một sự kiện mới được diễn ra.",
     "repeatNeeds": "Sự kiện lặp lại cần ngày giờ và địa điểm cố định.",
-    "repeatHint": "Sự kiện kế tiếp tự động được tạo sau khi sự kiện này bắt đầu, với cùng thông tin và người tổ chức."
+    "repeatHint": "Sự kiện kế tiếp tự động được tạo 14 ngày trước ngày diễn ra (hoặc khi sự kiện này bắt đầu, nếu muộn hơn), với cùng thông tin và người tổ chức."
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
