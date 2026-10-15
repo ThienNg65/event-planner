@@ -44,7 +44,7 @@ How the app works in depth (event lifecycle, identity and roles, polling, seats 
 ## Run locally
 
 ```bash
-npm install
+npm install --registry=https://registry.npmjs.org
 npm run db:migrate   # run again after pulling: migration 0002 adds roles, deadline, cancel, notice and partial payments
 npm run dev
 ```
