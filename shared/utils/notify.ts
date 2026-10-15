@@ -1,6 +1,6 @@
 import { paymentOf, rollCall, seated, shareOf } from './event.ts';
 
-export const NOTIFY_KINDS = ['planSet', 'paymentRequested', 'paymentRecorded', 'cancelled'] as const;
+export const NOTIFY_KINDS = ['planSet', 'paymentRequested', 'paymentRecorded', 'cancelled', 'tomorrow', 'paymentReminder'] as const;
 export type NotifyKind = (typeof NOTIFY_KINDS)[number];
 export const isNotifyKind = (v: unknown): v is NotifyKind => NOTIFY_KINDS.includes(v as never);
 
@@ -23,7 +23,9 @@ export const planFact = (ev: { startsAt: At; venue: string | null }) => `${ms(ev
 export const planSetFact = (prev: { startsAt: At; venue: string | null }, next: { startsAt: At; venue: string | null }) => `${planFact(prev)}→${planFact(next)}`;
 /** What entering or changing the bill announces: the previous total (empty when none) → the new one. */
 export const billFact = (prev: number | null, next: number) => `${prev ?? ''}→${next}`;
-/** The instant a payment was recorded or an event was cancelled. */
+/** Which payment reminder (1 or 2) for which bill total: a changed total starts the count again. */
+export const reminderFact = (total: number, n: 1 | 2) => `${total}#${n}`;
+/** The instant a payment was recorded, an event was cancelled, or (for "tomorrow") the event starts. */
 export const timeFact = (at: Date | string) => ms(at);
 
 export type Notice = { kind: NotifyKind; fact: string; memberId: number | null };
@@ -51,14 +53,16 @@ export function audienceOf(n: Notice, ev: NoticeEvent, rows: NoticeRow[], now = 
     return row?.paidAt && timeFact(row.paidAt) === n.fact ? [{ memberId: row.memberId }] : null;
   }
   const { confirmed, waitlist, seats } = rollCall(seated(rows, ev, now), ev.capacity);
-  if (n.kind === 'paymentRequested') {
-    if (ev.stage !== 'bill' || ev.billTotal === null || !n.fact.endsWith(`→${ev.billTotal}`)) return null;
+  if (n.kind === 'paymentRequested' || n.kind === 'paymentReminder') {
+    if (ev.stage !== 'bill' || ev.billTotal === null) return null;
+    if (n.kind === 'paymentRequested' ? !n.fact.endsWith(`→${ev.billTotal}`) : !n.fact.startsWith(`${ev.billTotal}#`)) return null;
     const share = shareOf(ev.billTotal, seats);
     return confirmed.flatMap((r) => {
       const owes = share === null ? 0 : paymentOf(r, share * (1 + r.guests)).left;
       return owes > 0 ? [{ memberId: r.memberId, owes }] : [];
     });
   }
+  if (n.kind === 'tomorrow') return ev.startsAt && timeFact(ev.startsAt) === n.fact && ev.stage !== 'poll' ? confirmed.map((r) => ({ memberId: r.memberId })) : null;
   if (n.kind === 'planSet' && !n.fact.endsWith(`→${planFact(ev)}`)) return null;
   return [...confirmed, ...waitlist].map((r) => ({ memberId: r.memberId }));
 }

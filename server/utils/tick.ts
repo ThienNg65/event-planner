@@ -2,8 +2,9 @@
 const HOUR = 3600_000;
 const DAY = 24 * HOUR;
 const VN_OFFSET = 7 * HOUR;
-/** Payment reminders go out at 09:00 Vietnam time, the 02:00 UTC hour. */
-const REMINDER_UTC_HOUR = 2;
+/** Scheduled mails ("tomorrow", payment reminders) are queued from 09:00 to 20:59 Vietnam time, the 02:00–13:59 UTC hours. The first tick
+ * in the window queues them; later ticks find them already queued (the outbox dedupes on the fact), so a missed 09:00 tick only delays them. */
+const SENDING_UTC_HOURS = [2, 14];
 /** Days after the payment request when reminder 1 and reminder 2 become due. */
 const REMINDER_AFTER_DAYS = [2, 5];
 
@@ -32,8 +33,9 @@ export async function runTick(now: Date, list: TickJob[] = jobs): Promise<TickSu
   return { at: now.toISOString(), jobs: results };
 }
 
-export function isReminderHour(now: Date) {
-  return now.getUTCHours() === REMINDER_UTC_HOUR;
+export function isSendingHour(now: Date) {
+  const h = now.getUTCHours();
+  return h >= SENDING_UTC_HOURS[0]! && h < SENDING_UTC_HOURS[1]!;
 }
 
 /** Start (inclusive) and end (exclusive) of tomorrow's calendar day in Vietnam time. */

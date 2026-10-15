@@ -912,11 +912,24 @@
       "body": "Mã PIN của {name} vừa được đặt lại bằng mã gửi qua email và mọi thiết bị khác đã bị đăng xuất.\n\nNếu là bạn làm thì không cần làm gì thêm. Nếu không, có thể ai đó đang truy cập hộp thư này: hãy bảo mật tài khoản email và nhờ người tổ chức Team Events hỗ trợ."
     },
     "stop": "Ngừng nhận các email này",
+    "tomorrow": {
+      "subject": "{title}: ngày mai",
+      "body": "Chào {name}, {title} diễn ra vào ngày mai.\n\nThời gian: {when}\nĐịa điểm: {place}\n\nNếu bạn không đi được nữa, hãy cập nhật câu trả lời để người khác có chỗ.",
+      "action2": "Mở sự kiện"
+    },
+    "paymentReminder": {
+      "subject": "{title}: nhắc thanh toán {amount}",
+      "body": "Chào {name}, bạn còn {amount} cho {title}.\n\nNếu bạn đã chuyển khoản, hãy bấm \"Tôi đã trả\" trên trang sự kiện để người tổ chức biết.",
+      "action": "Mở mã VietQR",
+      "action2": "Mở sự kiện"
+    },
     "kinds": {
       "planSet": "Chốt hoặc đổi ngày, địa điểm",
       "paymentRequested": "Yêu cầu thanh toán",
       "paymentRecorded": "Người tổ chức ghi nhận thanh toán",
-      "cancelled": "Sự kiện bị hủy"
+      "cancelled": "Sự kiện bị hủy",
+      "tomorrow": "Nhắc sự kiện ngày mai",
+      "paymentReminder": "Nhắc thanh toán"
     },
     "unsubscribe": {
       "title": "Ngừng nhận các email này?",

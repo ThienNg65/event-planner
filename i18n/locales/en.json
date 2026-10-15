@@ -912,11 +912,24 @@
       "body": "The PIN of {name} was reset with an email code, and every other device was signed out.\n\nIf this was you, there is nothing more to do. If it was not, someone may have access to this inbox: secure your email account and ask a Team Events organizer for help."
     },
     "stop": "Stop these emails",
+    "tomorrow": {
+      "subject": "{title}: tomorrow",
+      "body": "Hi {name}, {title} is tomorrow.\n\nWhen: {when}\nWhere: {place}\n\nIf you can no longer come, update your answer so someone else can have the seat.",
+      "action2": "Open the event"
+    },
+    "paymentReminder": {
+      "subject": "{title}: reminder, {amount} to pay",
+      "body": "Hi {name}, you still owe {amount} for {title}.\n\nIf you have already paid, tap \"I've paid\" on the event page so the organizer can see it.",
+      "action": "Open the VietQR code",
+      "action2": "Open the event"
+    },
     "kinds": {
       "planSet": "Date or place set or changed",
       "paymentRequested": "Payment requests",
       "paymentRecorded": "Payment recorded by the organizer",
-      "cancelled": "Event cancelled"
+      "cancelled": "Event cancelled",
+      "tomorrow": "Event tomorrow",
+      "paymentReminder": "Payment reminders"
     },
     "unsubscribe": {
       "title": "Stop these emails?",

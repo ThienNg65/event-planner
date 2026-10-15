@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { audienceOf, afterSendError, billFact, isNotifyKind, MAX_ATTEMPTS, NOTIFY_KINDS, planFact, planSetFact, reachable, retryAt, timeFact, type NoticeEvent, type NoticeRow } from '../shared/utils/notify.ts';
+import { audienceOf, afterSendError, billFact, isNotifyKind, MAX_ATTEMPTS, NOTIFY_KINDS, planFact, planSetFact, reachable, reminderFact, retryAt, timeFact, type NoticeEvent, type NoticeRow } from '../shared/utils/notify.ts';
 import { NOTIFY_KINDS as TABLE_KINDS } from '../server/db/schema.ts';
 import { MAIL_KINDS, renderMail } from '../server/utils/mailTemplates.ts';
 
@@ -151,4 +151,24 @@ test('notification mails: every kind in both languages, the amount only in the p
     assert.ok(d.mail.unsubscribe.title && d.mail.unsubscribe.body.includes('{what}') && d.mail.unsubscribe.done.includes('{what}') && d.mail.unsubscribe.button && d.err.unsubscribeInvalid);
     assert.ok(d.email.notifyTitle && d.email.notifyIntro);
   }
+});
+
+test('event tomorrow: seated people only, dropped if the start moved or the event went back to the poll', () => {
+  const now = ev({ capacity: 2 });
+  const n = { kind: 'tomorrow', fact: timeFact(now.startsAt!), memberId: null } as const;
+  const rows = [row(1), row(2), row(3), row(4, { status: 'maybe' })];
+  assert.deepEqual(ids(audienceOf(n, now, rows, NOW)), [1, 2]);
+  assert.equal(audienceOf(n, ev({ startsAt: at('2026-10-26T12:00:00Z') }), rows, NOW), null);
+  assert.equal(audienceOf(n, ev({ stage: 'poll' }), rows, NOW), null);
+  assert.equal(audienceOf(n, ev({ cancelledAt: at('2026-10-19T00:00:00Z') }), rows, NOW), null);
+});
+
+test('payment reminder: unpaid seat holders for the current total only', () => {
+  const bill = ev({ stage: 'bill', billTotal: 200_000 });
+  const rows = [row(1), row(2, { paidAt: at('2026-10-20T00:00:00Z') })];
+  const n = { kind: 'paymentReminder', fact: reminderFact(200_000, 1), memberId: null } as const;
+  assert.deepEqual(audienceOf(n, bill, rows, NOW), [{ memberId: 1, owes: 100_000 }]);
+  assert.equal(audienceOf(n, ev({ stage: 'bill', billTotal: 250_000 }), rows, NOW), null);
+  assert.equal(audienceOf(n, ev({ stage: 'settled', billTotal: 200_000 }), rows, NOW), null);
+  assert.notEqual(reminderFact(200_000, 1), reminderFact(200_000, 2));
 });

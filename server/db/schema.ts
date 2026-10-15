@@ -206,7 +206,7 @@ export const mailLog = pgTable('mail_log', {
   sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-export const NOTIFY_KINDS = ['planSet', 'paymentRequested', 'paymentRecorded', 'cancelled'] as const;
+export const NOTIFY_KINDS = ['planSet', 'paymentRequested', 'paymentRecorded', 'cancelled', 'tomorrow', 'paymentReminder'] as const;
 
 // Outbox of event emails: a row is written in the same batch as the state change it announces, and sent after the commit.
 // `fact` names what is announced (see shared/utils/notify.ts), so the same news is never queued twice; `memberId` is set when
@@ -231,7 +231,7 @@ export const notifications = pgTable(
   (t) => [
     uniqueIndex('notifications_once').on(t.kind, t.eventId, sql`coalesce(${t.memberId}, 0)`, t.fact),
     index('notifications_due').on(t.nextAt).where(sql`${t.doneAt} is null`),
-    check('notifications_kind', sql`${t.kind} in ('planSet', 'paymentRequested', 'paymentRecorded', 'cancelled')`),
+    check('notifications_kind', sql`${t.kind} in ('planSet', 'paymentRequested', 'paymentRecorded', 'cancelled', 'tomorrow', 'paymentReminder')`),
   ]
 );
 

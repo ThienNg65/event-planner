@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isReminderHour, reminderDue, runTick, tomorrowWindowVN } from '../server/utils/tick.ts';
+import { isSendingHour, reminderDue, runTick, tomorrowWindowVN } from '../server/utils/tick.ts';
 
-test('reminder hour is the 02:00 UTC hour (09:00 Vietnam)', () => {
-  assert.equal(isReminderHour(new Date('2026-10-15T02:00:00Z')), true);
-  assert.equal(isReminderHour(new Date('2026-10-15T02:59:59Z')), true);
-  assert.equal(isReminderHour(new Date('2026-10-15T03:00:00Z')), false);
-  assert.equal(isReminderHour(new Date('2026-10-15T01:59:59Z')), false);
+test('scheduled mails are queued from 09:00 to 20:59 Vietnam time', () => {
+  assert.equal(isSendingHour(new Date('2026-10-15T02:00:00Z')), true);
+  assert.equal(isSendingHour(new Date('2026-10-15T13:59:59Z')), true);
+  assert.equal(isSendingHour(new Date('2026-10-15T14:00:00Z')), false);
+  assert.equal(isSendingHour(new Date('2026-10-15T01:59:59Z')), false);
 });
 
 test('tomorrow in Vietnam time, including when UTC is still on the previous day', () => {

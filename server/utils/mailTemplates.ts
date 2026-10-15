@@ -1,6 +1,6 @@
 type Tr = (key: string, params?: Record<string, unknown>) => string;
 
-export const MAIL_KINDS = ['verifyCode', 'recoverCode', 'emailChanged', 'pinReset', 'planSet', 'paymentRequested', 'paymentRecorded', 'cancelled'] as const;
+export const MAIL_KINDS = ['verifyCode', 'recoverCode', 'emailChanged', 'pinReset', 'planSet', 'paymentRequested', 'paymentRecorded', 'cancelled', 'tomorrow', 'paymentReminder'] as const;
 export type MailTemplate = (typeof MAIL_KINDS)[number];
 
 const ENTITIES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };

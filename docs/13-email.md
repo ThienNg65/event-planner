@@ -44,7 +44,7 @@ Resend's free plan sends 100 a day. Every send first takes a place in `mail_log`
 
 ## Event emails: the outbox
 
-Four kinds, each sent to the member's verified address in the language saved with it (`member_email.locale`):
+Six kinds, each sent to the member's verified address in the language saved with it (`member_email.locale`):
 
 | Kind | Queued when | Goes to | Content |
 |---|---|---|---|
@@ -52,8 +52,10 @@ Four kinds, each sent to the member's verified address in the language saved wit
 | `paymentRequested` | the bill is entered (`rsvp → bill` with a total) or its total changes while in `bill` (reopening to `bill` sends nothing) | each seat holder who still owes, with **their own** amount | amount, a VietQR link when bank details are set, link to the event |
 | `paymentRecorded` | an organizer records a payment for someone else | that member only | title and link, **no amount** |
 | `cancelled` | the event is cancelled (not when it was already) | everyone with a seat or on the waitlist | title and link |
+| `tomorrow` | the hourly tick, 09:00–20:59 Vietnam time, for a locked (`rsvp` or `bill`), not cancelled event that starts tomorrow (Vietnam day) | everyone with a seat (not the waitlist) | title, time and place, link |
+| `paymentReminder` | the hourly tick, 09:00–20:59 Vietnam time, 2 and 5 days after the first `paymentRequested` for the current total, at most 2 per total | each seat holder who still owes, with **their own** amount | as `paymentRequested` |
 
-The amount appears only in the personal `paymentRequested` mail, never in the others.
+The amount appears only in the personal `paymentRequested` and `paymentReminder` mails, never in the others.
 
 **Writing.** The endpoint that makes the change adds `queuePlanSet`, `queuePaymentRequested`, `queuePaymentRecorded` or `queueCancelled` (`server/utils/outbox.ts`) to its `db.batch`: `INSERT INTO notifications … SELECT … WHERE EXISTS (<the event, plan, payment or cancellation as just written>) ON CONFLICT DO NOTHING`. A request that loses a race, or repeats the same change, queues nothing. The `fact` makes the news unique (`shared/utils/notify.ts`): a plan change is `planFact(prev)→planFact(next)` (start in ms plus place, so going back from B to A is a new announcement), a bill is `prevTotal→total`, a payment or a cancellation is its timestamp in ms. A single-statement endpoint (cancel, recording a payment, a plan edit without attendance writes) became a batch for this.
 
@@ -68,10 +70,20 @@ The amount appears only in the personal `paymentRequested` mail, never in the ot
 5. Sends each through `sendMail` with the `notify` budget. If the day's budget is used up (`mailBudget`), the places not yet used are given back (their `notification_sends` rows deleted) and the notification waits 24 hours (`next_at`, `attempts` not counted); when it comes back it is re-checked, so a stale one is dropped. Any other send failure sets `error` on that recipient's row and is not retried. At most 15 recipients per run (`SENDS_PER_RUN`; each costs two requests and Workers allow 50); the rest stay due for the next run.
 6. Marks the row done. An unexpected error (database, say) returns it to the queue with a backoff of 10, 20, 30, 40 minutes (`retryAt`) and gives up after 5 attempts.
 
-**Where it runs.** On Cloudflare Workers `dispatch` continues after the response (`event.waitUntil`, detected by `event.context.waitUntil`). On Netlify nothing can run after the response, so the request waits for it but at most 3 seconds (`afterCommit`); whatever is left is still queued. Leftovers are picked up by the next dispatch for the same event, and by the scheduled tick in R6.
+**Where it runs.** On Cloudflare Workers `dispatch` continues after the response (`event.waitUntil`, detected by `event.context.waitUntil`). On Netlify nothing can run after the response, so the request waits for it but at most 3 seconds (`afterCommit`); whatever is left is still queued. Leftovers are picked up by the next dispatch for the same event, and by the scheduled tick (below).
 
 **Every mail** carries a "stop these emails" link and the `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click` headers, all pointing to `APP_URL/api/unsubscribe?t=<token>&l=<locale>`. The token is `signToken(NOTIFY_SECRET, "unsub:<memberId>:<kind>")`, so it can only mute that kind for that member. `GET` shows a page (`mail.unsubscribe.*`, with a locked-down `Content-Security-Policy` and `Referrer-Policy: no-referrer`) and changes nothing, so a mail scanner that follows the link does no harm; its button, and mail clients' one-click, `POST` the same address, which appends the kind to `member_email.muted_kinds` (idempotent) and answers a page. The profile (`MemberEmail.vue`) shows one switch per kind, backed by `POST /api/me/email/mute`. Verifying the email also covers these mails: the consent text and `EMAIL_CONSENT_VERSION` (`2026-10.2`) name them.
 
+## Scheduled mails: the hourly tick
+
+`POST /api/cron/tick` (Netlify, `netlify/functions/tick.mts`) or the `cloudflare:scheduled` hook (`server/plugins/cron.ts`) runs `runTick` ([12](12-development-guide.md#scheduled-tick)). The jobs are registered in `server/plugins/tickJobs.ts`; while email is off they do nothing.
+
+- **`tomorrow`** queues one row per event starting tomorrow, with the start time in ms as its fact: an event moved to another day is announced again, and the same event is never queued twice. `audienceOf` drops it if the start moved, the event went back to the poll, or it was cancelled.
+- **`paymentReminders`** finds bill-stage events, the first `paymentRequested` row whose fact ends in the current total, and the number of reminders already queued for that total (`<total>#1`, `<total>#2`); `reminderDue` decides whether reminder 1 (day 2) or 2 (day 5) is due. A changed total starts the count again from its own request. Because the reminders hang off the outbox rows, an event billed while email was off gets no reminders. A fully paid event queues a reminder that mails no one.
+- **`sweep`** runs `dispatch()` for any event, two notifications per tick (Workers allow 50 requests per run), so leftovers from Netlify's 3-second cap, budget waits and retries go out.
+
+Scheduled mails are only queued between 09:00 and 20:59 Vietnam time (`isSendingHour`); the first tick in that window queues them and later ones find them already queued, so a missed tick only delays them.
+
 ## Files
 
-`shared/utils/email.ts` (constants, address and domain checks, budget maths), `server/utils/mailCrypto.ts` (code, hash, signed token), `server/utils/mailTemplates.ts` (renders `mail.<kind>.*` from the locale files), `server/utils/mail.ts` (`EmailSender`, `ResendSender`, `LogSender`, `sendMail`), `server/utils/emailCodes.ts`, `server/api/me/email*`, `server/api/members/[id]/recover*`, `app/components/MemberEmail.vue`, `app/components/MemberPicker.vue` (recovery), and for event mails `server/utils/outbox.ts` (queueing, `dispatch`, `afterCommit`), `server/utils/unsubscribe.ts`, `server/api/unsubscribe.*`, `server/api/me/email/mute.post.ts`, `shared/utils/notify.ts` (facts, `audienceOf`, `reachable`, retry rules). Tests: `test/email.test.ts`, `test/notify.test.ts`, `test/api/phase2-r4.test.ts` (the dark behaviour), `test/api/phase2-r5.test.ts` (nothing queued while email is off).
+`shared/utils/email.ts` (constants, address and domain checks, budget maths), `server/utils/mailCrypto.ts` (code, hash, signed token), `server/utils/mailTemplates.ts` (renders `mail.<kind>.*` from the locale files), `server/utils/mail.ts` (`EmailSender`, `ResendSender`, `LogSender`, `sendMail`), `server/utils/emailCodes.ts`, `server/api/me/email*`, `server/api/members/[id]/recover*`, `app/components/MemberEmail.vue`, `app/components/MemberPicker.vue` (recovery), and for event mails `server/utils/outbox.ts` (queueing, `dispatch`, `afterCommit`), `server/utils/unsubscribe.ts`, `server/api/unsubscribe.*`, `server/api/me/email/mute.post.ts`, `shared/utils/notify.ts` (facts, `audienceOf`, `reachable`, retry rules), `server/utils/tick.ts` and `server/plugins/tickJobs.ts` (scheduled mails). Tests: `test/email.test.ts`, `test/notify.test.ts`, `test/api/phase2-r4.test.ts` (the dark behaviour), `test/api/phase2-r5.test.ts` (nothing queued while email is off).

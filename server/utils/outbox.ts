@@ -161,7 +161,7 @@ async function deliver(n: Claimed) {
     const { name } = contacts.get(r.memberId)!;
     const stop = unsubscribeUrl(c, r.memberId, n.kind, r.locale);
     const qr =
-      n.kind === 'paymentRequested' && ev.bankId && ev.bankAccount
+      (n.kind === 'paymentRequested' || n.kind === 'paymentReminder') && ev.bankId && ev.bankAccount
         ? vietqrUrl(ev.bankId, ev.bankAccount, ev.bankHolder, r.owes!, `${ev.title} ${name}`)
         : '';
     try {
