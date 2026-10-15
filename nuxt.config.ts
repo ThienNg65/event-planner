@@ -8,12 +8,15 @@ export default defineNuxtConfig({
       // The share card renders with resvg compiled to wasm, which runs on Node (Netlify) and Cloudflare Workers alike.
       Object.assign((config.experimental ??= {}), { wasm: true });
       // Used only by the cloudflare-module preset: emit a wrangler config with nodejs_compat for `wrangler deploy`.
-      Object.assign(config, { cloudflare: { deployConfig: true, nodeCompat: true } });
+      // The hourly cron trigger runs the scheduled tick (server/plugins/cron.ts).
+      Object.assign(config, {
+        cloudflare: { deployConfig: true, nodeCompat: true, wrangler: { triggers: { crons: ['0 * * * *'] } } },
+      });
     },
   },
   // Email settings. Empty here: set RESEND_API_KEY, MAIL_FROM, APP_URL, NOTIFY_SECRET and ALLOWED_EMAIL_DOMAINS (or the
   // NUXT_* forms) in the host's environment. Without a key the app sends nothing and hides its email features.
-  runtimeConfig: { resendApiKey: '', mailFrom: '', appUrl: '', notifySecret: '', allowedEmailDomains: '' },
+  runtimeConfig: { resendApiKey: '', mailFrom: '', appUrl: '', notifySecret: '', allowedEmailDomains: '', cronSecret: '' },
   app: {
     head: {
       title: 'Team Events',

@@ -73,6 +73,17 @@ Members can add a verified email to reset their own forgotten PIN and to get eve
 
 Members consent when they add an address (the text names Resend as a processor outside Vietnam) and can withdraw by removing it. How it works: [docs/13-email.md](docs/13-email.md).
 
+## Scheduled tick (hourly)
+
+Time-based work runs from an hourly tick that needs no database setup. It is protected by a shared secret.
+
+| Variable | Meaning |
+|---|---|
+| `CRON_SECRET` | Long random string. Required for the tick to run over HTTP (Netlify); unset makes `POST /api/cron/tick` answer 404 |
+| `APP_URL` | Netlify only: the function calls `APP_URL/api/cron/tick` |
+
+Netlify runs `netlify/functions/tick.mts` every hour. Cloudflare gets the cron trigger `0 * * * *` from the generated Wrangler config; if you manage triggers in the dashboard instead, add it under the Worker's **Settings, Triggers, Cron Triggers**. Details: [docs/12-development-guide.md](docs/12-development-guide.md#scheduled-tick).
+
 ## Deploy (Netlify)
 
 1. Push to GitHub.

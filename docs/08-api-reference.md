@@ -98,6 +98,12 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `POST /api/events/:id/handover/accept` | signed in as the offered co-host | Take the event over; returns the new manage key `{ key }` once | `signInFirst`, `handoverGone`, `cancelled`, `forbidden` |
 | `POST /api/events/:id/cohost` / `DELETE` | host | Legacy shared co-host key: create or rotate (returns `{ key }` once) / revoke | |
 
+## Scheduler
+
+| Method and path | Auth | Purpose | Notable errors |
+|---|---|---|---|
+| `POST /api/cron/tick` | header `x-cron-secret` = `CRON_SECRET` | Runs the hourly tick and returns `{ at, jobs: [{ name, ok, error? }] }` ([12](12-development-guide.md#scheduled-tick)) | `notFound` (404, no secret configured), `cronSecret` (401) |
+
 ## Common error codes
 
 | Code | HTTP | Meaning |

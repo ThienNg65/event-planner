@@ -240,6 +240,7 @@
     "handoverTarget": "Pick an active co-host who has set a PIN.",
     "handoverGone": "This handover offer is no longer valid.",
     "emailOff": "Email is not available.",
+    "cronSecret": "Wrong scheduler secret.",
     "consentRequired": "Please tick the box to agree.",
     "emailInvalid": "That does not look like an email address.",
     "emailDomain": "That email domain is not allowed. Use your work email.",

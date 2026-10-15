@@ -64,6 +64,14 @@ Email is configured through `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL`, `NOTIFY_SE
 
 Full rules: [13](13-email.md#event-emails-the-outbox).
 
+### Scheduled tick
+
+Time-based work (notification sweep, "tomorrow" mails, payment reminders) runs from one hourly tick: `runTick(now)` in `server/utils/tick.ts` calls every job added with `registerTickJob(name, fn)`. A failing job is logged and reported in the summary but never stops the others. The pure helpers `isReminderHour` (the 02:00 UTC hour, 09:00 Vietnam), `tomorrowWindowVN` and `reminderDue` (reminder 1 at day 2, reminder 2 at day 5, never more) are unit-tested in `test/tick.test.ts`.
+
+- **Cloudflare:** the cron trigger `0 * * * *` is written into the generated Wrangler config (`nuxt.config.ts`, `cloudflare.wrangler.triggers`). `server/plugins/cron.ts` runs the tick on the `cloudflare:scheduled` hook. If the trigger does not show up, add it in the dashboard: Worker, **Settings, Triggers, Cron Triggers**, `0 * * * *`.
+- **Netlify:** `netlify/functions/tick.mts` is a scheduled function (`@hourly`) that POSTs `APP_URL/api/cron/tick` with `x-cron-secret`. It needs `APP_URL` and `CRON_SECRET` in the site's environment.
+- **Secret:** `CRON_SECRET` (or `NUXT_CRON_SECRET`, `runtimeConfig.cronSecret`). Without it the endpoint answers 404 and the tick never runs through HTTP.
+
 ## Releases
 
 1. Bump `VERSION`.

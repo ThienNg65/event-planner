@@ -240,6 +240,7 @@
     "handoverTarget": "Hãy chọn một đồng tổ chức đang hoạt động và đã đặt mã PIN.",
     "handoverGone": "Lời đề nghị chuyển giao này không còn hiệu lực.",
     "emailOff": "Chưa dùng được email.",
+    "cronSecret": "Sai mã bí mật của bộ hẹn giờ.",
     "consentRequired": "Hãy tích vào ô đồng ý.",
     "emailInvalid": "Địa chỉ email này không hợp lệ.",
     "emailDomain": "Tên miền email này không được chấp nhận. Hãy dùng email công việc.",
