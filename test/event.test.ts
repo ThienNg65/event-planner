@@ -414,6 +414,12 @@ test('initials: two letters, first and last word or the start of a one-word name
   assert.equal(initials(''), '');
 });
 
+test('initials: emoji and symbols in a name are not initials', () => {
+  assert.equal(initials('Hà Anh Tuấn 🕴️'), 'HT');
+  assert.equal(initials('Thiên 🎂'), 'TH');
+  assert.equal(initials('🎂'), '');
+});
+
 test('initials: a decomposed accent stays with its letter', () => {
   assert.equal(initials('Ánh'), 'ÁN');
 });

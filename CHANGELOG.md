@@ -28,6 +28,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Clearer labels: no more "leave blank" on the seat limit, "Payout account" instead of "Payment details (optional)", and shorter wording throughout.
 - Emails are sent from a Gmail account (set `GMAIL_USER` and `GMAIL_APP_PASSWORD`), so no own domain is needed. The consent text now names Gmail instead of Resend.
 
+### Fixed
+- A name that ends with an emoji (for example "Hà Anh Tuấn 🕴️") no longer shows a cut-off "H…" on its avatar; initials now come from the letters only.
+
 ## [0.11.0] - 2026-10-15
 
 ### Added

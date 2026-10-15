@@ -80,7 +80,12 @@ export const dayParts = (day: string, locale: string) => {
 /** Two-letter avatar text: first and last word's initials ("Lê Đông" → "LĐ"), or the first two letters of a one-word name ("Thiên" → "TH"). */
 export const initials = (name: string) => {
   // NFC so a decomposed "Ánh" counts its accent as part of the letter.
-  const words = name.normalize('NFC').trim().split(/\s+/).filter(Boolean);
+  // Only letters and digits count: an emoji or symbol in the name ("Hà Anh Tuấn 🕴️") is neither a word nor an initial.
+  const words = name
+    .normalize('NFC')
+    .split(/\s+/)
+    .map((w) => [...w].filter((c) => /[\p{L}\p{M}\p{N}]/u.test(c)).join(''))
+    .filter((w) => /[\p{L}\p{N}]/u.test(w));
   const chars = words.length > 1 ? [[...words[0]!][0], [...words.at(-1)!][0]] : [...(words[0] ?? '')].slice(0, 2);
   return chars.join('').toUpperCase();
 };
