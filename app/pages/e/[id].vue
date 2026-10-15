@@ -260,6 +260,9 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
           <UButton v-if="role" icon="i-lucide-pencil" color="neutral" variant="outline" :aria-label="t('edit.open')" @click="editing = true">
             <span class="hidden sm:inline">{{ t('edit.open') }}</span>
           </UButton>
+          <UButton v-if="role" icon="i-lucide-copy" color="neutral" variant="outline" :aria-label="t('event.duplicate')" :to="`/new?from=${id}`">
+            <span class="hidden sm:inline">{{ t('event.duplicate') }}</span>
+          </UButton>
           <EventHostMenu v-if="can(role, 'cancel')" :data="data!" :manage-key="key" @changed="refresh" />
         </template>
       </UDashboardNavbar>

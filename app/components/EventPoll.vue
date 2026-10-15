@@ -172,6 +172,14 @@ async function remove() {
 <template>
   <section id="poll" class="scroll-mt-4 space-y-6">
     <div class="space-y-1">
+      <UAlert
+        v-if="data.votesHidden"
+        color="info"
+        variant="subtle"
+        icon="i-lucide-eye-off"
+        :title="t('poll.votesHidden')"
+        :description="t('poll.answeredOf', { n: data.responses.filter((r) => r.voted).length, total: data.participants.length })"
+      />
       <p v-if="!me && !closed" class="text-sm">
         <button type="button" class="text-primary underline underline-offset-2" @click="act(() => {})">{{ t('poll.pickName') }}</button>
       </p>

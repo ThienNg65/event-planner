@@ -40,9 +40,13 @@ export default defineEventHandler(async (event) => {
     if (joinedNow) rs = await answers();
   }
   const { confirmed, waitlist, seats } = rollCall(seated(rs, ev), ev.capacity);
-  const venueList = vs
+  let venueList = vs
     .map((v) => ({ ...v, upvotes: rs.filter((r) => r.venueIds.includes(v.id)).map((r) => r.memberId) }))
     .sort((a, b) => b.upvotes.length - a.upvotes.length);
+  // `voted` is read from the real rows, so a hidden poll still shows who has answered.
+  let shown = rs.map((r) => ({ ...r, voted: hasVoted(r) }));
+  const votesHidden = hidesVotes(ev, role, rs, me);
+  if (votesHidden) ({ rows: shown, venues: venueList } = redactVotes(shown, venueList, me, ev.honorees));
   return {
     event: ev,
     role,
@@ -64,7 +68,8 @@ export default defineEventHandler(async (event) => {
     joinedNow,
     // Archived members stay out of the roster counts, like the team list.
     participants: rs.filter((r) => !r.archivedAt).map((r) => ({ id: r.memberId, name: r.name })),
-    responses: rs,
+    responses: shown,
+    votesHidden,
     confirmed: confirmed.map((r) => r.memberId),
     waitlist: waitlist.map((r) => r.memberId),
     // Seats held after a plan change that are still waiting for their owner to confirm.

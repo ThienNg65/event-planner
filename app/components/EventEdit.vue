@@ -20,6 +20,8 @@ const blank = () => {
     startsAt: e.startsAt ? toTeamInput(e.startsAt) : '',
     voteDeadline: e.voteDeadline ? toTeamInput(e.voteDeadline) : '',
     capacity: e.capacity,
+    maxGuests: guestLimit(e),
+    hideVotes: e.hideVotes,
     billTotal: e.billTotal,
     bankId: e.bankId ?? '',
     bankAccount: e.bankAccount ?? '',
@@ -124,6 +126,7 @@ const FIELD_OF: Record<string, string> = {
   titleRequired: 'title',
   invalidLink: 'venueLink',
   invalidCapacity: 'capacity',
+  invalidGuests: 'maxGuests',
   invalidBank: 'bank',
   invalidCover: 'cover',
   startsInPast: 'startsAt',
@@ -260,6 +263,10 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload));
         <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')" :error="errors.capacity">
           <UInputNumber v-model="form.capacity" :min="1" :max="500" class="w-40" />
         </UFormField>
+        <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')" :error="errors.maxGuests">
+          <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-40" />
+        </UFormField>
+        <UCheckbox v-model="form.hideVotes" :label="t('create.hideVotes')" :description="t('create.hideVotesHint')" />
         <UAlert
           v-if="seatMoves?.waitlisted.length"
           color="warning"

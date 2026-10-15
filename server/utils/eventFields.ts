@@ -50,6 +50,14 @@ export function eventFields(b: Record<string, unknown>) {
     if (b.capacity !== null && !intIn(b.capacity, 1, 500)) fail(400, 'invalidCapacity');
     out.capacity = b.capacity as number | null;
   }
+  if ('maxGuests' in b) {
+    if (b.maxGuests !== null && !intIn(b.maxGuests, 0, MAX_GUESTS)) fail(400, 'invalidGuests');
+    out.maxGuests = b.maxGuests as number | null;
+  }
+  if ('hideVotes' in b) {
+    if (typeof b.hideVotes !== 'boolean') fail(400, 'invalid');
+    out.hideVotes = b.hideVotes;
+  }
   if ('billTotal' in b) {
     if (b.billTotal !== null && !intIn(b.billTotal, 0, 1_000_000_000)) fail(400, 'invalidBill');
     out.billTotal = b.billTotal as number | null;

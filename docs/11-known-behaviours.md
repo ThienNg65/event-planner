@@ -52,6 +52,7 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 31 | Archiving a member keeps their access to events they joined, but they no longer count in "no reply yet" or the people strip. | Code | Deliberate. |
 | 32 | An event opened only with a manage key (a legacy co-host key, or a host signed in as someone else or signed out) is not listed on home or the calendar: listing follows the signed-in member. Open it by its link. | Code | Undecided. |
 | 33 | An organizer answering for a team member (`PUT /response` with their `memberId`) also makes that member a participant, so the event shows on their home. | Code | Deliberate. |
+| 34 | Hiding results until you vote is a nudge: someone can vote, see the results and then clear their votes (`hasVoted` is read live), and a visitor who is not signed in sees the poll hidden. Home screen answered counts are not hidden. | Code | Deliberate. |
 
 ## Data hygiene
 

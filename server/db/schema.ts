@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, integer, pgTable, primaryKey, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, check, date, integer, pgTable, primaryKey, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 export const STATUSES = ['going', 'maybe', 'no'] as const;
@@ -42,6 +42,10 @@ export const events = pgTable(
     venue: text(),
     venueLink: text(),
     capacity: integer(),
+    // Most guests one member may bring; null means the default of 10 (the hard ceiling).
+    maxGuests: integer(),
+    // While true, the poll hides everyone's votes from a visitor until they have voted themselves.
+    hideVotes: boolean().notNull().default(false),
     billTotal: integer(),
     bankId: text(),
     bankAccount: text(),
@@ -70,7 +74,10 @@ export const events = pgTable(
     reconfirmBy: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [check('events_stage', sql`${t.stage} in ('poll', 'rsvp', 'bill', 'settled')`)]
+  (t) => [
+    check('events_stage', sql`${t.stage} in ('poll', 'rsvp', 'bill', 'settled')`),
+    check('events_max_guests', sql`${t.maxGuests} between 0 and 10`),
+  ]
 );
 
 export const venues = pgTable('venues', {

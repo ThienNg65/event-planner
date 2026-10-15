@@ -43,7 +43,9 @@ export default defineEventHandler(async (event) => {
     else if (!open('rsvp')) fail(409, 'stageClosed');
     if (b.status !== null && !STATUSES.includes(b.status as never)) fail(400, 'invalid');
     const guests = b.guests ?? 0;
-    if (!intIn(guests, 0, 10)) fail(400, 'invalidGuests');
+    if (!intIn(guests, 0, MAX_GUESTS)) fail(400, 'invalidGuests');
+    // Lowering the limit never rewrites rows; it only stops members from asking for more. Organizers may set any number.
+    if (role === null && (guests as number) > guestLimit(ev)) fail(400, 'tooManyGuests');
     set.status = b.status as (typeof STATUSES)[number] | null;
     set.guests = guests;
     // An answer given by the member is explicit: it is no longer counted from their votes or held.

@@ -1,3 +1,5 @@
+import type { Role } from './roles.ts';
+
 /** The place name in a full Google Maps link (`/maps/place/<name>/…`), or null. */
 export function placeName(link?: string | null) {
   const m = link?.match(/\/maps\/place\/([^/?#]+)/);
@@ -301,7 +303,7 @@ export function capacityImpact<T extends QueueEntry>(responses: T[], from: numbe
 
 /** Roster members who have not answered yet (no day, no place picked, not declined), in roster order. */
 export const pendingVoters = <M extends { id: number }>(roster: M[], responses: { memberId: number; days: unknown[]; venueIds: unknown[]; status?: string | null }[]) => {
-  const voted = new Set(responses.filter((r) => r.days.length || r.venueIds.length || r.status === 'no').map((r) => r.memberId));
+  const voted = new Set(responses.filter(hasVoted).map((r) => r.memberId));
   return roster.filter((m) => !voted.has(m.id));
 };
 
@@ -375,4 +377,29 @@ export function compareDays(days: string[], responses: { memberId: number; days:
   let tie: 'honorees' | 'earlier' | null = null;
   if (a && b && a.n > 0 && a.n === b.n) tie = a.honoreesIn.length > b.honoreesIn.length ? 'honorees' : 'earlier';
   return { ranked, tie };
+}
+
+/** The hard ceiling on guests per member, and the limit of an event that sets none. */
+export const MAX_GUESTS = 10;
+
+/** Most guests one member may bring to this event. */
+export const guestLimit = (ev: { maxGuests: number | null }) => ev.maxGuests ?? MAX_GUESTS;
+
+type VoteRow = { memberId: number; days: string[]; venueIds: number[]; status?: string | null };
+
+/** Whether a member has answered the poll: picked a day or a place, or said they can't come. */
+export const hasVoted = (r: { days: unknown[]; venueIds: unknown[]; status?: string | null }) => r.days.length > 0 || r.venueIds.length > 0 || r.status === 'no';
+
+/** Results are hidden from a visitor who is not an organizer and has not answered yet, while the poll runs on an event that asks for it. */
+export const hidesVotes = (ev: { hideVotes: boolean; stage: string }, role: Role, rows: VoteRow[], viewerId: number | null) =>
+  ev.hideVotes && ev.stage === 'poll' && role === null && !rows.some((r) => r.memberId === viewerId && hasVoted(r));
+
+/** The poll as a visitor who must not see results gets it: other people's picks are emptied (honorees' days stay), counts are zero, places go by age. */
+export function redactVotes<R extends VoteRow, V extends { id: number; createdAt: Date | string; upvotes: number[] }>(rows: R[], venues: V[], viewerId: number | null, honorees: number[]) {
+  return {
+    rows: rows.map((r) => (r.memberId === viewerId ? r : { ...r, days: honorees.includes(r.memberId) ? r.days : [], venueIds: [] })),
+    venues: venues
+      .map((v) => ({ ...v, upvotes: [] as number[] }))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id - b.id),
+  };
 }

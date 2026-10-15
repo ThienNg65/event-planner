@@ -117,3 +117,13 @@ attendance is re-derived in mode **`edit`**:
 - An edit never marks anyone who wasn't already counted from votes.
 - A fixed-date event that never had a poll has no votes to derive from, so moving its date holds nobody.
 - The edit panel previews the effect (`lockImpact` with mode `edit`) before saving.
+
+## 4.7 Hiding results until you vote
+
+`events.hide_votes` (default off, a switch in create and Edit) keeps the poll from anchoring people. While it is on, the event is in `poll` and the visitor is not an organizer and has not voted themselves (`hasVoted`: a day or place picked, or declined; a Maybe or an empty row does not count), `GET /api/events/:id` is redacted by `redactVotes` in `shared/utils/event.ts`:
+
+- other members' `days` and `venueIds` are `[]`, except honorees' days, which stay visible; the visitor's own row is untouched;
+- every place's `upvotes` is `[]` and places are ordered by when they were suggested instead of by votes (the order would leak the ranking);
+- the response carries `votesHidden: true` and each row's `voted` flag, so the UI can say how many people have answered.
+
+The decision is `hidesVotes`. Organizers always see everything, and the data returns as soon as the visitor votes (declining counts). Known limits: it is a nudge, not secrecy (see [11](11-known-behaviours.md)).

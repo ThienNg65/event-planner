@@ -86,6 +86,7 @@
     "dateTbd": "Chưa chốt ngày",
     "seats": "chỗ",
     "share": "Chia sẻ",
+    "duplicate": "Nhân bản",
     "linkCopied": "Đã sao chép liên kết sự kiện",
     "joined": "Bạn đã tham gia \"{title}\"",
     "private": "Không tìm thấy sự kiện hoặc sự kiện riêng tư. Hãy xin chủ sự kiện liên kết tham gia.",
@@ -149,7 +150,12 @@
       "trip": "Du lịch cuối tuần 🏕️"
     },
     "bankPublic": "Thông tin ngân hàng hiển thị cho bất kỳ ai có liên kết sự kiện.",
-    "fixedDateNoVenue": "Đã có ngày nhưng chưa có địa điểm: sự kiện sẽ mở bình chọn địa điểm trước, chốt xong mọi người mới trả lời tham gia."
+    "fixedDateNoVenue": "Đã có ngày nhưng chưa có địa điểm: sự kiện sẽ mở bình chọn địa điểm trước, chốt xong mọi người mới trả lời tham gia.",
+    "maxGuests": "Khách đi cùng tối đa",
+    "maxGuestsHint": "Mỗi người được mang tối đa bấy nhiêu khách (0 đến 10)",
+    "hideVotes": "Ẩn kết quả cho đến khi bình chọn",
+    "hideVotesHint": "Mỗi người chỉ thấy kết quả sau khi đã chọn ngày hoặc địa điểm của mình. Người tổ chức luôn thấy.",
+    "copiedFrom": "Sao chép từ \"{title}\". Chọn ngày mới rồi tạo sự kiện."
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
@@ -169,7 +175,8 @@
     "fromVote": "Bạn được tính là đi theo phiếu bầu. Đổi câu trả lời nếu bạn không đi được.",
     "held": "Kế hoạch đã đổi. Chỗ của bạn được giữ đến {deadline}. Hãy xác nhận để giữ chỗ.",
     "released": "Chỗ giữ của bạn đã được nhả. Bạn vẫn có thể tham gia.",
-    "guestsQueue": "Thêm khách sẽ đưa bạn xuống cuối hàng chờ."
+    "guestsQueue": "Thêm khách sẽ đưa bạn xuống cuối hàng chờ.",
+    "guestsMax": "Tối đa {n} khách đi cùng."
   },
   "manage": {
     "copyLink": "Liên kết quản lý",
@@ -197,6 +204,7 @@
     "invalidBill": "Số tiền không hợp lệ.",
     "invalidBank": "Thông tin ngân hàng không hợp lệ.",
     "invalidGuests": "Số người đi cùng từ 0 đến 10.",
+    "tooManyGuests": "Sự kiện này không cho mang nhiều khách đến vậy.",
     "unknownVenue": "Địa điểm không tồn tại.",
     "invalidCover": "Chọn một ảnh bìa hoặc dán liên kết ảnh bắt đầu bằng https://",
     "notYou": "Bạn chỉ có thể sửa câu trả lời của chính mình.",
@@ -256,6 +264,8 @@
     "pickName": "Chọn tên của bạn ở trên để bình chọn",
     "suggestDay": "Gợi ý ngày",
     "suggestPlace": "Gợi ý địa điểm",
+    "votesHidden": "Kết quả được ẩn cho đến khi bạn bình chọn.",
+    "answeredOf": "{n}/{total} người đã trả lời",
     "dup": "Đã có trong danh sách. Mình đã thêm phiếu của bạn.",
     "remove": "Xoá",
     "removeTitle": "Xoá “{name}”?",

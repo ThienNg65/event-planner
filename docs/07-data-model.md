@@ -48,6 +48,8 @@ One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the
 | `bill_total` | integer | VND; null = no bill |
 | `bank_id`, `bank_account`, `bank_holder` | text | VietQR destination |
 | `cover` | text | a preset key (`aurora`, `sunset`, `ocean`, `forest`, `candy`, `slate`) or an `https://` image URL; null = gradient chosen from `id % 6` |
+| `max_guests` | integer | null = 10; check `between 0 and 10` (`events_max_guests`); see [05](05-rsvp-and-seats.md) |
+| `hide_votes` | boolean not null, default false | the poll hides results from visitors who have not voted yet, see [04](04-polling-and-locking.md) |
 | `honorees` | `integer[]` not null, default `{}` | member ids the event is for (max 20, validated; not a foreign key) |
 | `theme` | text not null, default `aurora` | one of `aurora, liquid, bento, brutal, acid, scrapbook, candy` |
 | `created_by` | integer FK → members, not null | the host by identity |
@@ -109,10 +111,10 @@ Primary key `(event_id, member_id)`.
 | `RECONFIRM_MS` | 48 hours | same |
 | `MAX_COHOSTS` | 5 | same |
 | Poll days max | 20 | `eventFields.ts`, `[id].patch.ts`, `days.post.ts` |
-| Guests max | 10 | schema check, `response.put.ts` |
+| Guests max | 10 | schema check, `MAX_GUESTS` in `shared/utils/event.ts`, `response.put.ts`; per event `events.max_guests` |
 
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`).
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`).
 `netlify.toml` (and the Cloudflare build command in the README) runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

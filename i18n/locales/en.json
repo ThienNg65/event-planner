@@ -86,6 +86,7 @@
     "dateTbd": "Date not set yet",
     "seats": "seats",
     "share": "Share",
+    "duplicate": "Duplicate",
     "linkCopied": "Event link copied",
     "joined": "You joined \"{title}\"",
     "private": "This event doesn't exist or is private. Ask the host for the joining link.",
@@ -149,7 +150,12 @@
       "trip": "Weekend trip 🏕️"
     },
     "bankPublic": "Bank details are visible to anyone who has the event link.",
-    "fixedDateNoVenue": "You have a date but no place yet: the event opens with a vote on the place first, and people RSVP once you lock it."
+    "fixedDateNoVenue": "You have a date but no place yet: the event opens with a vote on the place first, and people RSVP once you lock it.",
+    "maxGuests": "Max guests per person",
+    "maxGuestsHint": "Most guests one person may bring (0 to 10)",
+    "hideVotes": "Hide results until people vote",
+    "hideVotesHint": "Each person sees the results only after they have picked their own days or places. Organizers always see them.",
+    "copiedFrom": "Copied from \"{title}\". Pick new dates, then create the event."
   },
   "rsvp": {
     "title": "RSVP",
@@ -169,7 +175,8 @@
     "fromVote": "Counted as going from your votes. Change your answer if you can't make it.",
     "held": "The plan changed. Your seat is held until {deadline}. Confirm to keep it.",
     "released": "Your held seat was released. You can still join.",
-    "guestsQueue": "Adding guests puts you at the back of the queue."
+    "guestsQueue": "Adding guests puts you at the back of the queue.",
+    "guestsMax": "Up to {n} guests."
   },
   "manage": {
     "copyLink": "Manage link",
@@ -197,6 +204,7 @@
     "invalidBill": "Invalid amount.",
     "invalidBank": "Invalid bank details.",
     "invalidGuests": "Guests must be between 0 and 10.",
+    "tooManyGuests": "That is more guests than this event allows.",
     "unknownVenue": "That venue doesn't exist.",
     "invalidCover": "Pick a cover or paste an image link starting with https://",
     "notYou": "You can only change your own answers.",
@@ -256,6 +264,8 @@
     "pickName": "Pick your name above to vote",
     "suggestDay": "Suggest a day",
     "suggestPlace": "Suggest a place",
+    "votesHidden": "Results are hidden until you vote.",
+    "answeredOf": "{n} of {total} have answered",
     "dup": "Already on the list. We added your vote.",
     "remove": "Remove",
     "removeTitle": "Remove “{name}”?",

@@ -5,6 +5,9 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
+- Organizers can duplicate an event: the Duplicate button opens the create form filled in from the earlier event (title, note, place, limits, cover, theme and honorees, plus bank details if you created it), and you only pick new dates.
+- Organizers can limit how many guests each person may bring (0 to 10). Anyone asking for more is told the limit; organizers can still set any number, and lowering the limit does not change answers already given.
+- Organizers can hide poll results until people have voted: others' votes and the order of places stay hidden until you pick your own, so early votes do not sway the rest. Organizers always see the results.
 - Signing out other devices and changing your PIN now ask for your current PIN, so someone who only got hold of your session or sign-in link cannot lock you out. Resetting a member's PIN also signs them out reliably, even if they sign out other devices at the same moment. A manage link that was replaced on another device is now forgotten and no longer offered for copying.
 - The app can also be deployed on Cloudflare Workers.
 - After you create an event, the share window opens by itself with a ready message to paste into Zalo, in Vietnamese or English (your choice). Copy message is the main button, and Copy link, the QR code and Share are still there. The message carries the joining link of your private event, and the link changes with each stage so chat apps show a fresh preview.

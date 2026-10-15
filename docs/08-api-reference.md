@@ -28,7 +28,7 @@ Every handler validates its own input (there is no shared schema layer): `server
 | Method and path | Auth | Purpose | Notable errors |
 |---|---|---|---|
 | `GET /api/events` | signed in (signed out → `[]`) | Only my events (I created it or have an answer row): seats, answered count, `allPaid`, `manager`, `mine` (newest first) | |
-| `POST /api/events` | signed in | Create; returns `{ id, key }` (201). Ignores `stage` and `reconfirmBy` in the body | `signInFirst`, `titleRequired`, `invalidDate`, `startsInPast`, `invalidDays`, `invalidLink`, `invalidCapacity`, `invalidBank`, `invalidCover`, `unknownMember` |
+| `POST /api/events` | signed in | Create; returns `{ id, key }` (201). Ignores `stage` and `reconfirmBy` in the body | `signInFirst`, `titleRequired`, `invalidDate`, `startsInPast`, `invalidDays`, `invalidLink`, `invalidCapacity`, `invalidGuests`, `invalidBank`, `invalidCover`, `unknownMember` |
 | `GET /api/events/:id` | `requireAccess`: a role, the joining key (`x-join-key`), or a participant | Full detail (see below). Signed in with the key, it joins you (`joinedNow`) | `notFound` |
 | `PATCH /api/events/:id` | organizer (some moves host) | Edit, stage moves, cancel/restore, close/reopen voting, day diffs, corrections | many, see below |
 | `DELETE /api/events/:id` | host | Delete with cascade | `hostOnly`, `forbidden` |
@@ -41,7 +41,7 @@ Every handler validates its own input (there is no shared schema layer): `server
 Also `joinedNow` (this visit made you a participant) and `participants` (`{ id, name }`, by name), which the UI uses for counts and the avatar strip. `PUT /response`, `POST /days` and `POST /venues` also go through `requireAccess`, and so do the organizer-only endpoints (PATCH, DELETE, cohost, venue delete) before their role check, so a stranger gets `notFound` rather than 403.
 
 `event` (all columns except the key hashes), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
-`hostName`, `hostKey` (the sent `x-manage-key` still matches the manage key), `votingOpen`, `responses` (every member's row plus `name`), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).
+`hostName`, `hostKey` (the sent `x-manage-key` still matches the manage key), `votingOpen`, `responses` (every member's row plus `name` and `voted`; while `votesHidden` is true, other members' `days` and `venueIds` are emptied, see [04](04-polling-and-locking.md#47-hiding-results-until-you-vote)), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]`, sorted by upvotes).
 
 Events are private to organizers, joining-key holders and participants ([03](03-identity-and-roles.md#34-security-properties-worth-remembering)).
 
@@ -58,7 +58,7 @@ The handler tests, in this order:
 | `addDays` / `removeDays` | Day diffs (stage `poll`) | organizer | `invalidDays`, `daysRequired`, `tooManyDays`, `daysChanged`, `stageClosed`, `invalid` (cannot mix with `pollDays`, a stage move or a plan change) |
 | `stage` | Move: forward one step by organizer, backward by host, the single skip `rsvp → settled`. Leaving `rsvp` needs the event to have started; a lock needs a future start | organizer / host | `stageClosed`, `notStarted`, `startsInPast`, `hasPayments`, `invalidDate`, `hostOnly` |
 | `reopenVoting:true` + `voteDeadline` | Reopen voting; also validates the move to `poll` | organizer (host if leaving a later stage) | `invalid`, `invalidDate` |
-| any of `title, note, pollDays, startsAt, venue, venueLink, capacity, billTotal, bankId, bankAccount, bankHolder, cover, theme, honorees, notice, voteDeadline, reconfirmBy` | Field edits, validated by `eventFields` | organizer | `planFrozen` for date/place once frozen; `startsInPast` for a changed `startsAt` in the past; `votingClosed` for a deadline edit on a closed poll |
+| any of `title, note, pollDays, startsAt, venue, venueLink, capacity, maxGuests, hideVotes, billTotal, bankId, bankAccount, bankHolder, cover, theme, honorees, notice, voteDeadline, reconfirmBy` | Field edits, validated by `eventFields` | organizer | `planFrozen` for date/place once frozen; `startsInPast` for a changed `startsAt` in the past; `votingClosed` for a deadline edit on a closed poll |
 | `acknowledgePayments:true` | Required when reopening to `poll` with payments | host | `hasPayments` |
 
 Multi-row effects (attendance derivation, hold release) run in one `db.batch` together with the event UPDATE, guarded on the event still being in the stage the decision was made in; a lost race returns `stageClosed`.
@@ -67,7 +67,7 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 
 | Method and path | Auth | Body | Purpose | Notable errors |
 |---|---|---|---|---|
-| `PUT /api/events/:id/response` | self | `memberId` + any of `days`, `venueIds`, `status` (+`guests`), `paid`, `addPaid`, `paidAmount` | Write the member's own row ([04](04-polling-and-locking.md), [05](05-rsvp-and-seats.md), [06](06-bill-and-payments.md)) | `unknownMember`, `notYou`, `cancelled`, `stageClosed`, `votingClosed`, `invalidDays`, `unknownVenue`, `invalidGuests`, `invalid`, `daysChanged`, `venuesChanged`, `notAttending` (participant paying without a seat) |
+| `PUT /api/events/:id/response` | self | `memberId` + any of `days`, `venueIds`, `status` (+`guests`), `paid`, `addPaid`, `paidAmount` | Write the member's own row ([04](04-polling-and-locking.md), [05](05-rsvp-and-seats.md), [06](06-bill-and-payments.md)) | `unknownMember`, `notYou`, `cancelled`, `stageClosed`, `votingClosed`, `invalidDays`, `unknownVenue`, `invalidGuests`, `tooManyGuests`, `invalid`, `daysChanged`, `venuesChanged`, `notAttending` (participant paying without a seat) |
 | `POST /api/events/:id/days` | self | `memberId`, `day` | Suggest (or vote for) a day | `invalidDays`, `tooManyDays`, `daysChanged`, `stageClosed`, `votingClosed` |
 | `POST /api/events/:id/venues` | self | `addedBy`, `name`, `link?`, `note?` | Suggest a place (201) | `nameRequired`, `invalidLink`, `venueExists` (with `data.id`), `stageClosed` |
 | `DELETE /api/events/:id/venues/:venueId` | organizer | | Remove a place and its upvotes | `cancelled`, `notFound` |

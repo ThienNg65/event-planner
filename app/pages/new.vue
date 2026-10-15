@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const toast = useToast();
-const { meId } = useMe();
+const { meId, members } = useMe();
+const route = useRoute();
+// Set when the page was opened from "Duplicate": the title of the event being copied.
+const copiedFrom = ref('');
 // Tells the event page to open its share dialog once.
 const justCreated = useState<number>('justCreated', () => 0);
 
@@ -16,6 +19,9 @@ const form = reactive({
   venue: '',
   venueLink: '',
   capacity: null as number | null,
+  maxGuests: MAX_GUESTS as number,
+  hideVotes: false,
+  honorees: [] as number[],
   bankId: '',
   bankAccount: '',
   bankHolder: '',
@@ -55,13 +61,40 @@ function applyTemplate(i: number) {
   form.cover = tpl.cover;
 }
 
-onMounted(() => {
+onMounted(async () => {
   try {
     Object.assign(form, JSON.parse(localStorage.getItem(BANK) ?? '{}'));
   } catch {
     /* nothing remembered */
   }
+  const from = Number(route.query.from);
+  if (Number.isInteger(from) && from > 0) await prefillFrom(from);
 });
+
+/** Copies what an organizer would retype from an earlier event: no dates, answers, keys or links. Bank details only from the creator's own events. */
+async function prefillFrom(id: number) {
+  try {
+    const key = manageKeyOf(id);
+    const { event: e } = await $fetch(`/api/events/${id}`, { headers: key ? { 'x-manage-key': key } : {} });
+    Object.assign(form, {
+      title: e.title,
+      note: e.note,
+      venueMode: e.venue ? 'fixed' : 'poll',
+      venue: e.venue ?? '',
+      venueLink: e.venueLink ?? '',
+      capacity: e.capacity,
+      maxGuests: guestLimit(e),
+      hideVotes: e.hideVotes,
+      honorees: [...e.honorees],
+      cover: e.cover,
+      theme: themeOf(e.theme),
+      ...(meId.value === e.createdBy && { bankId: e.bankId ?? '', bankAccount: e.bankAccount ?? '', bankHolder: e.bankHolder ?? '' }),
+    });
+    copiedFrom.value = e.title;
+  } catch (err) {
+    toast.add({ color: 'error', title: errMsg(err) });
+  }
+}
 
 async function create() {
   busy.value = true;
@@ -79,6 +112,9 @@ async function create() {
         venue: fixedVenue ? form.venue : null,
         venueLink: fixedVenue ? form.venueLink : null,
         capacity: form.capacity || null,
+        maxGuests: form.maxGuests,
+        hideVotes: form.hideVotes,
+        honorees: form.honorees,
         cover: form.cover,
         theme: form.theme,
         ...bank,
@@ -116,6 +152,8 @@ async function create() {
         <MemberPicker new-only />
       </UCard>
 
+      <UAlert v-if="copiedFrom" class="mx-auto w-full max-w-5xl" color="info" variant="subtle" icon="i-lucide-copy" :title="t('create.copiedFrom', { title: copiedFrom })" />
+
       <div class="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-2">
         <span class="text-sm text-muted">{{ t('create.quickStart') }}</span>
         <UButton
@@ -139,6 +177,9 @@ async function create() {
               </UFormField>
               <UFormField :label="t('create.note')">
                 <UTextarea v-model="form.note" :maxlength="500" :rows="3" class="w-full" />
+              </UFormField>
+              <UFormField :label="t('edit.honorees')" :hint="t('edit.honoreesHint')">
+                <USelectMenu v-model="form.honorees" :items="members" value-key="id" label-key="name" multiple :placeholder="t('edit.honoreesPick')" class="w-full" />
               </UFormField>
               <UFormField :label="t('cover.label')">
                 <CoverPicker v-model="form.cover" />
@@ -190,6 +231,11 @@ async function create() {
               <UFormField :label="t('create.capacity')" :hint="t('create.capacityHint')">
                 <UInputNumber v-model="form.capacity" :min="1" :max="500" :placeholder="t('create.unlimited')" class="w-44" />
               </UFormField>
+
+              <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')">
+                <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-44" />
+              </UFormField>
+              <UCheckbox v-model="form.hideVotes" :label="t('create.hideVotes')" :description="t('create.hideVotesHint')" />
 
               <UCollapsible class="space-y-3">
                 <UButton color="neutral" variant="link" class="px-0" trailing-icon="i-lucide-chevron-down" :label="t('create.payment')" />
