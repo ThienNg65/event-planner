@@ -99,6 +99,15 @@ const nameLookalike = computed(() => {
   const n = norm(nameDraft.value);
   return n ? members.value.find((m) => m.id !== me.value?.id && norm(m.name) === n) : undefined;
 });
+// Asked for by the "You're Thiên · Rename" toast after joining.
+const renameRequest = useState<boolean>('renameRequest', () => false);
+watch(renameRequest, async (r) => {
+  if (!r) return;
+  renameRequest.value = false;
+  whoOpen.value = true;
+  await nextTick();
+  startRename();
+});
 function startRename() {
   nameDraft.value = me.value?.name ?? '';
   renaming.value = true;
@@ -222,7 +231,7 @@ const nav = computed<NavigationMenuItem[]>(() => [
                   </form>
                   <div v-else class="flex items-center gap-2">
                     <p class="min-w-0 flex-1 truncate text-sm">{{ me.name }}</p>
-                    <UButton icon="i-lucide-pencil" size="xs" color="neutral" variant="ghost" :aria-label="t('me.rename')" @click="startRename" />
+                    <UButton icon="i-lucide-pencil" size="xs" color="neutral" variant="soft" :label="t('me.rename')" @click="startRename" />
                   </div>
                   <p v-if="!me.hasPin && !pinEditing" class="text-xs text-warning">{{ t('me.noPinNudge') }}</p>
                   <form v-if="pinEditing" class="space-y-2" @submit.prevent="savePin">

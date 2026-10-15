@@ -12,6 +12,8 @@ const done = computed(() => !!reminder.value && !reminder.value.names.length && 
 // One line until opened: "5 still to answer · Remind".
 const expanded = ref(false);
 const pendingCount = computed(() => (reminder.value ? reminder.value.names.length + reminder.value.confirm.length : 0));
+// "Everyone has voted" is already said by the organizer's next-step card, so the poll row stays away once it is true.
+const redundant = computed(() => done.value && reminder.value?.kind === 'poll');
 const lang = ref<'vi' | 'en'>('vi');
 const countOnly = ref(false);
 const url = computed(() => (import.meta.client ? `${location.origin}/e/${ev.value.id}?join=${ev.value.joinKey}&s=${ev.value.stage}` : ''));
@@ -30,10 +32,10 @@ async function copy() {
 </script>
 
 <template>
-  <UButton v-if="reminder && !expanded" color="neutral" variant="outline" block class="justify-between" icon="i-lucide-bell-ring" trailing-icon="i-lucide-chevron-down" @click="expanded = true">
+  <UButton v-if="reminder && !redundant && !expanded" color="neutral" variant="outline" block class="justify-between" icon="i-lucide-bell-ring" trailing-icon="i-lucide-chevron-down" @click="expanded = true">
     {{ done ? t(reminder.kind === 'poll' ? 'remind.allVoted' : reminder.kind === 'rsvp' ? 'remind.allAnswered' : 'remind.allPaid') : t('remind.collapsed', { n: pendingCount }) }}
   </UButton>
-  <UCard v-else-if="reminder" :ui="{ body: 'space-y-3' }">
+  <UCard v-else-if="reminder && !redundant" :ui="{ body: 'space-y-3' }">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <p class="flex items-center gap-1.5 text-sm font-semibold text-highlighted"><UIcon name="i-lucide-bell-ring" class="size-4 text-muted" />{{ t('remind.title') }}</p>
       <MessageLangToggle v-model="lang" />

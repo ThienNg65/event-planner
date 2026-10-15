@@ -28,7 +28,6 @@ const rows = computed<Row[]>(() => {
   return props.data.responses.map((r) => (r.memberId === me.id ? { ...r, days: d.days, maybeDays: d.maybe } : r));
 });
 const voters = (pick: (r: Row) => boolean) => rows.value.filter(pick).map((r) => r.name);
-const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 // My vote on a place (the server list, no optimistic draft for places).
 const myVote = (v: EventDetail['venues'][number]) => !!props.me && v.upvotes.includes(props.me.id);
 const myMaybeVote = (v: EventDetail['venues'][number]) => !!props.me && v.maybe.includes(props.me.id);
@@ -132,11 +131,11 @@ const undecline = () => (mine.value?.status === 'no' ? { status: null } : {});
 
 // One save at a time, so quick taps never land out of order; a tap during a save is sent right after it.
 let savingDays = false;
-// A day is yes, "if need be" or neither: picking one kind takes the day out of the other.
-async function tapDay(day: string, kind: 'yes' | 'maybe' = 'yes') {
+// One tap cycles a day: can go, then if need be, then nothing.
+async function tapDay(day: string) {
   const without = (list: string[]) => list.filter((d) => d !== day);
-  draft.value =
-    kind === 'yes' ? { days: toggle(myDays.value, day), maybe: without(myMaybe.value) } : { days: without(myDays.value), maybe: toggle(myMaybe.value, day) };
+  const to = myDays.value.includes(day) ? 'maybe' : myMaybe.value.includes(day) ? null : 'yes';
+  draft.value = { days: to === 'yes' ? [...myDays.value, day] : without(myDays.value), maybe: to === 'maybe' ? [...myMaybe.value, day] : without(myMaybe.value) };
   if (savingDays) return;
   savingDays = true;
   const first = !mine.value || !hasPicked(mine.value);
@@ -190,12 +189,13 @@ usePlaceName(
 const voteFor = async (id: number) => {
   if (!mine.value?.venueIds.includes(id)) await save({ venueIds: [...(mine.value?.venueIds ?? []), id], maybeVenueIds: (mine.value?.maybeVenueIds ?? []).filter((v) => v !== id) });
 };
-// A place is yes, "if need be" or neither, like a day.
-const tapPlace = (id: number, kind: 'yes' | 'maybe') => {
+// A place cycles like a day: can go, if need be, nothing.
+const tapPlace = (id: number) => {
   const yes = mine.value?.venueIds ?? [];
   const maybe = mine.value?.maybeVenueIds ?? [];
   const without = (list: number[]) => list.filter((v) => v !== id);
-  return save(kind === 'yes' ? { venueIds: toggle(yes, id), maybeVenueIds: without(maybe) } : { venueIds: without(yes), maybeVenueIds: toggle(maybe, id) });
+  const to = yes.includes(id) ? 'maybe' : maybe.includes(id) ? null : 'yes';
+  return save({ venueIds: to === 'yes' ? [...yes, id] : without(yes), maybeVenueIds: to === 'maybe' ? [...maybe, id] : without(maybe) });
 };
 async function suggest() {
   const same = props.data.venues.find((v) => norm(v.name) === norm(form.name));
@@ -260,26 +260,28 @@ async function remove() {
         <UTooltip :delay-duration="0" :text="[...d.names, ...d.maybeNames.map((n) => `${n} (${t('poll.ifNeedBeState')})`)].join(', ')" :disabled="!d.names.length && !d.maybeNames.length">
           <button
             type="button"
-            :aria-pressed="myDays.includes(d.day)"
+            :aria-pressed="myDays.includes(d.day) ? 'true' : myMaybe.includes(d.day) ? 'mixed' : 'false'"
             :aria-disabled="readOnly"
             :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : myMaybe.includes(d.day) ? 'poll.ifNeedBeState' : 'poll.notSelected') })"
             class="themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
             :class="myMaybe.includes(d.day) && 'border-dashed'"
             :data-on="on(d.day)"
-            @click="act(() => tapDay(d.day), { day: d.day, already: () => myDays.includes(d.day) })"
+            @click="act(() => tapDay(d.day), { day: d.day, already: () => myDays.includes(d.day) || myMaybe.includes(d.day) })"
           >
             <UBadge v-if="d.top" color="warning" variant="solid" size="sm" icon="i-lucide-crown" :label="t('poll.top')" class="absolute -top-2.5 left-3 shadow-sm" />
             <!-- Closed: no empty checkbox inviting a tap, only the check on days you picked. -->
             <span
-              v-if="!readOnly || myDays.includes(d.day)"
+              v-if="!readOnly || myDays.includes(d.day) || myMaybe.includes(d.day)"
               class="absolute top-3 right-3 grid size-5 place-items-center rounded-full transition"
-              :class="on(d.day) ? 'bg-primary text-inverted' : 'ring-1 ring-accented ring-inset'"
+              :class="on(d.day) ? 'bg-primary text-inverted' : myMaybe.includes(d.day) ? 'bg-warning/20 text-warning ring-1 ring-warning ring-inset' : 'ring-1 ring-accented ring-inset'"
               aria-hidden="true"
             >
               <UIcon v-if="on(d.day)" name="i-lucide-check" class="size-3.5" />
+              <UIcon v-else-if="myMaybe.includes(d.day)" name="i-lucide-minus" class="size-3.5" />
             </span>
             <span class="text-xs font-medium text-muted">{{ d.weekday }}</span>
             <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
+            <span v-if="myMaybe.includes(d.day)" class="text-xs font-medium text-warning">{{ t('poll.ifNeedBe') }}</span>
             <span class="mt-1 flex items-center gap-1.5 text-xs text-muted tabular-nums">
               <UIcon name="i-lucide-users-round" class="size-3.5 text-dimmed" />
               {{ t('poll.chosen', { n: d.names.length }) }}<template v-if="d.maybeNames.length"> · {{ t('poll.maybeChosen', { n: d.maybeNames.length }) }}</template>
@@ -300,18 +302,6 @@ async function remove() {
             </span>
           </button>
         </UTooltip>
-        <UButton
-          v-if="!readOnly && me"
-          size="xs"
-          :color="myMaybe.includes(d.day) ? 'warning' : 'neutral'"
-          :variant="myMaybe.includes(d.day) ? 'soft' : 'outline'"
-          :icon="myMaybe.includes(d.day) ? 'i-lucide-check' : 'i-lucide-circle-help'"
-          :label="t('poll.ifNeedBe')"
-          block
-          :aria-pressed="myMaybe.includes(d.day)"
-          :aria-label="t('poll.ifNeedBeFor', { name: d.label })"
-          @click="act(() => tapDay(d.day, 'maybe'))"
-        />
         </div>
         <UPopover v-if="!readOnly && me" v-model:open="dayOpen">
           <button type="button" class="themed-tile flex min-h-24 w-full items-center justify-center gap-1.5 border-dashed p-4 text-sm text-muted focus-visible:outline-2 focus-visible:outline-primary">
@@ -354,7 +344,13 @@ async function remove() {
         <div class="flex min-w-0 gap-3 sm:flex-1">
           <UIcon name="i-lucide-map-pin" class="mt-1 size-5 shrink-0 text-highlighted" />
           <div class="min-w-0">
-            <h2 class="text-lg font-semibold text-highlighted">{{ closed ? t('poll.venuesResult') : ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}</h2>
+            <h2 class="flex items-center gap-1 text-lg font-semibold text-highlighted">
+              {{ closed ? t('poll.venuesResult') : ev.pollDays.length ? t('poll.venues') : t('poll.placeQ') }}
+              <UPopover v-if="!closed">
+                <UButton icon="i-lucide-circle-help" color="neutral" variant="link" size="xs" :aria-label="t('poll.daysHint')" />
+                <template #content><p class="max-w-xs p-3 text-sm text-muted">{{ t('poll.daysHint') }}</p></template>
+              </UPopover>
+            </h2>
           </div>
         </div>
       </div>
@@ -402,28 +398,16 @@ async function remove() {
           </span>
         </div>
         <UButton
-          v-if="!readOnly || myVote(v)"
+          v-if="!readOnly || myVote(v) || myMaybeVote(v)"
           :disabled="busy || readOnly"
-          :color="myVote(v) ? 'primary' : 'neutral'"
-          :variant="myVote(v) ? 'soft' : 'outline'"
-          :icon="myVote(v) ? 'i-lucide-check' : 'i-lucide-plus'"
-          :label="t(myVote(v) ? 'poll.myVote' : 'poll.vote')"
+          :color="myVote(v) ? 'primary' : myMaybeVote(v) ? 'warning' : 'neutral'"
+          :variant="myVote(v) || myMaybeVote(v) ? 'soft' : 'outline'"
+          :icon="myVote(v) ? 'i-lucide-check' : myMaybeVote(v) ? 'i-lucide-minus' : 'i-lucide-plus'"
+          :label="t(myVote(v) ? 'poll.myVote' : myMaybeVote(v) ? 'poll.ifNeedBe' : 'poll.vote')"
           class="shrink-0"
-          :aria-pressed="myVote(v)"
+          :aria-pressed="myVote(v) ? 'true' : myMaybeVote(v) ? 'mixed' : 'false'"
           :aria-label="t('poll.voteFor', { name: v.name })"
-          @click="act(() => tapPlace(v.id, 'yes'), { already: () => myVote(v) })"
-        />
-        <UButton
-          v-if="!readOnly || myMaybeVote(v)"
-          :disabled="busy || readOnly"
-          :color="myMaybeVote(v) ? 'warning' : 'neutral'"
-          :variant="myMaybeVote(v) ? 'soft' : 'outline'"
-          :icon="myMaybeVote(v) ? 'i-lucide-check' : 'i-lucide-circle-help'"
-          :label="t('poll.ifNeedBe')"
-          class="shrink-0"
-          :aria-pressed="myMaybeVote(v)"
-          :aria-label="t('poll.ifNeedBeFor', { name: v.name })"
-          @click="act(() => tapPlace(v.id, 'maybe'))"
+          @click="act(() => tapPlace(v.id), { already: () => myVote(v) || myMaybeVote(v) })"
         />
         <UDropdownMenu v-if="can(role, 'removeVenue')" :items="[{ label: t('poll.removePlace'), icon: 'i-lucide-trash-2', color: 'error', onSelect: () => (removing = v) }]">
           <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-ellipsis-vertical" class="-mr-2 shrink-0" :aria-label="t('poll.placeActions', { name: v.name })" />

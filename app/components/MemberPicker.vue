@@ -19,6 +19,13 @@ const busy = ref(false);
 // A name someone signed in as before PINs existed needs their sign-in link or an organizer's PIN reset.
 const pickable = computed(() => members.value.filter((m) => m.hasPin || !m.claimed));
 const listed = computed(() => (props.newOnly && !revealed.value ? [] : pickable.value));
+// What is typed in the name box: an existing name (ignoring case and accents) is never offered as "Add".
+const term = ref('');
+const exact = computed(() => {
+  const n = norm(term.value);
+  return n ? members.value.find((m) => norm(m.name) === n) : undefined;
+});
+const hiddenMatch = computed(() => (exact.value && !listed.value.some((m) => m.id === exact.value!.id) ? exact.value : undefined));
 const lookalike = computed(() => {
   const n = norm(newName.value);
   return n ? members.value.find((m) => norm(m.name) === n) : undefined;
@@ -30,7 +37,8 @@ const ready = computed(() => pin.value.length === PIN_LENGTH && !weak.value && (
 watch(pin, (v) => {
   pin.value = v.replace(/\D/g, '');
   // The sixth digit signs in; the button stays for keyboards and screen readers.
-  if (pin.value.length === PIN_LENGTH && ready.value && !busy.value && !recover.value) submit();
+  // A lookalike warning is still open: wait for the button.
+  if (pin.value.length === PIN_LENGTH && ready.value && !busy.value && !recover.value && !(adding.value && lookalike.value)) submit();
 });
 
 // Forgot the PIN: mail a code to the name's verified email (shown only once email is switched on), then set a new PIN with it.
@@ -74,6 +82,7 @@ function reset() {
   adding.value = false;
   picked.value = null;
   newName.value = '';
+  term.value = '';
   pin.value = '';
 }
 function startAdd(name: string) {
@@ -116,7 +125,8 @@ async function submit() {
         v-else
         :items="listed"
         label-key="name"
-        :create-item="pickOnly ? false : 'always'"
+        v-model:search-term="term"
+        :create-item="pickOnly || exact ? false : 'always'"
         :placeholder="t('me.yourName')"
         :autofocus="autofocus"
         :aria-label="t('me.yourName')"
@@ -127,6 +137,7 @@ async function submit() {
       >
         <template #create-item-label="{ item }">{{ t('join.add', { name: item }) }}</template>
       </UInputMenu>
+      <p v-if="hiddenMatch" class="text-xs text-warning">{{ t(pickable.some((m) => m.id === hiddenMatch!.id) ? 'me.isThisYou' : 'me.claimedName', { name: hiddenMatch.name }) }}</p>
       <UButton v-if="newOnly && !revealed" variant="link" size="xs" class="px-0" @click="revealed = true">{{ t('me.otherDeviceNew') }}</UButton>
     </div>
 

@@ -14,12 +14,19 @@ const picked = computed({
     if (next.length <= MAX) days.value = next;
   },
 });
-// One tap for the usual case: the next week, today included.
-const nextWeek = () => (days.value = Array.from({ length: 7 }, (_, i) => today.add({ days: i }).toString()));
+// One tap for the usual case: adds the next week (today included) to whatever is already picked.
+const nextWeek = () => {
+  const week = Array.from({ length: 7 }, (_, i) => today.add({ days: i }).toString());
+  days.value = [...new Set([...days.value, ...week])].sort().slice(0, MAX);
+};
 </script>
 
 <template>
   <div class="space-y-2">
+    <div class="flex flex-wrap items-center gap-3">
+      <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-calendar-range" :label="t('create.next7')" @click="nextWeek" />
+      <p class="text-sm text-muted">{{ t('create.daysPicked', { n: days.length, max: MAX }) }}</p>
+    </div>
     <UCalendar
       v-model="picked"
       multiple
@@ -28,9 +35,5 @@ const nextWeek = () => (days.value = Array.from({ length: 7 }, (_, i) => today.a
       :aria-label="t('create.pollDates')"
       class="rounded-lg p-2 ring ring-default"
     />
-    <div class="flex flex-wrap items-center gap-3">
-      <UButton size="sm" color="neutral" variant="outline" icon="i-lucide-calendar-range" :label="t('create.next7')" @click="nextWeek" />
-      <p class="text-sm text-muted">{{ t('create.daysPicked', { n: days.length, max: MAX }) }}</p>
-    </div>
   </div>
 </template>

@@ -2,18 +2,10 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
-
-### Changed
-- First visit made simpler: tap a day and a small "Your name?" sheet asks for your name (type it and pick or add it), then a 6-digit PIN that signs you in on the last digit, and your tapped day is saved right away. Creating an event while signed out works the same way. The "I'm new" button is gone.
-- The event page shows less at first: organizers get one **Manage** menu (edit, post update, organizers, duplicate, reopen, cancel, delete) and one main button on the next-step card with the rest behind "…"; the people list, reminder and host details start closed; "Add to calendar" moves to the card once you are going; help paragraphs sit behind a help icon.
-- Home and Create show less: a first-time visitor sees one big Create button, tabs and search appear from 6 events, and the create form keeps title and days up front with seat limit, place, note, look, guests, repeat and payout account one tap away. A "Next 7 days" chip fills the poll days.
-- Clearer labels: no more "leave blank" on the seat limit, "Payout account" instead of "Payment details (optional)", and shorter wording throughout.
+## [0.12.0] - 2026-10-15
 
 ### Added
-- You can rename yourself from the account menu (pencil next to your name). A name another person already has is refused.
-
-### Added
+- You can rename yourself from the account menu (the Rename button next to your name). A name another person already has is refused.
 - Events can repeat every week, every 2 weeks or every month, optionally until a date. The next event is created automatically once the previous one has started, with the same details, organizers and bank account but no answers, and the event page links to the previous and next event. Cancelling one event skips only that date; turning repeat off stops the whole series. Repeating needs a fixed date and place.
 - Members with a verified email now get event emails: when the date or place is set or changed, when the bill arrives (each person with their own amount and a VietQR link), when an organizer records their payment, and when the event is cancelled. Every mail has a "stop these emails" link, and the profile has a switch for each kind. Nothing is sent until email is set up, and the consent text now mentions these emails.
 - Members with a verified email also get an "event tomorrow" email, and people who still owe get up to two payment reminders (2 and 5 days after the bill), each with their own amount. These go out during the day, Vietnam time, from an hourly timer on Netlify and Cloudflare (it needs `CRON_SECRET`).
@@ -25,6 +17,15 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Organizers can hide poll results until people have voted: others' votes and the order of places stay hidden until you pick your own, so early votes do not sway the rest. Organizers always see the results.
 
 ### Changed
+- Voting takes one tap per day or place: tap once for "can go", again for "can if I must" (Vietnamese: "Cố được", replacing "Nếu cần"), a third time to clear. The separate "if need be" button is gone, and the help icon explains the taps.
+- The create form groups settings clearly: the people to celebrate have their own row, guest limit and hide-results sit under "Advanced", Repeat only appears once the date and place are fixed, every row shows what is set, and "Next 7 days" sits above the calendar and adds to the days already picked.
+- The name box only offers "Add" for a name nobody has (ignoring case and accents), and the PIN no longer submits by itself while a similar-name warning is showing. The PIN step repeats the name being added.
+- Rename is a labelled button in the account menu, and a "You're <name> · Rename" message appears right after joining. The join step slides up from the bottom on phones.
+- The next-step card says "No day picked yet" when you only voted for a place, the organizer's poll reminder no longer repeats "everyone has voted", and the Manage menu keeps reopen and hand-over under "More".
+- First visit made simpler: tap a day and a small "Your name?" sheet asks for your name (type it and pick or add it), then a 6-digit PIN that signs you in on the last digit, and your tapped day is saved right away. Creating an event while signed out works the same way. The "I'm new" button is gone.
+- The event page shows less at first: organizers get one **Manage** menu (edit, post update, organizers, duplicate, reopen, cancel, delete) and one main button on the next-step card with the rest behind "…"; the people list, reminder and host details start closed; "Add to calendar" moves to the card once you are going; help paragraphs sit behind a help icon.
+- Home and Create show less: a first-time visitor sees one big Create button, tabs and search appear from 6 events, and the create form keeps title and days up front with seat limit, place, note, look, guests, repeat and payout account one tap away. A "Next 7 days" chip fills the poll days.
+- Clearer labels: no more "leave blank" on the seat limit, "Payout account" instead of "Payment details (optional)", and shorter wording throughout.
 - Emails are sent from a Gmail account (set `GMAIL_USER` and `GMAIL_APP_PASSWORD`), so no own domain is needed. The consent text now names Gmail instead of Resend.
 
 ## [0.11.0] - 2026-10-15

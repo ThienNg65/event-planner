@@ -80,7 +80,8 @@
     "rename": "Rename",
     "renamed": "Name changed",
     "otherDevices": "Other devices",
-    "lookalike": "A similar name exists: \"{name}\"."
+    "lookalike": "A similar name exists: \"{name}\".",
+    "youAre": "You're {name}"
   },
   "event": {
     "dateTbd": "Date not set yet",
@@ -164,7 +165,7 @@
     "repeatHint": "The next event is created automatically 14 days before its date (or once this one has started, if that is later), with the same details and organizers.",
     "more": "Options",
     "next7": "Next 7 days",
-    "people": "Guests"
+    "advanced": "Advanced"
   },
   "rsvp": {
     "title": "RSVP",
@@ -194,7 +195,8 @@
     "lock": "Lock the result",
     "bill": "Bill total (₫)",
     "schedule": "Date & time",
-    "menu": "Manage"
+    "menu": "Manage",
+    "more": "More"
   },
   "err": {
     "generic": "Something went wrong, please try again.",
@@ -304,7 +306,7 @@
     "notSelected": "not selected",
     "closedDeadline": "Voting closed: the deadline passed",
     "closedCancelled": "Voting closed: the event was cancelled",
-    "daysHint": "Tick every day you could make it. If one of your days is picked, you're counted as going. Days marked \"If need be\" don't count automatically: you'll be asked to confirm.",
+    "daysHint": "Tap once: you can go. Twice: if need be (you would go if you must). Three times: clear it. If a day marked \"can go\" wins, you are counted as going; \"if need be\" days ask you to confirm.",
     "ifNeedBe": "If need be",
     "ifNeedBeState": "if need be",
     "ifNeedBeFor": "If need be: {name}",
@@ -553,7 +555,11 @@
     "checkGuests": "Guests of {name}",
     "checkShare": "{n} seats · {share} per seat",
     "checkOver": "Seat limit {cap} + {n} more. The limit is raised so everyone who came shares the bill.",
-    "hostMore": "More"
+    "hostMore": "More",
+    "votedNoDay": {
+      "title": "No day picked yet",
+      "cta": "Pick days"
+    }
   },
   "edit": {
     "open": "Edit",
@@ -983,7 +989,7 @@
   "join": {
     "title": "Your name?",
     "add": "Add “{name}”",
-    "pinNew": "Pick a 6-digit PIN",
+    "pinNew": "{name} · Pick a 6-digit PIN",
     "pinWhy": "To sign in elsewhere",
     "pinEnter": "{name}'s PIN"
   },

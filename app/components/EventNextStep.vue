@@ -58,6 +58,9 @@ const ui = computed(() => STEP_UI[next.value.step]);
 const copy = computed(() => {
   const step = next.value.step;
   if (step === 'vote' && !ev.value.pollDays.length) return 'voteVenue';
+  // Voted only for a place: the title must not say the days are done.
+  const row = props.data.responses.find((r) => r.memberId === props.me?.id);
+  if (step === 'voted' && ev.value.pollDays.length && !row?.days.length && !row?.maybeDays?.length) return 'votedNoDay';
   if (step === 'confirm' && mine.value?.derived === 'reconfirm') return mine.value.held ? 'reconfirmHeld' : 'reconfirmLost';
   if (step === 'going' && mine.value?.derived === 'going') return 'goingAuto';
   if (step === 'settled' && props.data.share !== null && !allPaid(payers.value, props.data.share)) return 'completedOpen';

@@ -80,7 +80,8 @@
     "rename": "Đổi tên",
     "renamed": "Đã đổi tên",
     "otherDevices": "Thiết bị khác",
-    "lookalike": "Đã có tên giống \"{name}\"."
+    "lookalike": "Đã có tên giống \"{name}\".",
+    "youAre": "Bạn là {name}"
   },
   "event": {
     "dateTbd": "Chưa chốt ngày",
@@ -164,7 +165,7 @@
     "repeatHint": "Sự kiện kế tiếp tự động được tạo 14 ngày trước ngày diễn ra (hoặc khi sự kiện này bắt đầu, nếu muộn hơn), với cùng thông tin và người tổ chức.",
     "more": "Tuỳ chọn",
     "next7": "7 ngày tới",
-    "people": "Khách mời"
+    "advanced": "Nâng cao"
   },
   "rsvp": {
     "title": "Đăng ký tham gia",
@@ -194,7 +195,8 @@
     "lock": "Chốt kết quả",
     "bill": "Tổng hoá đơn (₫)",
     "schedule": "Ngày giờ",
-    "menu": "Quản lý"
+    "menu": "Quản lý",
+    "more": "Thêm"
   },
   "err": {
     "generic": "Có lỗi xảy ra, vui lòng thử lại.",
@@ -304,11 +306,11 @@
     "notSelected": "chưa chọn",
     "closedDeadline": "Đã đóng bình chọn: quá hạn",
     "closedCancelled": "Đã đóng bình chọn: sự kiện bị huỷ",
-    "daysHint": "Chọn mọi ngày bạn đi được. Nếu một trong các ngày đó được chốt, bạn được tính là đi. Ngày chọn \"Nếu cần\" không tự được tính: bạn sẽ được hỏi xác nhận.",
-    "ifNeedBe": "Nếu cần",
-    "ifNeedBeState": "nếu cần",
-    "ifNeedBeFor": "Nếu cần: {name}",
-    "maybeChosen": "{n} nếu cần",
+    "daysHint": "Chạm lần 1: đi được. Lần 2: cố được (đi nếu bắt buộc). Lần 3: bỏ chọn. Ngày \"đi được\" mà được chốt thì bạn được tính là đi; ngày \"cố được\" sẽ hỏi bạn xác nhận.",
+    "ifNeedBe": "Cố được",
+    "ifNeedBeState": "cố được",
+    "ifNeedBeFor": "Cố được: {name}",
+    "maybeChosen": "{n} cố được",
     "picked": "Bạn chọn {n}/{total} ngày",
     "chosen": "{n} người chọn",
     "noVenuesTitle": "Chưa có địa điểm nào",
@@ -553,7 +555,11 @@
     "checkGuests": "Số bạn đi cùng {name}",
     "checkShare": "{n} chỗ · {share} mỗi chỗ",
     "checkOver": "Giới hạn {cap} chỗ + {n} người nữa. Giới hạn được nâng để mọi người đã đến cùng chia tiền.",
-    "hostMore": "Thêm"
+    "hostMore": "Thêm",
+    "votedNoDay": {
+      "title": "Chưa chọn ngày",
+      "cta": "Chọn ngày"
+    }
   },
   "edit": {
     "open": "Chỉnh sửa",
@@ -784,7 +790,7 @@
     "suggested": "Gợi ý chốt",
     "provisional": "Ưu tiên tạm thời",
     "in": "Đi được:",
-    "maybe": "Nếu cần:",
+    "maybe": "Cố được:",
     "out": "Không đi được ({n})",
     "pending": "{n} người chưa phản hồi.",
     "tieHonorees": "Đang hoà {n} phiếu. {day} được gợi ý vì nhiều người được chúc mừng đi được hơn.",
@@ -983,7 +989,7 @@
   "join": {
     "title": "Bạn tên gì?",
     "add": "Thêm “{name}”",
-    "pinNew": "Chọn mã PIN 6 số",
+    "pinNew": "{name} · Chọn mã PIN 6 số",
     "pinWhy": "Để vào lại trên máy khác",
     "pinEnter": "Mã PIN của {name}"
   },

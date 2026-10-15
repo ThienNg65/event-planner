@@ -71,6 +71,11 @@ function show(v: 'reopen' | 'cancel' | 'delete' | 'handover') {
 const items = computed(() => {
   const cancelled = !!ev.value.cancelledAt;
   const groups = [];
+  const more = [
+    ...(!cancelled && earlier.value.length ? [{ label: t('host.reopen'), icon: 'i-lucide-history', onSelect: () => show('reopen') }] : []),
+    // Only the signed-in creator can hand the event over (a manage link alone cannot).
+    ...(meId.value === ev.value.createdBy && !cancelled ? [{ label: t('host.handover'), icon: 'i-lucide-key-round', onSelect: () => show('handover') }] : []),
+  ];
   if (can(props.role, 'edit') && !cancelled) {
     groups.push([
       { label: t('edit.open'), icon: 'i-lucide-pencil', onSelect: () => emit('edit') },
@@ -83,11 +88,10 @@ const items = computed(() => {
   ]);
   if (can(props.role, 'cancel')) {
     groups.push([
-      ...(!cancelled && earlier.value.length ? [{ label: t('host.reopen'), icon: 'i-lucide-history', onSelect: () => show('reopen') }] : []),
       cancelled ? { label: t('edit.restore'), icon: 'i-lucide-undo-2', onSelect: restore } : { label: t('host.cancel'), icon: 'i-lucide-ban', onSelect: () => show('cancel') },
+      // The rarely used moves sit one level down, so the menu stays short.
+      ...(more.length ? [{ label: t('manage.more'), icon: 'i-lucide-ellipsis', children: more }] : []),
     ]);
-    // Only the signed-in creator can hand the event over (a manage link alone cannot).
-    if (meId.value === ev.value.createdBy && !cancelled) groups.push([{ label: t('host.handover'), icon: 'i-lucide-key-round', onSelect: () => show('handover') }]);
     groups.push([{ label: t('host.delete'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => show('delete') }]);
   }
   return groups;

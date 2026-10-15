@@ -58,13 +58,16 @@ const canRepeat = computed(() => form.dateMode === 'fixed' && form.venueMode ===
 const repeating = computed(() => canRepeat.value && form.repeat !== 'none');
 
 // The optional settings: each is one line until tapped.
+// Each row says what is set, so nothing needs opening just to check.
 const rows = computed(() => [
-  { label: t('create.where'), icon: 'i-lucide-map-pin', slot: 'where' },
-  { label: t('create.note'), icon: 'i-lucide-notebook-pen', slot: 'note' },
-  { label: t('theme.label'), icon: 'i-lucide-palette', slot: 'look' },
-  { label: t('create.people'), icon: 'i-lucide-users', slot: 'people' },
-  { label: t('create.repeat'), icon: 'i-lucide-repeat', slot: 'repeat' },
-  { label: t('create.payment'), icon: 'i-lucide-wallet', slot: 'payment' },
+  { label: t('create.where'), value: form.venueMode === 'poll' ? t('create.pollVenue') : form.venue.trim(), icon: 'i-lucide-map-pin', slot: 'where' },
+  { label: t('create.note'), value: form.note.trim(), icon: 'i-lucide-notebook-pen', slot: 'note' },
+  { label: t('theme.label'), value: t(`theme.${form.theme}`), icon: 'i-lucide-palette', slot: 'look' },
+  { label: t('edit.honorees'), value: form.honorees.map((id) => members.value.find((m) => m.id === id)?.name).filter(Boolean).join(', '), icon: 'i-lucide-cake', slot: 'honorees' },
+  { label: t('create.advanced'), value: form.hideVotes ? t('create.hideVotes') : '', icon: 'i-lucide-sliders-horizontal', slot: 'advanced' },
+  // Repeating needs a fixed date and place, so the row waits for them.
+  ...(canRepeat.value ? [{ label: t('create.repeat'), value: form.repeat === 'none' ? '' : t(`create.repeat${form.repeat.charAt(0).toUpperCase()}${form.repeat.slice(1)}`), icon: 'i-lucide-repeat', slot: 'repeat' }] : []),
+  { label: t('create.payment'), value: form.bankHolder.trim(), icon: 'i-lucide-wallet', slot: 'payment' },
 ]);
 
 // Quick starts: one tap fills a title (unless you typed your own) and a matching cover.
@@ -212,6 +215,12 @@ async function create() {
             <UInputNumber v-if="limited" v-model="form.capacity" :min="1" :max="500" :placeholder="t('create.unlimited')" :aria-label="t('create.capacity')" class="w-36" />
           </div>
           <UAccordion type="multiple" :items="rows">
+            <template #default="{ item }">
+              <span class="flex min-w-0 items-baseline gap-2">
+                <span>{{ item.label }}</span>
+                <span v-if="item.value" class="truncate text-sm font-normal text-muted">{{ item.value }}</span>
+              </span>
+            </template>
             <template #where-body>
               <UTabs
                 v-model="form.venueMode"
@@ -238,11 +247,13 @@ async function create() {
                 <UFormField :label="t('theme.label')" :hint="t('theme.hint')"><ThemePicker v-model="form.theme" :title="form.title" :cover="form.cover" /></UFormField>
               </div>
             </template>
-            <template #people-body>
+            <template #honorees-body>
+              <UFormField :hint="t('edit.honoreesHint')">
+                <USelectMenu v-model="form.honorees" :items="members" value-key="id" label-key="name" multiple :placeholder="t('edit.honoreesPick')" :aria-label="t('edit.honorees')" class="w-full" />
+              </UFormField>
+            </template>
+            <template #advanced-body>
               <div class="space-y-4">
-                <UFormField :label="t('edit.honorees')" :hint="t('edit.honoreesHint')">
-                  <USelectMenu v-model="form.honorees" :items="members" value-key="id" label-key="name" multiple :placeholder="t('edit.honoreesPick')" class="w-full" />
-                </UFormField>
                 <UFormField :label="t('create.maxGuests')" :hint="t('create.maxGuestsHint')">
                   <UInputNumber v-model="form.maxGuests" :min="0" :max="MAX_GUESTS" class="w-44" />
                 </UFormField>
