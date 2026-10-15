@@ -25,8 +25,9 @@ Shell: `app/layouts/default.vue` is the sidebar (nav, "who am I" menu with set/c
 | Stage section (one of) | `EventPoll.vue` / `EventRsvp.vue` / `EventBill.vue` | Day tiles and place list with Yes / If need be voting; RSVP buttons and guests; bill, share, QR and payment form |
 | People | `EventPeople.vue` | Everyone with a vote or answer, ranked; organizer row menu |
 | Side rail (after the stage section on phones) | `EventOverview.vue`, member avatars, `EventOrganizers.vue` | Counts and key facts (the seat limit too, while polling); roster avatars (declined ones marked); host/co-hosts and "Manage organizers" |
-| Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` | Edit panel, roles and links (the organizers dialog copies the manage link as `/e/:id#key=<key>`; the host can "Make a new manage link" after an in-page confirm: `POST /api/events/:id/key`, then `saveManageKey`), reopen/cancel/delete, date/place correction, poll day editing |
+| Organizer-only (client-only render) | `EventEdit.vue`, `EventOrganizersDialog.vue`, `EventHostMenu.vue`, `EventCorrectDialog.vue`, `EventDaysDialog.vue` (`EventHostMenu` also holds the creator's **Hand over…** picker) | Edit panel, roles and links (the organizers dialog copies the manage link as `/e/:id#key=<key>`; the host can "Make a new manage link" after an in-page confirm: `POST /api/events/:id/key`, then `saveManageKey`), reopen/cancel/delete, date/place correction, poll day editing |
 | Sharing | `EventShareDialog.vue` | Message preview with a vi/en toggle (default vi) and "Copy message", the joining link (`/e/:id?join=<key>&s=<stage>`), QR and the system share sheet; the page's `og:image` is `GET /api/events/:id/card?j=…`; co-host invite links carry `?join=` too |
+| Handover (everyone, renders only for the two parties) | `EventHandover.vue` | The target's accept/decline card (accepting stores the new manage key via `saveManageKey`) and the creator's "offered to X" note with Cancel offer |
 | After create | `EventKeepAccess.vue` | The "Set a PIN" modal, shown only to a creator with no PIN, see [03](03-identity-and-roles.md) |
 
 ## Sharing and reminders
@@ -71,4 +72,4 @@ Finished stages collapse to one summary line each ("12 voted", "8 seats").
 
 ## Component index
 
-`CoverPicker`, `DateTimeInput`, `EventBill`, `EventCard`, `EventCorrectDialog`, `EventDaysDialog`, `EventEdit`, `EventHostMenu`, `EventKeepAccess`, `EventNextStep`, `EventOrganizers`, `EventOrganizersDialog`, `EventOverview`, `EventPeople`, `EventPoll`, `EventReminder`, `EventRsvp`, `EventShareDialog`, `MemberAvatar`, `MemberPicker`, `MessageLangToggle`, `PollDaysInput`, `ThemePicker`: all in `app/components/`.
+`CoverPicker`, `DateTimeInput`, `EventBill`, `EventCard`, `EventCorrectDialog`, `EventDaysDialog`, `EventEdit`, `EventHandover`, `EventHostMenu`, `EventKeepAccess`, `EventNextStep`, `EventOrganizers`, `EventOrganizersDialog`, `EventOverview`, `EventPeople`, `EventPoll`, `EventReminder`, `EventRsvp`, `EventShareDialog`, `MemberAvatar`, `MemberPicker`, `MessageLangToggle`, `PollDaysInput`, `ThemePicker`: all in `app/components/`.

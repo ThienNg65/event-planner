@@ -1,4 +1,4 @@
-import { asc, eq, getTableColumns } from 'drizzle-orm';
+import { asc, eq, getTableColumns, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const { events, responses, members, venues, cohosts } = schema;
@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
       .innerJoin(members, eq(members.id, responses.memberId))
       .where(eq(responses.eventId, id))
       .orderBy(asc(members.name));
-  let [{ manageKeyHash, coHostKeyHash, ...ev }, rs, vs, [host], co, me] = await Promise.all([
+  let [{ manageKeyHash, coHostKeyHash, handoverTo, handoverAt, ...ev }, rs, vs, [host], co, me] = await Promise.all([
     findEvent(id),
     answers(),
     useDb()
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
       .orderBy(asc(venues.createdAt)),
     useDb().select({ name: members.name }).from(members).innerJoin(events, eq(events.createdBy, members.id)).where(eq(events.id, id)),
     useDb()
-      .select({ memberId: cohosts.memberId, name: members.name, status: cohosts.status, invitedAt: cohosts.invitedAt })
+      .select({ memberId: cohosts.memberId, name: members.name, status: cohosts.status, invitedAt: cohosts.invitedAt, hasPin: sql<boolean>`${members.pinHash} is not null` })
       .from(cohosts)
       .innerJoin(members, eq(members.id, cohosts.memberId))
       .where(eq(cohosts.eventId, id))
@@ -53,6 +53,9 @@ export default defineEventHandler(async (event) => {
   let shown = rs.map((r) => ({ ...r, voted: hasVoted(r) }));
   const votesHidden = hidesVotes(ev, role, rs, me);
   if (votesHidden) ({ rows: shown, venues: venueList } = redactVotes(shown, venueList, me, ev.honorees));
+  // The handover offer is for its two parties only: the signed-in creator (who can withdraw it) and the offered co-host (who can accept).
+  const target = handoverTo === null ? undefined : co.find((c) => c.memberId === handoverTo);
+  const handover = me !== null && target && (me === ev.createdBy || me === handoverTo) ? { to: target.memberId, name: target.name, at: handoverAt, mine: me === handoverTo } : null;
   return {
     event: ev,
     role,
@@ -69,6 +72,9 @@ export default defineEventHandler(async (event) => {
         invitedAt: c.invitedAt,
         status: c.status === 'invited' && Date.now() - c.invitedAt.getTime() > INVITE_TTL_MS ? ('expired' as const) : c.status,
       })),
+    handover,
+    // Co-hosts the creator may offer the event to (active, with a PIN); empty for everyone else.
+    handoverOptions: me !== null && me === ev.createdBy && !ev.cancelledAt ? co.filter((c) => c.status === 'active' && c.hasPin).map((c) => ({ memberId: c.memberId, name: c.name })) : [],
     hostName: host?.name ?? '',
     votingOpen: votingOpen(ev),
     joinedNow,

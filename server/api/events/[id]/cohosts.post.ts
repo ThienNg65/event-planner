@@ -22,9 +22,14 @@ export default defineEventHandler(async (event) => {
 
   const invite = randomBytes(32).toString('base64url');
   const set = { status: 'invited' as const, inviteHash: sha256(invite), keyHash: null, invitedAt: new Date(), acceptedAt: null };
-  await useDb()
-    .insert(cohosts)
-    .values({ eventId: ev.id, memberId: member.id, ...set })
-    .onConflictDoUpdate({ target: [cohosts.eventId, cohosts.memberId], set });
+  // Re-issuing turns an active co-host back into a pending invite, so an offer to hand the event to them is withdrawn with it.
+  const db = useDb();
+  await db.batch([
+    db
+      .insert(cohosts)
+      .values({ eventId: ev.id, memberId: member.id, ...set })
+      .onConflictDoUpdate({ target: [cohosts.eventId, cohosts.memberId], set }),
+    db.update(schema.events).set({ handoverTo: null, handoverAt: null }).where(and(eq(schema.events.id, ev.id), eq(schema.events.handoverTo, member.id))),
+  ]);
   return { invite };
 });

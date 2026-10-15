@@ -40,7 +40,8 @@ Every handler validates its own input (there is no shared schema layer): `server
 
 Also `joinedNow` (this visit made you a participant) and `participants` (`{ id, name }`, by name), which the UI uses for counts and the avatar strip. `PUT /response`, `POST /days` and `POST /venues` also go through `requireAccess`, and so do the organizer-only endpoints (PATCH, DELETE, cohost, venue delete) before their role check, so a stranger gets `notFound` rather than 403.
 
-`event` (all columns except the key hashes), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
+`event` (all columns except the key hashes and the handover offer), `role`, `manager` (role is not null), `hasCoHost` (legacy key exists), `cohosts` (`memberId, name, invitedAt, status` where pending invites older than 7 days read `expired`; pending/expired only for organizers),
+`handover` (`{ to, name, at, mine }` or null; only for the signed-in creator and the offered co-host), `handoverOptions` (`{ memberId, name }[]`, the co-hosts the signed-in creator may offer the event to),
 `hostName`, `hostKey` (the sent `x-manage-key` still matches the manage key), `votingOpen`, `responses` (every member's row plus `name` and `voted`; while `votesHidden` is true, other members' `days`, `venueIds`, `maybeDays` and `maybeVenueIds` are emptied, see [04](04-polling-and-locking.md#47-hiding-results-until-you-vote)), `confirmed` (member ids with seats), `waitlist` (ids in queue order), `held` (ids with a live hold), `seats`, `share`, `venues` (each with `upvotes: memberId[]` and `maybe: memberId[]` for "if need be", sorted by upvotes, then if need be).
 
 Events are private to organizers, joining-key holders and participants ([03](03-identity-and-roles.md#34-security-properties-worth-remembering)).
@@ -82,6 +83,9 @@ Multi-row effects (attendance derivation, hold release) run in one `db.batch` to
 | `POST /api/events/:id/cohosts/accept` `{invite}` | signed in as the invitee | Exchange the invite for an access key `{ key }` | `inviteInvalid`, `inviteExpired`, `notYou`, `cancelled` |
 | `POST /api/events/:id/cohosts/decline` `{invite}` | holder of the invite | Remove the pending row | `inviteInvalid` |
 | `DELETE /api/events/:id/cohosts/:memberId` | host (any row) or co-host (own row only) | Revoke or leave | `forbidden`, `hostOnly` |
+| `POST /api/events/:id/handover` `{to}` | signed-in creator | Offer the event to an active co-host with a PIN; replaces an earlier offer ([03](03-identity-and-roles.md#35-handing-an-event-over)) | `creatorOnly`, `handoverTarget`, `cancelled`, `unknownMember` |
+| `DELETE /api/events/:id/handover` | signed-in creator or target | Withdraw or decline the pending offer (nothing pending is fine) | `signInFirst` |
+| `POST /api/events/:id/handover/accept` | signed in as the offered co-host | Take the event over; returns the new manage key `{ key }` once | `signInFirst`, `handoverGone`, `cancelled`, `forbidden` |
 | `POST /api/events/:id/cohost` / `DELETE` | host | Legacy shared co-host key: create or rotate (returns `{ key }` once) / revoke | |
 
 ## Common error codes

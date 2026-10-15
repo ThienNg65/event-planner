@@ -60,6 +60,9 @@ export const events = pgTable(
       .notNull()
       .references(() => members.id),
     manageKeyHash: text().notNull(),
+    // Pending offer to hand the event over to an active co-host: the creator offers, the target accepts. Null when none.
+    handoverTo: integer().references(() => members.id, { onDelete: 'set null' }),
+    handoverAt: timestamp({ withTimezone: true }),
     // Second, lower-privilege key: may edit and move the event forward, but not reopen, cancel or delete it.
     coHostKeyHash: text(),
     // Secret in the joining link (/e/:id?join=…). Kept readable so organizers and participants can share the link again.

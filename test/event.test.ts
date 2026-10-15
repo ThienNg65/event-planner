@@ -161,8 +161,8 @@ test('votingOpen: only while polling, not cancelled, before the deadline', () =>
 });
 
 test('can: host does everything, co-host cannot reopen/cancel/delete/manage the co-host link, others nothing', () => {
-  const shared = ['edit', 'advance', 'removeVenue', 'setOthers', 'remind'] as const;
-  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost', 'rotateKey'] as const;
+  const shared = ['edit', 'advance', 'removeVenue', 'setOthers', 'remind', 'acceptHandover'] as const;
+  const hostOnly = ['reopen', 'cancel', 'delete', 'cohost', 'rotateKey', 'handover'] as const;
   for (const a of [...shared, ...hostOnly]) assert.equal(can('host', a), true, `host ${a}`);
   for (const a of shared) assert.equal(can('cohost', a), true, `cohost ${a}`);
   for (const a of hostOnly) assert.equal(can('cohost', a), false, `cohost ${a}`);

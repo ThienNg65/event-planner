@@ -21,6 +21,7 @@ const ROWS: { key: string; action?: Action }[] = [
   { key: 'reopen', action: 'reopen' },
   { key: 'cancel', action: 'cancel' },
   { key: 'cohost', action: 'cohost' },
+  { key: 'handover', action: 'handover' },
 ];
 const COLUMNS: { role: Role; label: string }[] = [
   { role: 'host', label: 'org.host' },

@@ -235,7 +235,10 @@
     "pinWeak": "Mã PIN quá dễ đoán. Tránh số lặp và dãy như 123456.",
     "pinWrong": "Sai tên hoặc mã PIN.",
     "pinLocked": "Nhập sai quá nhiều lần. Hãy thử lại sau 15 phút, hoặc nhờ người tổ chức đặt lại mã PIN.",
-    "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN."
+    "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN.",
+    "creatorOnly": "Chỉ người tổ chức đã tạo sự kiện mới chuyển giao được.",
+    "handoverTarget": "Hãy chọn một đồng tổ chức đang hoạt động và đã đặt mã PIN.",
+    "handoverGone": "Lời đề nghị chuyển giao này không còn hiệu lực."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -632,7 +635,14 @@
     "votingChoice": "Bình chọn sau khi mở lại",
     "reopenDerived": "Đã xoá {n} câu trả lời tính từ phiếu bầu. | Đã xoá {n} câu trả lời tính từ phiếu bầu.",
     "reopenPayments": "Các khoản thanh toán được giữ nguyên, không bị xoá:",
-    "reopenAck": "Tôi biết các khoản thanh toán này vẫn được ghi nhận"
+    "reopenAck": "Tôi biết các khoản thanh toán này vẫn được ghi nhận",
+    "handover": "Chuyển giao…",
+    "handoverTitle": "Chuyển giao sự kiện",
+    "handoverBody": "Đề nghị một đồng tổ chức nhận sự kiện. Khi họ đồng ý, họ trở thành người tổ chức chính còn bạn thành đồng tổ chức. Liên kết quản lý của bạn sẽ không còn dùng được.",
+    "handoverButton": "Gửi đề nghị",
+    "handoverPick": "Chọn đồng tổ chức",
+    "handoverNone": "Chưa có ai nhận được: người đó phải là đồng tổ chức đang hoạt động và đã đặt mã PIN.",
+    "handoverReplace": "Đề nghị này thay cho đề nghị gửi {name}."
   },
   "org": {
     "title": "Ban tổ chức",
@@ -653,7 +663,8 @@
       "setOthers": "Sửa đăng ký và thanh toán của người khác",
       "reopen": "Mở lại một bước trước",
       "cancel": "Huỷ, khôi phục hoặc xoá sự kiện",
-      "cohost": "Quản lý liên kết quản lý và liên kết đồng tổ chức"
+      "cohost": "Quản lý liên kết quản lý và liên kết đồng tổ chức",
+      "handover": "Chuyển sự kiện cho một đồng tổ chức"
     },
     "legacyActive": "Đang có liên kết đồng tổ chức",
     "manage": "Quản lý ban tổ chức",
@@ -826,5 +837,14 @@
     "previewNote": "Chuyen khoan thu",
     "failed": "VietQR không tạo được mã. Hãy kiểm tra mã ngân hàng và số tài khoản.",
     "previewHint": "Quét bằng ứng dụng ngân hàng: phải hiện đúng tài khoản và chủ tài khoản. Không cần chuyển tiền."
+  },
+  "handover": {
+    "offerTitle": "{name} đề nghị chuyển sự kiện này cho bạn",
+    "offerBody": "Đồng ý để trở thành người tổ chức chính. Người tổ chức trước vẫn là đồng tổ chức. Bạn sẽ nhận liên kết quản lý mới trên thiết bị này.",
+    "accept": "Đồng ý",
+    "decline": "Từ chối",
+    "accepted": "Bạn đã là người tổ chức chính",
+    "pending": "Đã đề nghị chuyển giao cho {name}, đang chờ trả lời",
+    "cancel": "Hủy đề nghị"
   }
 }

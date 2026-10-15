@@ -61,5 +61,6 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 |---|---|---|---|
 | 26 | Deleting an event cascades to its responses, places and co-hosts; the members stay. | Code | Deliberate. |
 | 27 | There are no notifications of any kind. People only learn something changed by opening the app; the home to-do list is the nudge. | Code | Deliberate for now. |
+| 36 | After a handover the old host is an ordinary co-host: no longer protected by `organizes()` (unless they created other events), so another organizer can reset their PIN, like any co-host. There is no way to take the event back except the new host handing it over again. A handover needs the target to have a PIN, and a pending offer does not expire. | Code | Undecided. |
 
 When you decide one of the "Undecided" items, change the behaviour *and* move the line here to the relevant chapter (or delete it).

@@ -26,6 +26,7 @@ The code is shaped around a few rules that make that safe. Break one and you rei
 - A row has `derived` only if `status = 'going'` (DB check).
 - `guests` is 0 to 10 (and, through `PUT /response`, at most the event's `max_guests` unless an organizer writes it; lowering the limit never rewrites rows), `paid_amount` ≥ 0, `stage` is one of four values (DB checks).
 - A co-host row is `invited` with an invite hash **or** `active` with a key hash, never both and never neither (DB check).
+- A handover accept is one batch whose event UPDATE is guarded on the creator, the offer and the target's co-host row; the co-host swaps run only if it took effect, so a stale or doubled accept is a no-op (`409`). Exactly one of two simultaneous accepts wins.
 - An explicit answer is never overwritten by a derived write (guard in `attendanceWrites`).
 - A paid row is never touched by derivation, hold release or reopen.
 - Poll days: between 1 and 20 while polling; every member's `days` ⊆ the event's `pollDays`.

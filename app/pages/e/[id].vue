@@ -342,6 +342,7 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
             :description="ev.cancelReason ?? undefined"
             :actions="restoreActions"
           />
+          <EventHandover :data="data" @changed="refresh" @rekeyed="key = $event" />
           <UAlert v-if="ev.notice" role="status" color="info" variant="subtle" icon="i-lucide-megaphone" :description="ev.notice" :actions="noticeActions" :ui="{ title: 'text-highlighted', description: 'text-default' }">
             <template #title>
               {{ t('event.noticeTitle') }}

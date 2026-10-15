@@ -5,6 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
+- The host can hand an event over to a co-host: pick **Hand over…** in the host menu, and when the co-host accepts, they become the host with a new manage link and you stay on as a co-host. Only the host's own signed-in account can offer, the co-host needs a PIN, and the offer disappears if you withdraw or replace it or the co-host is removed.
 - Votes on days and places can now be Yes, If need be or No. The poll shows both counts, the leader has the most Yes and then the most If need be, and people who only said If need be for the chosen day or place are asked to confirm instead of being marked Going. An If need be answer counts as having voted.
 - Organizers can duplicate an event: the Duplicate button opens the create form filled in from the earlier event (title, note, place, limits, cover, theme and honorees, plus bank details if you created it), and you only pick new dates.
 - Organizers can limit how many guests each person may bring (0 to 10). Anyone asking for more is told the limit; organizers can still set any number, and lowering the limit does not change answers already given.

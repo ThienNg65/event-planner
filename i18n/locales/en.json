@@ -235,7 +235,10 @@
     "pinWeak": "That PIN is too easy to guess. Avoid repeated digits and runs like 123456.",
     "pinWrong": "Wrong name or PIN.",
     "pinLocked": "Too many wrong PINs. Try again in 15 minutes, or ask an organizer to reset your PIN.",
-    "pinResetOrganizer": "This member organizes events, so their PIN can only be changed by themselves."
+    "pinResetOrganizer": "This member organizes events, so their PIN can only be changed by themselves.",
+    "creatorOnly": "Only the host who created this event can hand it over.",
+    "handoverTarget": "Pick an active co-host who has set a PIN.",
+    "handoverGone": "This handover offer is no longer valid."
   },
   "days": {
     "edit": "Edit days",
@@ -632,7 +635,14 @@
     "votingChoice": "Voting after reopening",
     "reopenDerived": "{n} answer counted from votes is cleared. | {n} answers counted from votes are cleared.",
     "reopenPayments": "Payments are kept, they are not cleared:",
-    "reopenAck": "I know these payments stay recorded"
+    "reopenAck": "I know these payments stay recorded",
+    "handover": "Hand over…",
+    "handoverTitle": "Hand this event over",
+    "handoverBody": "Offer the event to a co-host. When they accept, they become the host and you become a co-host. Your manage link stops working.",
+    "handoverButton": "Offer handover",
+    "handoverPick": "Choose a co-host",
+    "handoverNone": "No co-host can take it yet: they must be an active co-host and have set a PIN.",
+    "handoverReplace": "This replaces your offer to {name}."
   },
   "org": {
     "title": "Organizers",
@@ -653,7 +663,8 @@
       "setOthers": "Change other people's RSVP and payments",
       "reopen": "Reopen an earlier stage",
       "cancel": "Cancel, restore or delete the event",
-      "cohost": "Manage the manage link and the co-host link"
+      "cohost": "Manage the manage link and the co-host link",
+      "handover": "Hand the event over to a co-host"
     },
     "legacyActive": "A co-host link is active",
     "manage": "Manage organizers",
@@ -826,5 +837,14 @@
     "previewNote": "Test transfer",
     "failed": "VietQR could not build a code. Check the bank code and account number.",
     "previewHint": "Scan it with your banking app: it should show this account and holder. Do not complete the transfer."
+  },
+  "handover": {
+    "offerTitle": "{name} offers you this event",
+    "offerBody": "Accept to become its host. The previous host stays on as a co-host. You will get a new manage link on this device.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "accepted": "You are now the host",
+    "pending": "Handover offered to {name}, waiting for their answer",
+    "cancel": "Cancel offer"
   }
 }

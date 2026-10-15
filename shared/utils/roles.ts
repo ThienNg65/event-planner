@@ -13,6 +13,10 @@ const MIN_ROLE = {
   delete: 'host',
   cohost: 'host',
   rotateKey: 'host',
+  // Offer the event to a co-host, or withdraw the offer (the server also needs the signed-in creator).
+  handover: 'host',
+  // Take an offer over (the server also needs the signed-in target).
+  acceptHandover: 'cohost',
 } as const;
 
 /** How long a pending co-host invite can still be accepted (an active co-host never expires). */
