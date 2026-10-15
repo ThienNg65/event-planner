@@ -12,7 +12,9 @@ export default defineEventHandler(async (event) => {
   const me = await meOf(event);
   const current = sessionToken(event);
   if (me === null || !current) fail(401, 'signInFirst');
-  await requireCurrentPin(me, (await readJson(event)).currentPin);
+  // A member without a PIN sends no body, so readJson (which rejects an empty one) does not fit here.
+  const body = await readBody(event).catch(() => null);
+  await requireCurrentPin(me, body?.currentPin);
   const { members, memberSessions } = schema;
   const db = useDb();
   const token = randomBytes(32).toString('base64url');
