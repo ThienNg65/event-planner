@@ -25,13 +25,50 @@ const weak = computed(() => setting.value && pin.value.length === PIN_LENGTH && 
 const ready = computed(() => pin.value.length === PIN_LENGTH && !weak.value && (!adding.value || !!newName.value.trim()));
 watch(pin, (v) => (pin.value = v.replace(/\D/g, '')));
 
+// Forgot the PIN: mail a code to the name's verified email (shown only once email is switched on), then set a new PIN with it.
+const { data: mail } = useFetch('/api/email-enabled', { key: 'email-enabled', default: () => ({ enabled: false }) });
+const recover = ref<'ask' | 'code' | null>(null);
+const code = ref('');
+watch(code, (v) => (code.value = v.replace(/\D/g, '')));
+const recoverWeak = computed(() => pin.value.length === PIN_LENGTH && pinProblem(pin.value) === 'weak');
+async function askCode() {
+  busy.value = true;
+  try {
+    await $fetch(`/api/members/${picked.value!.id}/recover`, { method: 'POST' });
+    toast.add({ title: t('email.recoverSent') });
+    pin.value = '';
+    recover.value = 'code';
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+  } finally {
+    busy.value = false;
+  }
+}
+async function confirmRecover() {
+  busy.value = true;
+  try {
+    await $fetch(`/api/members/${picked.value!.id}/recover/confirm`, { method: 'POST', body: { code: code.value, newPin: pin.value } });
+    reset();
+    await Promise.all([refreshMe(), refresh()]);
+    toast.add({ title: t('email.recovered') });
+  } catch (e) {
+    toast.add({ color: 'error', title: errMsg(e) });
+    pin.value = '';
+  } finally {
+    busy.value = false;
+  }
+}
+
 function reset() {
+  recover.value = null;
+  code.value = '';
   adding.value = props.newOnly;
   picked.value = null;
   newName.value = '';
   pin.value = '';
 }
 function pickMember(m: Row) {
+  recover.value = null;
   picked.value = m;
   adding.value = false;
   pin.value = '';
@@ -76,7 +113,7 @@ async function submit() {
       <p class="text-xs text-muted">{{ t('me.otherDevice') }}</p>
     </div>
 
-    <form v-else class="space-y-2" @submit.prevent="submit">
+    <form v-else-if="recover !== 'code'" class="space-y-2" @submit.prevent="submit">
       <p v-if="picked" class="text-sm">{{ t(picked.hasPin ? 'pin.enterFor' : 'pin.chooseFor', { name: picked.name }) }}</p>
       <!-- No autofocus on the create page: the field shows on load, and focus there would pop the phone keyboard. -->
       <UInput v-else v-model="newName" :placeholder="t('me.yourName')" :maxlength="50" :autofocus="!newOnly" class="w-full" />
@@ -108,5 +145,22 @@ async function submit() {
         <p v-if="newOnly" class="text-xs text-muted">{{ t('me.otherDeviceNew') }}</p>
       </template>
     </form>
+    <form v-else class="space-y-2" @submit.prevent="confirmRecover">
+      <p class="text-xs text-muted">{{ t('email.recoverSent') }}</p>
+      <UInput v-model="code" inputmode="numeric" autocomplete="one-time-code" autofocus :maxlength="6" :placeholder="t('email.code')" :aria-label="t('email.code')" class="w-full" />
+      <UInput v-model="pin" type="password" inputmode="numeric" autocomplete="new-password" :maxlength="PIN_LENGTH" :placeholder="t('pin.choose')" :aria-label="t('pin.label')" class="w-full" />
+      <p class="text-xs" :class="recoverWeak ? 'text-error' : 'text-muted'">{{ recoverWeak ? t('pin.weak') : t('pin.hintNew') }}</p>
+      <div class="flex gap-2">
+        <UButton type="submit" :loading="busy" :disabled="code.length !== 6 || pin.length !== PIN_LENGTH || recoverWeak">{{ t('email.recoverDo') }}</UButton>
+        <UButton variant="ghost" color="neutral" @click="reset">{{ t('cancel') }}</UButton>
+      </div>
+    </form>
+    <div v-if="mail?.enabled && picked?.hasPin && !recover" class="space-y-1">
+      <UButton variant="link" size="xs" class="px-0" @click="recover = 'ask'">{{ t('email.forgot') }}</UButton>
+    </div>
+    <div v-if="recover === 'ask'" class="space-y-2">
+      <UButton size="sm" variant="soft" icon="i-lucide-mail" :loading="busy" @click="askCode">{{ t('email.recoverSend') }}</UButton>
+      <p class="text-xs text-muted">{{ t('email.recoverNone') }}</p>
+    </div>
   </div>
 </template>

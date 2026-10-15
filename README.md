@@ -53,11 +53,25 @@ Open http://localhost:3000.
 
 | Command | What it does |
 |---|---|
-| `npm test` | Unit tests for the waitlist, bill split, next step, name matching, VietQR link, covers and the calendar grid (`node --test`) |
+| `npm test` | Unit tests for the waitlist, bill split, next step, name matching, VietQR link, covers, the calendar grid and email codes, tokens and limits (`node --test`) |
 | `npm run typecheck` | Vue and TypeScript type check |
 | `npm run test:api` | Builds the app, migrates the database, starts it on port 3999 and runs the API tests in `test/api` against `DATABASE_URL` (or `TEST_DATABASE_URL`). Test data is named `zz-test-` and events are deleted after each test |
 | `npm run db:generate` | Create a migration after changing `server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
+
+## Email (optional, off by default)
+
+Members can add a verified email to reset their own forgotten PIN. It stays switched off, and its screens hidden, until you configure [Resend](https://resend.com). Copy `.env.example` for the list; set these as environment variables on the host (on Cloudflare as Worker variables/secrets):
+
+| Variable | Meaning |
+|---|---|
+| `RESEND_API_KEY` | Resend API key; unset keeps email off |
+| `MAIL_FROM` | Sender on a domain verified in Resend, e.g. `Team Events <events@example.com>` |
+| `APP_URL` | Public address of the site, used in links inside mails |
+| `NOTIFY_SECRET` | Long random string that signs mail links and keys the one-time codes |
+| `ALLOWED_EMAIL_DOMAINS` | Optional comma-separated work domains; empty allows any |
+
+Members consent when they add an address (the text names Resend as a processor outside Vietnam) and can withdraw by removing it. How it works: [docs/13-email.md](docs/13-email.md).
 
 ## Deploy (Netlify)
 
@@ -87,6 +101,7 @@ Open http://localhost:3000.
 | Message texts for sharing and reminders | `app/utils/messages.ts` (tested in `test/messages.test.ts`) |
 | Calendar file and Google Calendar link | `shared/utils/ics.ts` (tested in `test/ics.test.ts`) |
 | Roles and permissions table (`can()`) | `shared/utils/roles.ts` |
+| Email: addresses, one-time codes, mail sending and templates | `server/utils/mail.ts`, `emailCodes.ts`, `mailCrypto.ts`, `mailTemplates.ts`, `shared/utils/email.ts` (tested in `test/email.test.ts`) |
 | Confetti | `app/utils/confetti.ts` |
 | Cover presets | `shared/utils/cover.ts` |
 | Strings | `i18n/locales/vi.json`, `en.json` |

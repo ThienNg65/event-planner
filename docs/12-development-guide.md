@@ -52,6 +52,10 @@ Add the key to `i18n/locales/vi.json` and `en.json` (every user-facing string, e
 
 VND is an integer; the share rounds up to 1,000. Times are stored as `timestamptz`, entered and shown in UTC+7; poll days are `YYYY-MM-DD` strings. Use `teamTime`, `teamDay`, `teamToday`; do not call `new Date(...)` on a bare day string for display.
 
+### Email settings
+
+Email is configured through `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL`, `NOTIFY_SECRET` and `ALLOWED_EMAIL_DOMAINS` (see `.env.example` and [13](13-email.md)). Leave them unset in development unless you are working on mail: the email UI stays hidden. For local work set `NOTIFY_SECRET` only: mails then go to the dev server's log (`LogSender`), never to Resend. Tests must never call the real Resend API.
+
 ## Releases
 
 1. Bump `VERSION`.

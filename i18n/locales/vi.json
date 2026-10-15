@@ -238,7 +238,18 @@
     "pinResetOrganizer": "Thành viên này đang tổ chức sự kiện nên chỉ tự họ mới đổi được mã PIN.",
     "creatorOnly": "Chỉ người tổ chức đã tạo sự kiện mới chuyển giao được.",
     "handoverTarget": "Hãy chọn một đồng tổ chức đang hoạt động và đã đặt mã PIN.",
-    "handoverGone": "Lời đề nghị chuyển giao này không còn hiệu lực."
+    "handoverGone": "Lời đề nghị chuyển giao này không còn hiệu lực.",
+    "emailOff": "Chưa dùng được email.",
+    "consentRequired": "Hãy tích vào ô đồng ý.",
+    "emailInvalid": "Địa chỉ email này không hợp lệ.",
+    "emailDomain": "Tên miền email này không được chấp nhận. Hãy dùng email công việc.",
+    "pinRequired": "Hãy đặt mã PIN trước: email được thêm bằng mã PIN.",
+    "emailSame": "Đây đã là email của bạn.",
+    "emailTooSoon": "Mã vừa được gửi, hoặc hôm nay bạn đã yêu cầu quá nhiều lần. Hãy thử lại sau.",
+    "mailBudget": "Hiện chưa gửi được email. Hãy thử lại vào ngày mai.",
+    "mailFailed": "Không gửi được email. Hãy thử lại sau.",
+    "codeInvalid": "Mã sai hoặc đã hết hạn.",
+    "revertInvalid": "Liên kết này không còn hiệu lực."
   },
   "days": {
     "edit": "Sửa ngày",
@@ -846,5 +857,55 @@
     "accepted": "Bạn đã là người tổ chức chính",
     "pending": "Đã đề nghị chuyển giao cho {name}, đang chờ trả lời",
     "cancel": "Hủy đề nghị"
+  },
+  "email": {
+    "title": "Email",
+    "intro": "Thêm email đã xác minh để tự đặt lại mã PIN khi quên.",
+    "add": "Thêm email",
+    "change": "Đổi email",
+    "remove": "Xoá email",
+    "current": "Email của bạn: {email}",
+    "cooldown": "Bạn vừa đổi địa chỉ. Đến {until}, mã khôi phục PIN vẫn được gửi về địa chỉ cũ.",
+    "label": "Địa chỉ email",
+    "consent": "Tôi đồng ý để Team Events lưu địa chỉ email của tôi nhằm gửi mã dùng một lần (xác nhận địa chỉ này và đặt lại mã PIN) và thông báo bảo mật. Email được gửi qua Resend, một dịch vụ ở ngoài Việt Nam, nên địa chỉ của tôi được chuyển ra nước ngoài. Tôi có thể rút lại sự đồng ý bất cứ lúc nào bằng cách xoá email tại đây.",
+    "send": "Gửi mã",
+    "codeSent": "Chúng tôi đã gửi mã 6 số đến {email}. Mã có hiệu lực 15 phút.",
+    "code": "Mã 6 số",
+    "confirm": "Xác nhận",
+    "saved": "Đã lưu email",
+    "removed": "Đã xoá email",
+    "removeNote": "Việc này rút lại sự đồng ý của bạn. Bạn sẽ không thể đặt lại mã PIN bằng email nữa.",
+    "forgot": "Quên mã PIN?",
+    "recoverSend": "Gửi mã qua email",
+    "recoverSent": "Nếu tên này có email đã xác minh, chúng tôi đã gửi mã đến đó. Mã có hiệu lực 15 phút.",
+    "recoverNone": "Tên này chưa có email? Hãy nhờ người tổ chức đặt lại mã PIN.",
+    "recoverDo": "Đặt PIN mới và đăng nhập",
+    "recovered": "Đã đổi mã PIN. Bạn đã đăng nhập.",
+    "back": "Quay lại",
+    "revertTitle": "Có phải bạn không?",
+    "revertBody": "Địa chỉ của một tài khoản Team Events vừa bị thay bằng địa chỉ khác. Nếu không phải bạn làm, hãy khôi phục: tài khoản sẽ bị đăng xuất ở mọi nơi, rồi bạn có thể đặt lại mã PIN bằng mã gửi về địa chỉ này.",
+    "revertDo": "Không phải tôi: khôi phục địa chỉ này",
+    "revertDone": "Xong. Địa chỉ cũ đã được khôi phục và tài khoản đã bị đăng xuất ở mọi nơi.",
+    "revertMissing": "Liên kết này không đầy đủ. Hãy mở lại từ email."
+  },
+  "mail": {
+    "footer": "Team Events. Đây là thư tự động, vui lòng không trả lời.",
+    "verifyCode": {
+      "subject": "Mã Team Events của bạn: {code}",
+      "body": "Mã để xác nhận địa chỉ email này là {code}.\n\nMã có hiệu lực 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua thư này: không có gì thay đổi nếu thiếu mã."
+    },
+    "recoverCode": {
+      "subject": "Team Events: mã đặt lại PIN",
+      "body": "Dùng mã này để chọn mã PIN mới: {code}.\n\nMã có hiệu lực 15 phút. Nếu bạn không yêu cầu, hãy bỏ qua thư này: mã PIN của bạn giữ nguyên."
+    },
+    "emailChanged": {
+      "subject": "Team Events: địa chỉ email đã đổi",
+      "body": "Địa chỉ email của một tài khoản Team Events vừa được đổi thành {email}. Đây là địa chỉ trước đó của bạn.\n\nNếu là bạn làm thì không cần làm gì thêm. Trong 72 giờ, mã khôi phục PIN vẫn được gửi đến địa chỉ này.\n\nNếu không phải bạn, hãy dùng liên kết bên dưới để khôi phục địa chỉ này.",
+      "action": "Không phải tôi: khôi phục địa chỉ này"
+    },
+    "pinReset": {
+      "subject": "Team Events: mã PIN của bạn đã được đặt lại",
+      "body": "Mã PIN của {name} vừa được đặt lại bằng mã gửi qua email và mọi thiết bị khác đã bị đăng xuất.\n\nNếu là bạn làm thì không cần làm gì thêm. Nếu không, có thể ai đó đang truy cập hộp thư này: hãy bảo mật tài khoản email và nhờ người tổ chức Team Events hỗ trợ."
+    }
   }
 }

@@ -16,6 +16,7 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 5 | A name that created an event cannot be claimed from the list, and another organizer cannot reset its PIN (it would hand over host rights). Such a member signs in with their PIN or sign-in link; with neither, only the manage link gets them back, and only as host. | Code | Deliberate (prevents taking over host rights). |
 | 6 | A PIN has only 10^6 values and the name list is public, so the lockout is the protection. Anyone can lock a colleague's name for 15 minutes by guessing; an organizer's reset clears it. | Code | Deliberate trade-off for an internal app. |
 | 7 | A member who signed in before PINs existed has no PIN and is not in the name list until they set one (from a device that is still signed in) or an organizer resets it. | Code | Transition. |
+| 8 | Email recovery (R4): removing an address and adding another skips the 72 h cool-down (only a replacement counts as a change), and a "not me" revert restores the old address but leaves the PIN alone, so someone who knows the PIN can sign in again until the owner recovers and picks a new one. Anyone can burn a colleague's recovery code with five wrong guesses (a new one can be asked for, 3 a day). A member without a verified email still needs an organizer to reset a PIN. | Code | Deliberate for a first version; the PIN is already needed to change the address. |
 
 ## Dates and stages
 

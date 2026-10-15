@@ -20,6 +20,7 @@ The code is shaped around a few rules that make that safe. Break one and you rei
 8. **Increments, not overwrites, for money.** `addPaid` adds to `paidAmount` in SQL, so a payment reported at the same moment as an organizer correction cannot erase it.
 9. **Time comparisons that decide ownership use the database clock** (`now()`), or the server clock for the request, never the browser's. Hold deadlines are compared at millisecond precision because JavaScript dates lose Postgres microseconds.
 10. **Held seats expire on read.** Every seat reader goes through `seated()`; `releaseExpired` only tidies rows. It runs *before* `reconfirm_by` is rewritten, and only while the stored deadline still equals the one it read, so a new deadline can never revive an expired hold.
+11. **Email codes are counted, then compared, then consumed.** `consumeCode` increments `member_codes.fails` in one guarded UPDATE before comparing (like `verifyPin`), burns the code at 5, and uses the right one with `DELETE … WHERE code_hash = … RETURNING`. Issuing is one `INSERT … ON CONFLICT DO UPDATE … WHERE` that carries the per-minute, per-day and global caps; the mail budget is one `INSERT … WHERE count < limit` on `mail_log`; the "not me" revert is one data-modifying CTE. The recover endpoint answers `{ sent: true }` however it ended. See [13](13-email.md).
 
 ## Invariants (must always be true)
 

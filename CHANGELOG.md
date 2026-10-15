@@ -5,6 +5,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 ## [Unreleased]
 
 ### Added
+- Members can add a verified email and use it to reset their own forgotten PIN: ask for a code on the sign-in screen, then choose a new PIN. Adding, changing or removing the address asks for your PIN and your consent, and after a change the old address still gets recovery codes for 72 hours and a "not me" link that puts it back and signs the account out everywhere. The feature stays off, with its screens hidden, until email sending is set up.
 - The host can hand an event over to a co-host: pick **Hand over…** in the host menu, and when the co-host accepts, they become the host with a new manage link and you stay on as a co-host. Only the host's own signed-in account can offer, the co-host needs a PIN, and the offer disappears if you withdraw or replace it or the co-host is removed.
 - Votes on days and places can now be Yes, If need be or No. The poll shows both counts, the leader has the most Yes and then the most If need be, and people who only said If need be for the chosen day or place are asked to confirm instead of being marked Going. An If need be answer counts as having voted.
 - Organizers can duplicate an event: the Duplicate button opens the create form filled in from the earlier event (title, note, place, limits, cover, theme and honorees, plus bank details if you created it), and you only pick new dates.

@@ -23,6 +23,7 @@ that implements it.
 | 10 | [Concurrency and invariants](10-concurrency-and-invariants.md) | Why the code is shaped the way it is, and what must never be broken. |
 | 11 | [Known behaviours](11-known-behaviours.md) | Surprising but intentional (or not-yet-decided) behaviours worth knowing before changing things. |
 | 12 | [Development guide](12-development-guide.md) | How to add a rule, a field, a string, a migration, a release. |
+| 13 | [Email and PIN recovery](13-email.md) | How a member's verified email, the one-time codes, the cool-down and PIN recovery by email work, and how to switch email on. |
 
 ## Where to look for what
 
@@ -33,6 +34,7 @@ that implements it.
 | A stage transition or event edit | `server/api/events/[id].patch.ts` (the one place stages move) |
 | An RSVP, vote or payment | `server/api/events/[id]/response.put.ts` |
 | What the event page shows | `app/pages/e/[id].vue` and the `Event*.vue` components |
+| Email, codes or PIN recovery | `docs/13-email.md`, `server/utils/mail.ts`, `server/utils/emailCodes.ts` |
 | A user-facing string or error | `i18n/locales/vi.json` **and** `en.json` |
 
 ## Conventions used in these docs

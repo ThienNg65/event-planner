@@ -159,3 +159,49 @@ export const cohosts = pgTable(
     check('cohosts_key', sql`(${t.status} = 'active') = (${t.keyHash} is not null)`),
   ]
 );
+
+// A member's verified email, only ever read back to its owner. `prev*`: after a change, the old address keeps receiving
+// recovery codes (and the "not me" link) until `recoveryAfter`; `consent*` records what the member agreed to and when.
+export const memberEmail = pgTable('member_email', {
+  memberId: integer()
+    .primaryKey()
+    .references(() => members.id, { onDelete: 'cascade' }),
+  email: text().notNull(),
+  verifiedAt: timestamp({ withTimezone: true }).notNull(),
+  consentAt: timestamp({ withTimezone: true }).notNull(),
+  consentVersion: text().notNull(),
+  locale: text().notNull().default('vi'),
+  mutedKinds: text().array().notNull().default(sql`'{}'`),
+  prevEmail: text(),
+  prevUntil: timestamp({ withTimezone: true }),
+  recoveryAfter: timestamp({ withTimezone: true }),
+});
+
+export const CODE_PURPOSES = ['verify', 'recover'] as const;
+
+// One live one-time code per member and purpose (a new request replaces it); only its keyed hash is stored.
+// `sendsToday` / `sendsDay` count requests for the daily caps.
+export const memberCodes = pgTable(
+  'member_codes',
+  {
+    memberId: integer()
+      .notNull()
+      .references(() => members.id, { onDelete: 'cascade' }),
+    purpose: text({ enum: CODE_PURPOSES }).notNull(),
+    targetEmail: text().notNull(),
+    codeHash: text().notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    fails: integer().notNull().default(0),
+    sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    sendsToday: integer().notNull().default(1),
+    sendsDay: date({ mode: 'string' }).notNull().default(sql`current_date`),
+  },
+  (t) => [primaryKey({ columns: [t.memberId, t.purpose] }), check('member_codes_purpose', sql`${t.purpose} in ('verify', 'recover')`)]
+);
+
+// One row per email handed to the mail provider in the last day or two: the daily budget is counted from it.
+export const mailLog = pgTable('mail_log', {
+  id: serial().primaryKey(),
+  kind: text().notNull(),
+  sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});

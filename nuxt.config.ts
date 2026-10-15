@@ -11,6 +11,9 @@ export default defineNuxtConfig({
       Object.assign(config, { cloudflare: { deployConfig: true, nodeCompat: true } });
     },
   },
+  // Email settings. Empty here: set RESEND_API_KEY, MAIL_FROM, APP_URL, NOTIFY_SECRET and ALLOWED_EMAIL_DOMAINS (or the
+  // NUXT_* forms) in the host's environment. Without a key the app sends nothing and hides its email features.
+  runtimeConfig: { resendApiKey: '', mailFrom: '', appUrl: '', notifySecret: '', allowedEmailDomains: '' },
   app: {
     head: {
       title: 'Team Events',

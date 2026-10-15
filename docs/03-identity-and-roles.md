@@ -139,6 +139,8 @@ sequenceDiagram
 - The create page only asks for a new name and never lists others, so it can't be used to browse the roster.
 - **Events are private, the roster is not**: an event, with every member's votes, answers and payments and its bank id, account number and holder, is readable only by an organizer, a holder of the joining key or a participant (`requireAccess`, section 3.2); anyone else gets `notFound`. The member name list is public.
 
+- **Forgotten PIN**: an organizer's reset (above) or, once email is switched on, the member's own recovery by a code sent to their verified address ([3.6](#36-verified-email-and-recovering-a-pin)). A member without a verified email still needs an organizer.
+
 ## 3.5 Handing an event over
 
 The creator can pass the event to an active co-host (`events.handover_to`, `handover_at`). Q3 of the Phase 2 spec: full creator rights move, not just the manage key.
@@ -148,3 +150,7 @@ The creator can pass the event to an active co-host (`events.handover_to`, `hand
 3. **Afterwards**: the old manage link and key stop working; the old host is a co-host and sees the page as one. The new host's old co-host access key stops working with the deleted row.
 4. **Clearing**: revoking, leaving or re-issuing the target's co-host row clears the offer in the same batch. Deleting the event removes it. `GET` returns `handover` (`{ to, name, at, mine }`) and `handoverOptions` (eligible co-hosts) only to the signed-in creator and the target, and the raw `handoverTo`/`handoverAt` never.
 5. **Side effect**: `organizes()` follows `created_by`, so the new host's name gains the organizer protections (no claim, no PIN reset by others) and the old host loses them unless they created other events; see [11](11-known-behaviours.md).
+
+## 3.6 Verified email and recovering a PIN
+
+A member with a PIN may attach a verified email (`member_email`), after consent, to recover their own PIN: `POST /api/members/:id/recover` mails a code, `/recover/confirm` sets a new PIN, signs the member out everywhere else and in on this browser. Organizers may use it too (it hands nothing over; manage keys are untouched). Adding, changing or removing the address needs the current PIN. After a change, recovery codes keep going to the **previous** address for 72 hours and that address gets a signed "not me" link that restores it, signs the member out everywhere and rotates their token. The address is visible only to its owner (`GET /api/me`). Everything is switched off until Resend is configured. Details: [13](13-email.md).

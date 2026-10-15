@@ -12,6 +12,8 @@ erDiagram
     events  ||--o{ responses : "event_id (cascade)"
     events  ||--o{ venues : "event_id (cascade)"
     events  ||--o{ cohosts : "event_id (cascade)"
+    members ||--o| member_email : "member_id (cascade)"
+    members ||--o{ member_codes : "member_id (cascade)"
 ```
 
 Event deletion cascades to `responses`, `venues` and `cohosts`. Members are never deleted by the app; archiving (`archived_at`) hides them ([03](03-identity-and-roles.md#archived-members)). The API tests delete their own `zz-test-` members with SQL in `stopServer()`.
@@ -91,6 +93,14 @@ Primary key `(event_id, member_id)`. **Each person writes only their own row** (
 
 Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `derived in (...)`, and **`derived is null or status = 'going'`**.
 
+## `member_email`, `member_codes`, `mail_log` (R4)
+
+`member_email` (PK `member_id` to members, cascade): `email`, `verified_at`, `consent_at`, `consent_version`, `locale` (`vi` or `en`, language of mails), `muted_kinds` (text[], for R5), `prev_email`, `prev_until`, `recovery_after` (set together after a change: the cool-down, [13](13-email.md)). No unique index on `email`: two members may share an address. Never returned except to its owner.
+
+`member_codes` (PK `(member_id, purpose)`, purpose `verify` or `recover`): `target_email`, `code_hash` (keyed HMAC, never the code), `expires_at`, `fails`, `sent_at`, `sends_today` and `sends_day` (the daily caps).
+
+`mail_log` (`id`, `kind`, `sent_at`): one row per mail handed to the provider; the 24-hour budget is counted from it and rows older than two days are deleted.
+
 ## `cohosts`
 
 Primary key `(event_id, member_id)`.
@@ -119,5 +129,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`).
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_mixed_may_parker` (`max_guests`, `hide_votes`), `0012_kind_ulik` (`maybe_days`, `maybe_venue_ids`), `0013_unique_ben_parker` (`handover_to`, `handover_at`), `0014_slimy_pyro` (`member_email`, `member_codes`, `mail_log`).
 `netlify.toml` (and the Cloudflare build command in the README) runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.
