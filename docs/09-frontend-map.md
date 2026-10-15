@@ -71,4 +71,4 @@ Finished stages collapse to one summary line each ("12 voted", "8 seats").
 
 ## Component index
 
-`CoverPicker`, `DateTimeInput`, `EventBill`, `EventCard`, `EventCorrectDialog`, `EventDaysDialog`, `EventEdit`, `EventHostMenu`, `EventKeepAccess`, `EventNextStep`, `EventOrganizers`, `EventOrganizersDialog`, `EventOverview`, `EventPeople`, `EventPoll`, `EventReminder`, `EventRsvp`, `EventShareDialog`, `MemberAvatar`, `MemberPicker`, `MessageLangToggle`, `PollDaysInput`, `ThemePicker`: all in `app/components/`.
+`CoverPicker`, `DateTimeInput`, `EventBill`, `EventCard`, `EventCorrectDialog`, `EventDaysDialog`, `EventEdit`, `EventHostMenu`, `EventKeepAccess`, `EventNextStep`, `EventOrganizers`, `EventOrganizersDialog`, `EventOverview`, `EventPeople`, `EventPoll`, `EventReminder`, `EventRsvp`, `EventShareDialog`, `MemberAvatar`, `MemberPicker`, `MessageLangToggle`, `PollDaysInput`, `SeatCount` (seats/limit, or "15/10 + 5" in red once the attendance check raised the limit), `ThemePicker`: all in `app/components/`.

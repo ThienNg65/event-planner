@@ -59,9 +59,10 @@ The handler tests, in this order:
 | `stage` | Move: forward one step by organizer, backward by host, the single skip `rsvp → settled`. Leaving `rsvp` needs the event to have started; a lock needs a future start | organizer / host | `stageClosed`, `notStarted`, `startsInPast`, `hasPayments`, `invalidDate`, `hostOnly` |
 | `reopenVoting:true` + `voteDeadline` | Reopen voting; also validates the move to `poll` | organizer (host if leaving a later stage) | `invalid`, `invalidDate` |
 | any of `title, note, pollDays, startsAt, venue, venueLink, capacity, billTotal, bankId, bankAccount, bankHolder, cover, theme, honorees, notice, voteDeadline, reconfirmBy` | Field edits, validated by `eventFields` | organizer | `planFrozen` for date/place once frozen; `startsInPast` for a changed `startsAt` in the past; `votingClosed` for a deadline edit on a closed poll |
+| `attended: [{ memberId, guests }]` | The attendance check; only with `stage:'bill'` from `rsvp` ([06](06-bill-and-payments.md#61-entering-the-bill)) | organizer | `invalid` (wrong stage, not a participant, duplicate), `invalidGuests` |
 | `acknowledgePayments:true` | Required when reopening to `poll` with payments | host | `hasPayments` |
 
-Multi-row effects (attendance derivation, hold release) run in one `db.batch` together with the event UPDATE, guarded on the event still being in the stage the decision was made in; a lost race returns `stageClosed`.
+Multi-row effects (attendance derivation, the attendance check, hold release) run in one `db.batch` together with the event UPDATE, guarded on the event still being in the stage the decision was made in; a lost race returns `stageClosed`.
 
 ## Answers, suggestions
 

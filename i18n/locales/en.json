@@ -105,7 +105,8 @@
     "dayOptions": "Date not set · {n} proposed days",
     "addToCalendar": "Add to calendar",
     "calendarFile": "Calendar file (.ics)",
-    "googleCalendar": "Google Calendar"
+    "googleCalendar": "Google Calendar",
+    "goingSuffix": " going"
   },
   "create": {
     "title": "New event",
@@ -515,7 +516,13 @@
     "closeVsLock": "Close voting: stop taking votes, nothing is decided. Lock: pick the day (and place); everyone who voted for it counts as going. At the deadline, voting closes by itself and waits for you to lock.",
     "billAfter": "You can enter the bill once the event starts ({when}).",
     "lockOnly": "Voting is closed. Lock to pick the day (and place); everyone who voted for it counts as going.",
-    "leading": "Most votes: {day} ({n})"
+    "leading": "Most votes: {day} ({n})",
+    "checkTitle": "Who actually came?",
+    "checkHint": "Tick everyone who came, with the friends they brought. Unticked people owe nothing.",
+    "checkNone": "No answer",
+    "checkGuests": "Guests of {name}",
+    "checkShare": "{n} seats · {share} per seat",
+    "checkOver": "Seat limit {cap} + {n} more. The limit is raised so everyone who came shares the bill."
   },
   "edit": {
     "open": "Edit",
@@ -599,7 +606,8 @@
     "save": "Save",
     "fromVote": "From vote",
     "heldUntil": "Held until {time}",
-    "declinedCount": "{n} can't make it"
+    "declinedCount": "{n} can't make it",
+    "noshow": "Said going, didn't come"
   },
   "host": {
     "menu": "More actions",
@@ -707,7 +715,9 @@
     "answeredOf": "{n} of {total}",
     "votedL": "Voted",
     "declinedL": "Can't join",
-    "pendingL": "No reply yet"
+    "pendingL": "No reply yet",
+    "overLimit": "{cap} + {n}",
+    "overLimitHint": "The seat limit was {cap}; {n} more came."
   },
   "invite": {
     "title": "You are invited to co-host as {name}",

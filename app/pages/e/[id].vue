@@ -310,7 +310,9 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
               <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                 <span class="flex items-center gap-1.5"><UIcon name="i-lucide-user-round" />{{ t('event.hostedBy', { name: data.hostName }) }}</span>
                 <span v-if="ev.stage !== 'poll'" class="flex items-center gap-1.5">
-                  <UIcon name="i-lucide-users" />{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}
+                  <UIcon name="i-lucide-users" />
+                  <template v-if="overLimit(ev)"><SeatCount :seats="data.seats" :capacity="ev.capacity" :planned-capacity="ev.plannedCapacity" />{{ t('event.goingSuffix') }}</template>
+                  <template v-else>{{ t('event.goingCount', { n: ev.capacity ? `${data.seats}/${ev.capacity}` : data.seats }) }}</template>
                 </span>
               </p>
               <p v-if="googleCalendar" class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">

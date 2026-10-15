@@ -78,6 +78,13 @@
       "when": 1791954258510,
       "tag": "0010_lyrical_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792047749135,
+      "tag": "0011_damp_fallen_one",
+      "breakpoints": true
     }
   ]
 }

@@ -299,6 +299,38 @@ export function capacityImpact<T extends QueueEntry>(responses: T[], from: numbe
   };
 }
 
+export type Attended = { memberId: number; guests: number };
+
+/**
+ * What the attendance check at the bill does: ticked members become going with their guests, unticked members who had a
+ * seat are no-shows, other unticked "going" rows (waitlisted, lapsed holds) are dropped. Paid rows never change but still
+ * count their seats. A seat limit the real party exceeds is raised to fit it.
+ */
+export function attendanceCheck(
+  rows: { memberId: number; status: string | null; guests: number; paidAt: unknown; paidAmount?: number | null }[],
+  confirmedIds: number[],
+  attended: Attended[],
+  capacity: number | null
+) {
+  const paid = rows.filter((r) => r.paidAt || (r.paidAmount ?? 0) > 0);
+  const isPaid = new Set(paid.map((r) => r.memberId));
+  const ticked = new Set(attended.map((a) => a.memberId));
+  const going = attended.filter((a) => !isPaid.has(a.memberId));
+  const left = rows.filter((r) => r.status === 'going' && !ticked.has(r.memberId) && !isPaid.has(r.memberId));
+  const seats = [...going, ...paid.filter((r) => r.status === 'going')].reduce((n, r) => n + 1 + r.guests, 0);
+  return {
+    going,
+    noShow: left.filter((r) => confirmedIds.includes(r.memberId)).map((r) => r.memberId),
+    dropped: left.filter((r) => !confirmedIds.includes(r.memberId)).map((r) => r.memberId),
+    seats,
+    capacity: capacity === null ? null : Math.max(capacity, seats),
+  };
+}
+
+/** Seats beyond the limit the event was planned with (raised by the attendance check), or 0. */
+export const overLimit = (ev: { capacity: number | null; plannedCapacity: number | null }) =>
+  ev.plannedCapacity !== null && ev.capacity !== null && ev.capacity > ev.plannedCapacity ? ev.capacity - ev.plannedCapacity : 0;
+
 /** Roster members who have not answered yet (no day, no place picked, not declined), in roster order. */
 export const pendingVoters = <M extends { id: number }>(roster: M[], responses: { memberId: number; days: unknown[]; venueIds: unknown[]; status?: string | null }[]) => {
   const voted = new Set(responses.filter((r) => r.days.length || r.venueIds.length || r.status === 'no').map((r) => r.memberId));

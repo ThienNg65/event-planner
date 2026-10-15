@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, integer, pgTable, primaryKey, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, check, date, integer, pgTable, primaryKey, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
 export const STATUSES = ['going', 'maybe', 'no'] as const;
@@ -42,6 +42,8 @@ export const events = pgTable(
     venue: text(),
     venueLink: text(),
     capacity: integer(),
+    // The seat limit before the attendance check raised it to fit everyone who came; null = never raised.
+    plannedCapacity: integer(),
     billTotal: integer(),
     bankId: text(),
     bankAccount: text(),
@@ -110,6 +112,8 @@ export const responses = pgTable(
     firstVotedAt: timestamp({ withTimezone: true }),
     // Null for an explicit answer; 'going' = counted from votes; 'reconfirm' = seat held after a plan change.
     derived: text({ enum: DERIVED }),
+    // Had a seat but was unticked in the attendance check: shown as "said going, didn't come".
+    noShow: boolean().notNull().default(false),
   },
   (t) => [
     primaryKey({ columns: [t.eventId, t.memberId] }),
@@ -118,6 +122,7 @@ export const responses = pgTable(
     check('responses_paid_amount', sql`${t.paidAmount} >= 0`),
     check('responses_derived', sql`${t.derived} in ('going', 'reconfirm')`),
     check('responses_derived_going', sql`${t.derived} is null or ${t.status} = 'going'`),
+    check('responses_no_show', sql`not ${t.noShow} or ${t.status} = 'no'`),
   ]
 );
 

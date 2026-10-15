@@ -40,6 +40,7 @@ Evidence tags: **E2E** = observed in the browser on 2026-10-13 (v0.7.0); **Code*
 | 20 | The collectable total can exceed the bill because the share rounds **up** to 1,000 ₫ per seat (100,000 ₫ over 3 seats collects 102,000 ₫). | E2E | Deliberate; the page explains the rounding. |
 | 22 | The host is also a payer (owes `share × (1 + guests)`). With no bank details, the host sees "the organizer hasn't entered a bank account, pay directly", addressed to themselves. | E2E | Undecided. |
 | 23 | Completing with unpaid members is allowed (host or co-host); a confirm dialog lists debtors. They can keep reporting payments afterwards; only organizers set or clear amounts. | E2E | Deliberate. |
+| 34 | The attendance check at the bill overrides people's own answers (a Can't who is ticked becomes Going and owes), and a walk-in is not tagged as one: only the seat count ("10 + 5") shows that more people came. The raised limit stays raised if the event is reopened. | Code, tests | Deliberate (the organizer knows who came); the walk-in tag is undecided. |
 | 24 | The bill dialog shows the raw number (`100000`) with no separators and no per-seat preview; amounts elsewhere use `vi-VN` grouping (`100.000 ₫`), also in English. | E2E | Undecided. |
 
 ## Privacy

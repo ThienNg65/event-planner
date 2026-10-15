@@ -16,7 +16,7 @@ const paying = computed(() => ev.value.stage === 'bill' || ev.value.stage === 's
 
 // One list for everyone: who is in, with their answer and (when paying) how much they have settled.
 // People who are coming first; those who can't join last.
-const ORDER = ['going', 'waitlist', 'maybe', 'voted', 'no'] as const;
+const ORDER = ['going', 'waitlist', 'maybe', 'voted', 'noshow', 'no'] as const;
 const rows = computed(() =>
   props.data.responses
     .filter((r) => (ev.value.stage === 'poll' ? r.days.length || r.venueIds.length || r.status === 'no' : r.status))
@@ -27,7 +27,7 @@ const rows = computed(() =>
       const answered = ev.value.stage !== 'poll' || declined;
       // A held seat past its deadline is released: that person is back to "voted, no answer".
       const lost = r.derived === 'reconfirm' && !props.data.held.includes(r.memberId);
-      const kind = !answered || lost ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : (r.status ?? 'voted');
+      const kind = !answered || lost ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : r.noShow ? 'noshow' : (r.status ?? 'voted');
       // No share yet (bill not entered): nothing is owed, so no payment state to show.
       const owes = kind === 'going' && props.data.share !== null ? props.data.share * (1 + r.guests) : null;
       return { r, kind: kind as (typeof ORDER)[number], waitPlace, owes, pay: owes === null ? null : paymentOf(r, owes) };
@@ -37,7 +37,8 @@ const rows = computed(() =>
 const declinedCount = computed(() => rows.value.filter((r) => r.kind === 'no').length);
 const shown = computed(() => (showAll.value ? rows.value : rows.value.slice(0, COLLAPSED)));
 
-const KIND_COLOR = { going: 'success', waitlist: 'warning', maybe: 'neutral', no: 'error', voted: 'neutral' } as const;
+const KIND_COLOR = { going: 'success', waitlist: 'warning', maybe: 'neutral', no: 'error', noshow: 'warning', voted: 'neutral' } as const;
+const KIND_ICON: Partial<Record<(typeof ORDER)[number], string>> = { no: 'i-lucide-circle-slash', noshow: 'i-lucide-user-x' };
 const heldUntil = computed(() => (ev.value.reconfirmBy ? fmtDateTime(ev.value.reconfirmBy, locale.value) : ''));
 const label = (kind: (typeof ORDER)[number], place: number) => (kind === 'waitlist' ? t('people.waitlist', { n: place }) : t(`people.${kind}`));
 
@@ -104,7 +105,7 @@ async function saveAmount() {
             :title="data.venues.filter((v) => row.r.venueIds.includes(v.id)).map((v) => v.name).join(', ')"
           />
         </template>
-        <UBadge v-else :color="KIND_COLOR[row.kind]" variant="subtle" :icon="row.kind === 'no' ? 'i-lucide-circle-slash' : undefined" :label="label(row.kind, row.waitPlace)" />
+        <UBadge v-else :color="KIND_COLOR[row.kind]" variant="subtle" :icon="KIND_ICON[row.kind]" :label="label(row.kind, row.waitPlace)" />
         <UBadge
           v-if="paying && row.pay"
           :color="row.pay.done ? 'success' : row.pay.paid > 0 ? 'warning' : 'neutral'"

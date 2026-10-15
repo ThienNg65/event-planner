@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import type { BatchItem } from 'drizzle-orm/batch';
 import { STAGES } from '../../db/schema';
 
@@ -9,6 +9,18 @@ function dayList(b: Record<string, unknown>, key: string) {
   if (!(key in b)) return [];
   if (!Array.isArray(b[key]) || !b[key].every(isDay)) fail(400, 'invalidDays');
   return [...new Set(b[key] as string[])];
+}
+
+/** The attendance check's `[{ memberId, guests }]`: distinct members, 0 to 10 guests each. */
+function attendedList(v: unknown): Attended[] {
+  if (!Array.isArray(v)) fail(400, 'invalid');
+  const out = v.map((a) => {
+    if (!a || typeof a !== 'object' || !Number.isInteger(a.memberId)) fail(400, 'invalid');
+    if (!intIn(a.guests ?? 0, 0, 10)) fail(400, 'invalidGuests');
+    return { memberId: a.memberId as number, guests: (a.guests ?? 0) as number };
+  });
+  if (new Set(out.map((a) => a.memberId)).size !== out.length) fail(400, 'invalid');
+  return out;
 }
 
 export default defineEventHandler(async (event) => {
@@ -83,6 +95,9 @@ export default defineEventHandler(async (event) => {
     // Leaving the RSVP stage (bill or complete) needs the event to have started.
     if (jump > 0 && ev.stage === 'rsvp' && (!ev.startsAt || ev.startsAt > now)) fail(409, 'notStarted');
   }
+  // The attendance check ("who actually came?") rides only on entering the bill.
+  const attended = 'attended' in b ? attendedList(b.attended) : null;
+  if (attended && !(f.stage === 'bill' && ev.stage === 'rsvp')) fail(400, 'invalid');
   // Reopening voting always names the new deadline (a future time, or null for none) and needs the poll stage.
   const reopen = b.reopenVoting === true;
   if (reopen) {
@@ -107,6 +122,7 @@ export default defineEventHandler(async (event) => {
   // Statements that must run before the event UPDATE (they read the event row as it was).
   const before: BatchItem<'pg'>[] = [];
   let reconfirmBy: Date | null | undefined;
+  let raise: { capacity: number | null; plannedCapacity: SQL } | undefined;
   const toPoll = f.stage === 'poll' && ev.stage !== 'poll';
   const lock = f.stage === 'rsvp' && ev.stage === 'poll';
   const leavesRsvp = ev.stage === 'rsvp' && (f.stage === 'bill' || f.stage === 'settled');
@@ -122,9 +138,18 @@ export default defineEventHandler(async (event) => {
       .from(responses)
       .where(and(eq(responses.eventId, ev.id), or(isNotNull(responses.paidAt), gt(responses.paidAmount, 0))));
     if (paid!.n > 0 && b.acknowledgePayments !== true) fail(409, 'hasPayments');
-    extras.push(clearDerived(ev.id));
+    extras.push(clearDerived(ev.id), clearNoShows(ev.id));
     reconfirmBy = null;
   } else if (leavesRsvp) {
+    if (attended) {
+      const rows = await useDb().select().from(responses).where(eq(responses.eventId, ev.id));
+      if (attended.some((a) => !rows.some((r) => r.memberId === a.memberId))) fail(400, 'invalid');
+      const confirmed = rollCall(seated(rows, ev), ev.capacity).confirmed.map((r) => r.memberId);
+      const check = attendanceCheck(rows, confirmed, attended, next.capacity);
+      before.push(...checkInWrites(ev.id, check));
+      // A party bigger than the limit raises it; the first original limit is kept, so the page can show "10 + 5".
+      if (check.capacity !== next.capacity) raise = { capacity: check.capacity, plannedCapacity: sql`COALESCE(${events.plannedCapacity}, ${next.capacity})` };
+    }
     extras.push(releaseHolds(ev.id));
     reconfirmBy = null;
   } else if (derive) {
@@ -149,6 +174,7 @@ export default defineEventHandler(async (event) => {
     ...f,
     ...(repoll && { startsAt: null }),
     ...(reconfirmBy !== undefined && { reconfirmBy }),
+    ...raise,
     ...('notice' in f && f.notice !== ev.notice && { noticeAt: f.notice ? new Date() : null }),
     ...(nextDays && { pollDays: nextDays }),
   };

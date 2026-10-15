@@ -20,6 +20,22 @@ Entering the bill releases any seat still being held ([04](04-polling-and-lockin
 The move needs the event to have started (`notStarted` before that), and the UI offers "Enter bill" only then.
 Without a bill, a started event can be completed straight from `rsvp` ("Complete, no bill").
 
+### Attendance check ("Who actually came?")
+
+The Enter bill dialog lists every member with a response row, confirmed first, pre-ticked with today's confirmed seats and their guests. The organizer ticks walk-ins (Maybe, Can't, no answer, waitlisted) with their guests and unticks people who didn't come. The dialog previews seats and the per-seat share. The UI always sends `attended: [{ memberId, guests }]` with the move; the field is optional, and without it the move works as before.
+`attendanceCheck` in `shared/utils/event.ts` decides, and `checkInWrites` in `server/utils/attendance.ts` writes, in the same batch:
+
+| Member | Becomes |
+|---|---|
+| Ticked | `going` with the given guests, explicit (`derived = null`). Someone already going with as many guests keeps their queue spot |
+| Unticked, had a seat (confirmed) | `no` with `no_show = true`: People shows "Said going, didn't come" |
+| Unticked, waitlisted or a lapsed hold | `no` (no flag: they never had a seat) |
+| Paid (any payment recorded) | Untouched, but their seats still count |
+
+If the ticked seats exceed the seat limit, `capacity` is raised to fit them and the first original is kept in `planned_capacity` (`COALESCE`, so a second check after a reopen keeps it). Everyone who came is therefore confirmed and owes a share. Seat counts then read `15/10 + 5` in red with an info tooltip (`SeatCount.vue`, `overLimit`).
+The flag goes away on any later status write (an organizer can still move a no-show to Going in the People list), and reopening to the poll turns no-shows back into "no answer".
+Not covered: free events completed without a bill, and people who never joined the event (they open the joining link first, or count as someone's guests).
+
 ## 6.2 The split
 
 ```
@@ -29,7 +45,7 @@ owes(member) = share * (1 + member.guests)           (only confirmed members owe
 ```
 
 - Rounding is **up to the next 1,000 VND** per seat, so the amount collected can exceed the bill by up to 999 VND per seat (a 100,000 ₫ bill over 3 seats is 34,000 ₫ each, 102,000 ₫ collectable). The page states the rounding.
-- Only **confirmed** attendees owe. Waitlisted, Maybe and Can't members, and held seats that lapsed, owe nothing. An organizer can still move a Maybe to Going during the bill stage (People list); that person then owes a share and everyone else's share drops.
+- Only **confirmed** attendees owe. Waitlisted, Maybe and Can't members, and held seats that lapsed, owe nothing. The attendance check (above) settles who owes when the bill is entered. Afterwards an organizer can still move a Maybe to Going during the bill stage (People list); that person then owes a share and everyone else's share drops.
 - The share is computed on read from the current seat count; it is not stored. If seats change after the bill (an organizer edits someone's RSVP or guests), everyone's amount moves accordingly.
 - **Preview payment** (organizers, stage `rsvp`, before the event starts): `EventNextStep.vue` opens a read-only modal where a throwaway total is split over today's confirmed seats with `shareOf`. Nothing is saved and the stage does not change.
 

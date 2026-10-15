@@ -10,7 +10,7 @@ Round 1 (the single birthday-party voter) is in git history at `bbf852a`.
 - **Events** move through stages:
   1. **Polling**: tap the days you can make, suggest venues and upvote them, or say **Can't join** up front (this withdraws your votes, so locking never marks you Going, and you drop off the "no reply yet" list; voting again takes it back). The organizer picks the days on a calendar when creating the event.
   2. **RSVP open**: Going / Maybe / Can't, plus guests (both save as you tap). With a seat limit, it's strictly first come: a party that doesn't fit waits, and so does everyone after it. Adding guests puts you at the back of the queue.
-  3. **Splitting the bill**: once the event has started, the organizer enters the total. Each seat pays `ceil(total / seats / 1000) × 1000` ₫. People with a seat see their amount and a VietQR code and tap "I've paid".
+  3. **Splitting the bill**: once the event has started, the organizer enters the total and ticks who actually came. Walk-ins (Maybe, Can't, no answer, waitlisted) share the bill, people who had a seat but didn't come are marked "didn't come" and owe nothing, and a party bigger than the seat limit raises it (shown as "10 + 5"). Each seat pays `ceil(total / seats / 1000) × 1000` ₫. People with a seat see their amount and a VietQR code and tap "I've paid".
   4. **Settled**.
 
   **Honorees** (who the event is for, e.g. birthday people) are picked in Edit; every proposed day shows whether each can come. Organizers also see the leading days side by side (who can come, who can't, who hasn't replied). When days tie on votes, the day more honorees can make is suggested, then the earlier one; the lock dialog preselects it and says why. Once everyone has replied, organizers are nudged to lock.

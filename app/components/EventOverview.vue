@@ -129,6 +129,10 @@ const relative = computed(() => {
         <UProgress :model-value="collected" :max="Math.max(total, 1)" size="sm" :aria-label="t('overview.paid', { n: paidCount, total: payers.length })" />
       </div>
       <p class="text-sm text-muted tabular-nums">{{ t('overview.collected', { got: fmtVnd(collected), total: fmtVnd(total) }) }}</p>
+      <p v-if="overLimit(ev)" class="flex items-center gap-2 text-sm text-muted tabular-nums">
+        <UIcon name="i-lucide-armchair" class="size-4 shrink-0" />
+        <SeatCount :seats="data.seats" :capacity="ev.capacity" :planned-capacity="ev.plannedCapacity" />{{ t('event.seats') }}
+      </p>
       <p v-if="data.share !== null" class="text-sm text-muted tabular-nums">{{ t('overview.share', { amount: fmtVnd(data.share) }) }}</p>
     </template>
 
