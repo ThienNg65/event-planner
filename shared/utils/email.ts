@@ -12,11 +12,11 @@ export const CODE_GAP_SECS = 60;
 export const VERIFY_CODES_PER_DAY = 5;
 export const RECOVER_CODES_PER_MEMBER_DAY = 3;
 export const RECOVER_CODES_GLOBAL_DAY = 15;
-/** Resend's free plan sends 100 a day: codes stop at 95 in the last 24 h, notifications defer at 70 to leave room for codes. */
+/** The app keeps to 100 mails a day (Gmail allows about 500): codes stop at 95 in the last 24 h, notifications defer at 70 to leave room for codes. */
 export const MAIL_BUDGET_CODES = 95;
 export const MAIL_BUDGET_NOTIFY = 70;
 /** Bump when the consent wording changes; stored with each member's consent. */
-export const EMAIL_CONSENT_VERSION = '2026-10.2';
+export const EMAIL_CONSENT_VERSION = '2026-10.3';
 
 /** The address trimmed and lower-cased, or null when it is not a plausible single address. */
 export function normalizeEmail(v: unknown) {

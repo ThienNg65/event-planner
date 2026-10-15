@@ -61,17 +61,18 @@ Open http://localhost:3000.
 
 ## Email (optional, off by default)
 
-Members can add a verified email to reset their own forgotten PIN and to get event emails: the date or place is set or changed, a payment is requested (their own amount and a VietQR link) or recorded by the organizer, or the event is cancelled. Each mail has a "stop these emails" link and each kind can be switched off in the profile. Email stays switched off, and its screens hidden, until you configure [Resend](https://resend.com). Copy `.env.example` for the list; set these as environment variables on the host (on Cloudflare as Worker variables/secrets):
+Members can add a verified email to reset their own forgotten PIN and to get event emails: the date or place is set or changed, a payment is requested (their own amount and a VietQR link) or recorded by the organizer, or the event is cancelled. Each mail has a "stop these emails" link and each kind can be switched off in the profile. Email stays switched off, and its screens hidden, until you configure a Gmail account to send from (no own domain needed). Copy `.env.example` for the list; set these as environment variables on the host. Gmail is reached over SMTP, so mail works on Node hosts (Vercel, Netlify), not on Cloudflare Workers:
 
 | Variable | Meaning |
 |---|---|
-| `RESEND_API_KEY` | Resend API key; unset keeps email off |
-| `MAIL_FROM` | Sender on a domain verified in Resend, e.g. `Team Events <events@example.com>` |
+| `GMAIL_USER` | Gmail address the mails are sent from (best a dedicated account); unset keeps email off |
+| `GMAIL_APP_PASSWORD` | App password of that account (Google account → Security → 2-Step Verification → App passwords) |
+| `MAIL_FROM_NAME` | Optional sender name, default `Team Events` |
 | `APP_URL` | Public address of the site, used in links inside mails |
 | `NOTIFY_SECRET` | Long random string that signs mail links and keys the one-time codes |
 | `ALLOWED_EMAIL_DOMAINS` | Optional comma-separated work domains; empty allows any |
 
-Members consent when they add an address (the text names Resend as a processor outside Vietnam) and can withdraw by removing it. How it works: [docs/13-email.md](docs/13-email.md).
+Members consent when they add an address (the text names Gmail as a processor outside Vietnam) and can withdraw by removing it. How it works: [docs/13-email.md](docs/13-email.md).
 
 ## Scheduled tick (hourly)
 

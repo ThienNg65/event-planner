@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { createTransport, type Transporter } from 'nodemailer';
 import en from '../../i18n/locales/en.json';
 import vi from '../../i18n/locales/vi.json';
 
@@ -7,21 +8,23 @@ export interface EmailSender {
   send(messages: EmailMessage[]): Promise<void>;
 }
 
-/** Sends through Resend (https://resend.com/docs/api-reference/emails/send-batch-emails). */
-class ResendSender implements EmailSender {
-  constructor(private apiKey: string, private from: string) {}
+let transport: Transporter | undefined;
+
+/**
+ * Sends through a Gmail account over SMTP, signed in with an app password (Google account → Security → App passwords;
+ * needs 2-step verification). Gmail allows about 500 mails a day from a personal account. SMTP needs a TCP socket, so this
+ * runs on Node hosts (Vercel, Netlify), not on Cloudflare Workers.
+ */
+class GmailSender implements EmailSender {
+  constructor(private user: string, private password: string, private name: string) {}
   async send(messages: EmailMessage[]) {
-    const body = messages.map(({ to, ...m }) => ({ from: this.from, to: [to], ...m }));
-    const res = await fetch(`https://api.resend.com/emails${body.length > 1 ? '/batch' : ''}`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify(body.length > 1 ? body : body[0]),
-    });
-    if (!res.ok) throw new Error(`Resend answered ${res.status}`);
+    transport ??= createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: this.user, pass: this.password } });
+    for (const { to, subject, text, html, headers } of messages)
+      await transport.sendMail({ from: { name: this.name, address: this.user }, to, subject, text, html, headers });
   }
 }
 
-/** Used without an API key (local dev): the mail goes to the server log. */
+/** Used without a Gmail account (local dev): the mail goes to the server log. */
 class LogSender implements EmailSender {
   async send(messages: EmailMessage[]) {
     for (const m of messages) console.info(`[mail] to ${m.to}: ${m.subject}\n${m.text}`);
@@ -33,8 +36,10 @@ function config() {
   const rc = useRuntimeConfig();
   const pick = (value: unknown, name: string) => String(value || process.env[name] || '').trim();
   return {
-    apiKey: pick(rc.resendApiKey, 'RESEND_API_KEY'),
-    from: pick(rc.mailFrom, 'MAIL_FROM'),
+    gmailUser: pick(rc.gmailUser, 'GMAIL_USER'),
+    // Google shows app passwords in groups of four; the spaces are not part of it.
+    gmailPassword: pick(rc.gmailAppPassword, 'GMAIL_APP_PASSWORD').replace(/\s+/g, ''),
+    fromName: pick(rc.mailFromName, 'MAIL_FROM_NAME') || 'Team Events',
     appUrl: pick(rc.appUrl, 'APP_URL').replace(/\/+$/, '') || (import.meta.dev ? 'http://localhost:3000' : ''),
     secret: pick(rc.notifySecret, 'NOTIFY_SECRET'),
     domains: parseDomains(pick(rc.allowedEmailDomains, 'ALLOWED_EMAIL_DOMAINS')),
@@ -42,12 +47,12 @@ function config() {
 }
 
 /**
- * Email is off (and its UI hidden) until Resend is configured. Local dev needs only the secret: mail then goes to the log.
+ * Email is off (and its UI hidden) until a Gmail account is configured. Local dev needs only the secret: mail then goes to the log.
  * The site address and secret are always required, so a link in a mail can't be pointed at a forged host.
  */
 export function emailEnabled() {
   const c = config();
-  return !!c.secret && !!c.appUrl && (import.meta.dev || (!!c.apiKey && !!c.from));
+  return !!c.secret && !!c.appUrl && (import.meta.dev || (!!c.gmailUser && !!c.gmailPassword));
 }
 
 export function requireEmailEnabled() {
@@ -86,7 +91,7 @@ type Mail = { kind: MailKind; to: string; template: MailTemplate; locale: string
 export async function sendMail({ kind, to, template, locale, params = {}, headers }: Mail) {
   const c = requireEmailEnabled();
   if (!(await reserveMail(kind))) fail(429, 'mailBudget');
-  const sender = c.apiKey && c.from ? new ResendSender(c.apiKey, c.from) : new LogSender();
+  const sender = c.gmailUser && c.gmailPassword ? new GmailSender(c.gmailUser, c.gmailPassword, c.fromName) : new LogSender();
   try {
     await sender.send([{ to, ...renderMail(mailTranslator(locale), template, params), ...(headers && { headers }) }]);
   } catch (e) {

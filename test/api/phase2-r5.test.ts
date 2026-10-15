@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { api, cleanup, event, member, query, startServer, stopServer } from './harness.ts';
 
 /**
- * Phase 2 R5: event emails ship switched off. The harness server has no Resend configuration, so the endpoints that would queue
+ * Phase 2 R5: event emails ship switched off. The harness server has no Gmail configuration, so the endpoints that would queue
  * a mail (lock, plan edit, correction, bill, organizer-recorded payment, cancel) must work exactly as before and queue nothing.
  * (The queueing SQL and dispatch need a sender and are covered by test/notify.test.ts and the offline SQL checks.)
  */
