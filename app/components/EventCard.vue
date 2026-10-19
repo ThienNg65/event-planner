@@ -6,6 +6,7 @@ export type EventSummary = InternalApi['/api/events']['get'][number];
 const props = defineProps<{ event: EventSummary }>();
 const { t, locale } = useI18n();
 
+const cover = computed(() => coverOf(props.event.cover, props.event.id));
 const block = computed(() => props.event.startsAt && dateBlock(props.event.startsAt, locale.value));
 // The span of proposed days while polling, e.g. "Thứ 3, 13 thg 10 – Thứ 6, 23 thg 10".
 const range = computed(() => {
@@ -41,11 +42,15 @@ const status = computed(() => {
 </script>
 
 <template>
-  <!-- A ticket stub: the date torn off on the left (the number of days to vote on while polling), the event on the right. -->
+  <!-- A ticket: the event's cover on top, then the stub (the date torn off on the left, or the number of days to vote on while
+       polling) and the event on the right. -->
   <NuxtLink
     :to="`/e/${event.id}`"
-    class="themed-surface group grid grid-cols-[4.5rem_minmax(0,1fr)] overflow-hidden transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
+    class="themed-surface group grid grid-cols-[4.5rem_minmax(0,1fr)] grid-rows-[auto_1fr] overflow-hidden transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
   >
+    <div class="relative col-span-2 h-24" :class="'gradient' in cover && cover.gradient">
+      <img v-if="'image' in cover" :src="cover.image" alt="" loading="lazy" class="size-full object-cover" />
+    </div>
     <div class="grid place-content-center gap-0.5 border-r-[1.5px] border-dashed border-accented bg-elevated px-1 py-4 text-center">
       <template v-if="block">
         <span class="text-xs font-semibold text-muted">{{ block.weekday }}</span>

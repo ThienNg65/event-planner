@@ -16,7 +16,7 @@ All notable changes to this project are documented here, following [Keep a Chang
 - Organizers have one Manage menu: the extra moves that sat behind "…" on the next-step card (close or reopen voting, preview the bill, complete) now come first in it.
 - On a computer, the reminder and the details sit in the right-hand column and stay in view while you scroll.
 - Event cards on Home now follow your own appearance setting; an event's look applies when you open it.
-- Home lists events as ticket stubs (the date torn off on the left) grouped under Upcoming, Undecided and Past, and the most pressing to-do stands out.
+- Home lists events as tickets (the event's cover on top, the date torn off on the left) grouped under Upcoming, Undecided and Past, and the most pressing to-do stands out.
 - The event page shows where you are ("Events / event name") at the top, and the date, place and seat limit as short lines on the ticket.
 - Day tiles say "Leading" inside the tile instead of on a badge over its edge, mark "If need be" with ~, and drop the percentage next to the bar.
 - Each to-do on Home shows what to do ("Pick days", "Pay"…) and opens the event right at that part of the page.
