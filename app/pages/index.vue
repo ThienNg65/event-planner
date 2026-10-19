@@ -29,6 +29,9 @@ const TODO_ICON = {
   bill: 'i-lucide-receipt',
   settle: 'i-lucide-sparkles',
 } as const;
+// A personal to-do lands on its stage section; the organizer's moves start from the next-step card at the top.
+const TODO_SECTION: Partial<Record<keyof typeof TODO_ICON, string>> = { vote: 'poll', rsvp: 'rsvp', confirm: 'rsvp', pay: 'bill' };
+const todoLink = (td: { event: { id: number }; kind: keyof typeof TODO_ICON }) => `/e/${td.event.id}${TODO_SECTION[td.kind] ? `#${TODO_SECTION[td.kind]}` : ''}`;
 const todos = computed(() =>
   events.value.flatMap((e) => {
     const { step, action } = nextStep({
@@ -65,6 +68,9 @@ const shown = computed(() => {
       (!needle || norm(`${e.title} ${e.venue ?? ''}`).includes(needle))
   );
 });
+// The unfiltered list reads as groups: upcoming first, then undecided, then past (empty groups are left out).
+const GROUPS = ['upcoming', 'planning', 'past'] as const;
+const grouped = computed(() => (filter.value === 'all' && !q.value.trim() ? GROUPS.map((b) => ({ b, events: of(b) })).filter((g) => g.events.length) : null));
 const tabs = computed(() =>
   (['all', 'planning', 'upcoming', 'past'] as const).map((k) => ({
     label: k === 'all' ? t('home.all') : t(`home.${k}`),
@@ -95,10 +101,11 @@ const tabs = computed(() =>
           </h2>
           <div class="rise grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <NuxtLink
-              v-for="td in shownTodos"
+              v-for="(td, i) in shownTodos"
               :key="td.key"
-              :to="`/e/${td.event.id}`"
+              :to="todoLink(td)"
               class="themed-tile flex items-center gap-3 p-3 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
+              :class="i === 0 && 'todo-hot'"
             >
               <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-secondary/15 text-secondary"><UIcon :name="TODO_ICON[td.kind]" class="size-5" /></span>
               <span class="min-w-0 flex-1">
@@ -107,7 +114,9 @@ const tabs = computed(() =>
                 </span>
                 <span class="block truncate text-sm text-muted">{{ td.event.title }}</span>
               </span>
-              <UIcon name="i-lucide-chevron-right" class="size-4 shrink-0 text-dimmed" />
+              <span class="todo-cta inline-flex min-h-9 shrink-0 items-center gap-1 rounded-md bg-primary px-3 text-sm font-medium text-inverted" aria-hidden="true">
+                {{ t(`home.todo.cta.${td.kind}`) }}<UIcon name="i-lucide-chevron-right" class="size-4" />
+              </span>
             </NuxtLink>
           </div>
           <UButton v-if="todos.length > TODO_CAP && !allTodos" color="neutral" variant="link" size="sm" class="px-0" @click="allTodos = true">{{ t('home.seeAll') }}</UButton>
@@ -129,7 +138,15 @@ const tabs = computed(() =>
         <UButton v-if="!meId" variant="link" color="neutral" size="sm" @click="join.ask()">{{ t('me.otherDeviceNew') }}</UButton>
       </div>
       <p v-else-if="!shown.length" class="py-10 text-center text-muted">{{ t('home.noMatch') }}</p>
-      <div v-else class="rise grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div v-else-if="grouped" class="space-y-6">
+        <section v-for="g in grouped" :key="g.b" :aria-label="t(`home.${g.b}`)" class="space-y-2">
+          <h2 class="flex items-center gap-2 text-sm font-semibold text-highlighted">{{ t(`home.${g.b}`) }}<span class="text-xs font-normal text-muted tabular-nums">{{ g.events.length }}</span></h2>
+          <div class="rise grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <EventCard v-for="e in g.events" :key="e.id" :event="e" />
+          </div>
+        </section>
+      </div>
+      <div v-else class="rise grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <EventCard v-for="e in shown" :key="e.id" :event="e" />
       </div>
     </template>

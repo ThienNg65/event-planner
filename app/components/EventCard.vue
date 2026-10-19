@@ -6,7 +6,6 @@ export type EventSummary = InternalApi['/api/events']['get'][number];
 const props = defineProps<{ event: EventSummary }>();
 const { t, locale } = useI18n();
 
-const cover = computed(() => coverOf(props.event.cover, props.event.id));
 const block = computed(() => props.event.startsAt && dateBlock(props.event.startsAt, locale.value));
 // The span of proposed days while polling, e.g. "Thứ 3, 13 thg 10 – Thứ 6, 23 thg 10".
 const range = computed(() => {
@@ -15,7 +14,7 @@ const range = computed(() => {
   const [first, last] = [fmtDay(days[0]!, locale.value), fmtDay(days.at(-1)!, locale.value)];
   return first === last ? first : `${first} – ${last}`;
 });
-// The visitor's own status on this event, as a badge on the cover.
+// The visitor's own status on this event, as a chip on the stub.
 const STATUS = {
   vote: { color: 'secondary', icon: 'i-lucide-vote' },
   rsvp: { color: 'secondary', icon: 'i-lucide-hand' },
@@ -42,46 +41,44 @@ const status = computed(() => {
 </script>
 
 <template>
+  <!-- A ticket stub: the date torn off on the left (the number of days to vote on while polling), the event on the right. -->
   <NuxtLink
     :to="`/e/${event.id}`"
-    :data-theme="themeOf(event.theme)"
-    class="themed-surface group flex flex-col overflow-hidden transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
+    class="themed-surface group grid grid-cols-[4.5rem_minmax(0,1fr)] overflow-hidden transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-primary"
   >
-    <div class="relative h-28" :class="'gradient' in cover && cover.gradient">
-      <img v-if="'image' in cover" :src="cover.image" alt="" loading="lazy" class="size-full object-cover" />
-      <UBadge v-if="status" :color="status.color" variant="solid" :icon="status.icon" :label="status.label" class="absolute top-3 left-3 shadow-sm" />
-      <UBadge v-if="event.cancelledAt" color="neutral" variant="solid" :label="t('card.cancelled')" class="absolute top-3 right-3 shadow-sm" />
-      <!-- While voting, the personal "vote now" badge already says the stage. -->
-      <UBadge v-else-if="!(status && event.stage === 'poll')" :color="STAGE_COLOR[event.stage]" variant="solid" :label="t(`stage.${stageKey(event)}`)" class="absolute top-3 right-3 shadow-sm" />
-      <div v-if="block" class="absolute -bottom-6 left-4 grid min-w-12 place-items-center rounded-lg bg-default px-1.5 py-1 shadow-md ring ring-default">
-        <span class="text-[0.625rem] font-semibold whitespace-nowrap text-primary uppercase">{{ block.month }}</span>
-        <span class="text-lg leading-none font-bold text-highlighted">{{ block.day }}</span>
-      </div>
+    <div class="grid place-content-center gap-0.5 border-r-[1.5px] border-dashed border-accented bg-elevated px-1 py-4 text-center">
+      <template v-if="block">
+        <span class="text-xs font-semibold text-muted">{{ block.weekday }}</span>
+        <span class="text-2xl leading-none font-bold text-highlighted tabular-nums">{{ block.day }}</span>
+        <span class="text-xs font-semibold whitespace-nowrap text-muted">{{ block.month }}</span>
+      </template>
+      <template v-else>
+        <span class="text-lg leading-none font-bold text-primary tabular-nums">{{ event.pollDays.length || '?' }}</span>
+        <span class="text-xs font-semibold text-muted">{{ t('card.days', event.pollDays.length) }}</span>
+      </template>
     </div>
 
-    <div class="flex flex-1 flex-col gap-1 p-4" :class="block && 'pt-8'">
-      <p class="truncate font-semibold text-highlighted group-hover:text-primary">{{ event.title }}</p>
+    <div class="flex min-w-0 flex-col gap-1 p-3.5">
+      <p class="line-clamp-2 font-semibold break-words text-highlighted group-hover:text-primary">{{ event.title }}</p>
       <p class="truncate text-sm text-muted">
         <template v-if="event.startsAt">{{ fmtDateTime(event.startsAt, locale) }}</template>
-        <template v-else-if="event.pollDays.length">{{ t('card.voting', { n: event.pollDays.length }, event.pollDays.length) }} · {{ range }}</template>
+        <template v-else-if="event.pollDays.length">{{ range }}</template>
         <template v-else>{{ t('event.dateTbd') }}</template>
+        <template v-if="event.venue"> · {{ event.venue }}</template>
       </p>
-      <p v-if="event.stage === 'poll'" class="flex items-center gap-1 truncate text-sm text-muted">
-        <UIcon name="i-lucide-users-round" class="size-3.5 shrink-0" />{{ t('card.answered', { n: event.answered }, event.answered) }}
+      <p v-if="event.stage === 'poll'" class="truncate text-xs text-muted">
+        {{ t('card.answered', { n: event.answered }, event.answered) }}<template v-if="event.voteDeadline && !event.cancelledAt"> · {{ t('card.closes', { when: fmtDateTime(event.voteDeadline, locale) }) }}</template>
       </p>
-      <p v-if="event.stage === 'poll' && event.voteDeadline && !event.cancelledAt" class="truncate text-xs text-muted">
-        {{ t('card.closes', { when: fmtDateTime(event.voteDeadline, locale) }) }}
-      </p>
-      <p v-if="event.venue" class="flex items-center gap-1 truncate text-sm text-muted">
-        <UIcon name="i-lucide-map-pin" class="size-3.5 shrink-0" />{{ event.venue }}
-      </p>
-
-      <div v-if="event.stage !== 'poll'" class="mt-auto pt-3">
-        <div class="mb-1 flex justify-between text-xs text-muted tabular-nums">
-          <span>{{ t('event.seats') }}</span>
-          <SeatCount :seats="event.seats" :capacity="event.capacity" :planned-capacity="event.plannedCapacity" />
-        </div>
-        <UProgress v-if="event.capacity" :model-value="event.seats" :max="event.capacity" size="xs" />
+      <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-1.5">
+        <UBadge v-if="event.cancelledAt" color="neutral" variant="soft" :label="t('card.cancelled')" class="rounded-full" />
+        <template v-else>
+          <UBadge v-if="status" :color="status.color" variant="soft" :icon="status.icon" :label="status.label" class="rounded-full" />
+          <!-- While voting, the personal "vote now" chip already says the stage. -->
+          <UBadge v-if="!(status && event.stage === 'poll')" :color="STAGE_COLOR[event.stage]" variant="outline" :label="t(`stage.${stageKey(event)}`)" class="rounded-full" />
+        </template>
+        <span v-if="event.stage !== 'poll'" class="ml-auto text-xs text-muted tabular-nums">
+          <SeatCount :seats="event.seats" :capacity="event.capacity" :planned-capacity="event.plannedCapacity" /> {{ t('event.seats') }}
+        </span>
       </div>
     </div>
   </NuxtLink>

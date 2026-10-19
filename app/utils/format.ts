@@ -29,8 +29,9 @@ export const fmtDateTime = (iso: string | Date, locale: string) =>
 export const fmtDay = (day: string, locale: string) =>
   fmtParts(new Date(`${day}T00:00:00Z`), locale, { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
 
-/** Big day number + short month for a calendar-style date block, in team time. */
+/** Big day number + short month (and short weekday) for a calendar-style date block, in team time. */
 export const dateBlock = (iso: string | Date, locale: string) => ({
+  weekday: fmtParts(new Date(iso), locale, { timeZone: TZ, weekday: 'short' }),
   day: new Date(iso).toLocaleString(locale, { timeZone: TZ, day: 'numeric' }),
   // Node renders a lone vi short month as "Tháng 10" (too wide, and unlike "thg 10" in full dates): build it from the number.
   month: locale.startsWith('vi')

@@ -2,6 +2,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-10-01',
   modules: ['@nuxt/ui', '@nuxtjs/i18n'],
   css: ['~/assets/css/main.css'],
+  // The Ticket theme's face. @nuxt/fonts (bundled with Nuxt UI) self-hosts it. `global`: themes name their font through
+  // var(--theme-font), which the module does not scan, so it would never be registered otherwise. The weights are listed
+  // because it is not a variable font, and the Vietnamese subset carries the stacked diacritics.
+  fonts: { families: [{ name: 'Be Vietnam Pro', provider: 'google', global: true, weights: [400, 500, 600, 700], subsets: ['vietnamese', 'latin-ext', 'latin'] }] },
   hooks: {
     // Set here because Nuxt's `nitro` option type lists neither key.
     'nitro:config'(config) {

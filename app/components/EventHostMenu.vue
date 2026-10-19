@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { HOST_MORE } from '~/composables/useHostMore';
+
 const props = defineProps<{ data: EventDetail; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: []; edit: []; post: []; organizers: [] }>();
 const { t } = useI18n();
@@ -67,10 +69,14 @@ function show(v: 'reopen' | 'cancel' | 'delete' | 'handover') {
   view.value = v;
 }
 
-// The one organizer menu: what a co-host may do first, then what only the host may.
+// The next-step card's secondary moves for this stage (close voting, preview, complete...), owned by EventNextStep.
+const stageMoves = inject(HOST_MORE, null);
+
+// The one organizer menu: this stage's moves, then what a co-host may do, then what only the host may.
 const items = computed(() => {
   const cancelled = !!ev.value.cancelledAt;
   const groups = [];
+  if (stageMoves?.value.length) groups.push(stageMoves.value);
   const more = [
     ...(!cancelled && earlier.value.length ? [{ label: t('host.reopen'), icon: 'i-lucide-history', onSelect: () => show('reopen') }] : []),
     // Only the signed-in creator can hand the event over (a manage link alone cannot).

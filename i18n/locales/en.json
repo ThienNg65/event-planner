@@ -27,7 +27,16 @@
       "lock": "Lock the date",
       "bill": "Enter the bill",
       "settle": "Mark as settled",
-      "confirm": "Confirm you're coming"
+      "confirm": "Confirm you're coming",
+      "cta": {
+        "vote": "Pick days",
+        "rsvp": "Answer",
+        "confirm": "Confirm",
+        "pay": "Pay",
+        "lock": "Lock",
+        "bill": "Enter",
+        "settle": "Finish"
+      }
     },
     "seeAll": "See all"
   },
@@ -42,10 +51,10 @@
   },
   "stages": {
     "label": "Progress",
-    "poll": "Vote",
-    "rsvp": "Confirm",
-    "bill": "Pay",
-    "settled": "Done"
+    "poll": "Voting",
+    "rsvp": "Confirmed",
+    "bill": "Paying",
+    "settled": "Completed"
   },
   "map": {
     "show": "Map",
@@ -356,7 +365,8 @@
     "events": "Events",
     "calendar": "Calendar",
     "new": "New event",
-    "back": "Back"
+    "back": "Back",
+    "breadcrumb": "You are here"
   },
   "calendar": {
     "title": "Calendar",
@@ -389,6 +399,7 @@
     "acid": "Acid Night",
     "scrapbook": "Scrapbook",
     "candy": "Game Candy",
+    "ticket": "Ticket",
     "preview": "Preview",
     "previewHint": "See a sample event in each theme before you choose.",
     "use": "Use {name}",
@@ -417,7 +428,8 @@
     "paid": "Paid",
     "cancelled": "Cancelled",
     "closes": "Voting closes {when}",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "days": "day | days"
   },
   "next": {
     "organizers": "the organizers",
@@ -1000,5 +1012,25 @@
   "hint": {
     "tapDays": "Tap days you're free",
     "tapAgain": "Tap again to clear"
+  },
+  "spine": {
+    "label": "Event steps",
+    "done": "done",
+    "skipped": "No vote needed",
+    "noBill": "No bill",
+    "collected": "Collected {paid} of {total}",
+    "next": {
+      "rsvp": "When the organizers lock it in",
+      "bill": "Once the event starts and the bill is in",
+      "settled": "When the organizers mark it done"
+    }
+  },
+  "seats": {
+    "holes": "{n} of {cap} seats taken",
+    "yours": "{n} is yours | {n} are yours"
+  },
+  "ticket": {
+    "limit": "Limited to {n} seats, first come first served.",
+    "yourPart": "Your part"
   }
 }

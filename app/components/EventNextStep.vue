@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { HOST_MORE, type HostMoreItem } from '~/composables/useHostMore';
+
 const props = defineProps<{ data: EventDetail; me: Member | null; manageKey: string | null; role: Role }>();
 const emit = defineEmits<{ changed: [] }>();
 const { t, te, locale } = useI18n();
@@ -92,7 +94,7 @@ const hostActions = computed(() => canAdvance.value && (!!next.value.action || e
 
 // Secondary organizer moves: close or reopen voting, an early look at the bill, completing without a bill or with debts open.
 const hostMore = computed(() => {
-  const items: { label: string; icon: string; onSelect: () => void }[] = [];
+  const items: HostMoreItem[] = [];
   if (next.value.action === 'lock') {
     items.push({ label: t(votingClosed.value ? 'next.action.reopen' : 'next.action.close'), icon: votingClosed.value ? 'i-lucide-lock-open' : 'i-lucide-lock', onSelect: () => (votingClosed.value ? (reopenOpen.value = true) : (closeOpen.value = true)) });
   }
@@ -101,6 +103,50 @@ const hostMore = computed(() => {
   if (ev.value.stage === 'bill' && next.value.action !== 'settle') items.push({ label: t('next.action.completeAnyway'), icon: 'i-lucide-check', onSelect: () => (completeOpen.value = 'anyway') });
   return items;
 });
+// They live in the Manage menu (EventHostMenu), so organizers have one menu; the dialogs stay here.
+const sharedMore = inject(HOST_MORE, null);
+watchEffect(() => {
+  if (sharedMore) sharedMore.value = hostMore.value;
+});
+
+// The phone action bar repeats the card's one main button once the card has scrolled away, and hides while typing
+// (an on-screen keyboard would push it over the field). The organizer's move wins over the visitor's own to-do.
+type BarAction = { label: string; icon: string; run: () => void; loading?: boolean };
+const barAction = computed<BarAction | null>(() => {
+  if (next.value.step === 'cancelled') return null;
+  if (next.value.action === 'lock') return { label: t(lockKey.value), icon: 'i-lucide-calendar-check', run: () => (lockOpen.value = true) };
+  if (next.value.action === 'bill') return { label: t('next.action.bill'), icon: 'i-lucide-receipt', run: () => (billOpen.value = true) };
+  if (next.value.action === 'settle') return { label: t('next.action.settle'), icon: 'i-lucide-sparkles', run: settle, loading: busy.value };
+  // A signed-out visitor first says who they are (the card's "Your name?" link).
+  if (!props.me) return votingClosed.value ? null : { label: t('next.who.title'), icon: 'i-lucide-user-round', run: () => join.ask() };
+  if (next.value.step === 'declined') return { label: t('next.declined.cta'), icon: 'i-lucide-undo-2', run: () => decline(null), loading: busy.value };
+  const target = ui.value.jump;
+  if (myTodo.value && target) return { label: t(`next.${copy.value}.cta`), icon: 'i-lucide-arrow-down', run: () => jump(target) };
+  return null;
+});
+const cardEl = useTemplateRef<HTMLElement>('cardEl');
+const cardVisible = ref(true);
+const typing = ref(false);
+const isField = (el: EventTarget | null) => el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+let seen: IntersectionObserver | null = null;
+const onFocusIn = (e: FocusEvent) => (typing.value = isField(e.target));
+const onFocusOut = () => (typing.value = false);
+onMounted(() => {
+  document.addEventListener('focusin', onFocusIn);
+  document.addEventListener('focusout', onFocusOut);
+  seen = new IntersectionObserver(([entry]) => (cardVisible.value = !!entry?.isIntersecting));
+  watch(cardEl, (el, old) => {
+    if (old) seen?.unobserve(old);
+    if (el) seen?.observe(el);
+    else cardVisible.value = false;
+  }, { immediate: true });
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('focusin', onFocusIn);
+  document.removeEventListener('focusout', onFocusOut);
+  seen?.disconnect();
+});
+const showBar = computed(() => !!barAction.value && !cardVisible.value && !typing.value);
 
 // Add to calendar sits with the answer it follows: once you are in (or asked to confirm) and the date is set.
 const calendar = computed(() => {
@@ -268,13 +314,14 @@ async function complete() {
   <!-- After voting closes there is nothing to answer, so this link gives way to a small one below. -->
   <UButton v-if="!me && !ev.cancelledAt && !votingClosed" id="who" variant="link" icon="i-lucide-user-round" class="px-0" @click="join.ask()">{{ t('next.who.title') }}</UButton>
 
-  <UCard v-if="next.step !== 'cancelled' && (me || canAdvance || votingClosed)" :ui="{ body: 'space-y-4' }">
+  <div v-if="next.step !== 'cancelled' && (me || canAdvance || votingClosed)" ref="cardEl">
+  <div class="space-y-4">
     <!-- Your own answer -->
     <div class="flex flex-wrap items-center gap-4">
-      <div class="flex min-w-64 flex-1 items-start gap-3">
+      <div class="flex min-w-56 flex-1 items-start gap-3">
         <span class="grid size-10 shrink-0 place-items-center rounded-lg" :class="ui.tone"><UIcon v-if="ui.icon" :name="ui.icon" class="size-5" /><span v-else aria-hidden="true">😭</span></span>
         <div class="min-w-0">
-          <p class="font-semibold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
+          <p class="text-lg leading-snug font-bold text-highlighted">{{ t(`next.${copy}.title`, params) }}</p>
           <p v-if="te(`next.${copy}.${bodyKey}`)" class="text-sm text-muted">{{ t(`next.${copy}.${bodyKey}`, params) }}</p>
           <p v-if="copy === 'voteClosed' && !canAdvance && leader" class="mt-1 text-sm font-medium text-highlighted">{{ t('next.leading', { day: leader.label, n: leader.n }) }}</p>
           <template v-if="!me && votingClosed">
@@ -302,18 +349,26 @@ async function complete() {
     </div>
 
     <!-- Organizer moves, kept apart from the visitor's own answer: one main button, the rest behind the menu -->
-    <div v-if="hostActions" class="flex flex-wrap items-center gap-2 border-t border-default pt-4">
+    <div v-if="hostActions" class="flex flex-wrap items-center gap-2 border-t border-dashed border-accented pt-4">
       <p class="mr-auto flex items-center gap-1.5 text-xs font-medium text-muted"><UIcon name="i-lucide-shield-check" class="size-4" />{{ t('next.hostTitle') }}</p>
       <p v-if="next.action === 'lock' && allAnswered" class="basis-full text-sm font-medium text-success">{{ t('next.allAnswered') }}</p>
       <p v-if="ev.stage === 'rsvp' && next.action !== 'bill' && ev.startsAt" class="basis-full text-xs text-muted">{{ t('next.billAfter', { when: fmtDateTime(ev.startsAt, locale) }) }}</p>
-      <UDropdownMenu v-if="hostMore.length" :items="hostMore" :content="{ align: 'end' }">
-        <UButton color="neutral" variant="ghost" icon="i-lucide-ellipsis" :aria-label="t('next.hostMore')" />
-      </UDropdownMenu>
       <UButton v-if="next.action === 'lock'" v-bind="hostMain" icon="i-lucide-calendar-check" @click="lockOpen = true">{{ t(lockKey) }}</UButton>
       <UButton v-if="next.action === 'bill'" v-bind="hostMain" icon="i-lucide-receipt" @click="billOpen = true">{{ t('next.action.bill') }}</UButton>
       <UButton v-if="next.action === 'settle'" v-bind="hostMain" icon="i-lucide-sparkles" :loading="busy" @click="settle">{{ t('next.action.settle') }}</UButton>
     </div>
-  </UCard>
+  </div>
+  </div>
+
+  <ClientOnly>
+    <Teleport to="body">
+      <Transition enter-from-class="translate-y-full" leave-to-class="translate-y-full" enter-active-class="transition-transform duration-200" leave-active-class="transition-transform duration-150">
+        <div v-if="showBar && barAction" class="fixed inset-x-0 bottom-0 z-40 border-t border-default bg-default/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+          <UButton block size="lg" :icon="barAction.icon" :loading="barAction.loading" class="mx-auto max-w-3xl" @click="barAction.run()">{{ barAction.label }}</UButton>
+        </div>
+      </Transition>
+    </Teleport>
+  </ClientOnly>
 
   <UModal v-model:open="lockOpen" :title="t('manage.lock')">
     <template #body>

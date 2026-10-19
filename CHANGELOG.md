@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+- A new look, **Ticket**: each event reads like a ticket, on warm paper with clear Vietnamese type, chunky yellow buttons that press down when clicked, Pick it in the appearance settings or for one event.
+- The event page opens with a ticket in every look: cover, title and key facts on the left, and your part (what you need to do, and the organizer's next move) on the torn-off stub. The current step's section sits in its own card.
+- In Ticket, celebrations (first vote, joining, paying, locking, finishing) pop a small star from the button you pressed instead of confetti, your picked days and your RSVP answer get a clear indigo border, and day tiles press down when tapped.
+- Events with a seat limit show the seats as a row of punch holes next to the count: taken seats, your own seats, and walk-ins past the limit.
+
+### Changed
+- Everyone now sees the event's steps (Voting, Confirmed, Paying, Completed) on the event page, not just organizers on wide screens. Finished steps fold to one line, such as what was collected against the bill, and later steps say when they open.
+- On phones, the main thing to do (vote, answer, pay, or the organizer's Lock / Enter bill / Mark as settled) stays in a bar at the bottom of the screen once you scroll past the card.
+- Organizers have one Manage menu: the extra moves that sat behind "…" on the next-step card (close or reopen voting, preview the bill, complete) now come first in it.
+- On a computer, the reminder and the details sit in the right-hand column and stay in view while you scroll.
+- Event cards on Home now follow your own appearance setting; an event's look applies when you open it.
+- Home lists events as ticket stubs (the date torn off on the left) grouped under Upcoming, Undecided and Past, and the most pressing to-do stands out.
+- The event page shows where you are ("Events / event name") at the top, and the date, place and seat limit as short lines on the ticket.
+- Day tiles say "Leading" inside the tile instead of on a badge over its edge, mark "If need be" with ~, and drop the percentage next to the bar.
+- Each to-do on Home shows what to do ("Pick days", "Pay"…) and opens the event right at that part of the page.
+
 ## [0.12.0] - 2026-10-15
 
 ### Added

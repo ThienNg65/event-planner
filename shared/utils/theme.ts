@@ -1,5 +1,5 @@
 /** Event themes. Aurora is the app's own look and the default; the rest are picked per event. */
-export const THEMES = ['aurora', 'liquid', 'bento', 'brutal', 'acid', 'scrapbook', 'candy'] as const;
+export const THEMES = ['aurora', 'ticket', 'liquid', 'bento', 'brutal', 'acid', 'scrapbook', 'candy'] as const;
 
 export type ThemeKey = (typeof THEMES)[number];
 export const DEFAULT_THEME: ThemeKey = 'aurora';
@@ -15,6 +15,7 @@ export const THEME_SWATCH: Record<ThemeKey, [string, string]> = {
   acid: ['#0d0d12', '#c6ff00'],
   scrapbook: ['#f6ead2', '#e0457b'],
   candy: ['#ffe1f0', '#7c4dff'],
+  ticket: ['#faf8f2', '#f2d43a'],
 };
 
 /** A stored or unknown value → a valid theme key. */

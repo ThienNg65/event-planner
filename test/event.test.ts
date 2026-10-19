@@ -518,9 +518,10 @@ test('placeName: the name from a full Google Maps place link, else null', () => 
   for (const link of ['https://maps.app.goo.gl/abc', 'https://www.google.com/maps/@10.77,106.70,17z', 'https://example.com', null, '']) assert.equal(placeName(link), null);
 });
 
-test('dateBlock: vi month reads "thg 10" on every runtime, en stays short', () => {
-  assert.deepEqual(dateBlock('2026-10-19T11:30:00Z', 'vi'), { day: '19', month: 'thg 10' });
-  assert.deepEqual(dateBlock('2026-10-18T18:00:00Z', 'en'), { day: '19', month: 'Oct' });
+test('dateBlock: vi month reads "thg 10" and the weekday comes from the fixed table on every runtime, en stays short', () => {
+  assert.deepEqual(dateBlock('2026-10-19T11:30:00Z', 'vi'), { weekday: 'Thứ 2', day: '19', month: 'thg 10' });
+  // 18:00 UTC on the 18th is already Monday the 19th in Vietnam time.
+  assert.deepEqual(dateBlock('2026-10-18T18:00:00Z', 'en'), { weekday: 'Mon', day: '19', month: 'Oct' });
 });
 
 test('guestLimit: an event with no limit allows the ceiling of 10', () => {
