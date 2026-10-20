@@ -342,8 +342,6 @@
     "perSeat": "Per person",
     "rounded": "split across {n} seats, rounded up to 1,000 ₫",
     "sponsors": "Fixed sponsors: {list}",
-    "sponsor": "Sponsor",
-    "everyoneQr": "Everyone's QR codes",
     "youOwe": "You owe",
     "withGuests": "incl. {n} guest | incl. {n} guests",
     "qrAlt": "VietQR code for the transfer",

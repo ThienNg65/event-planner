@@ -98,7 +98,7 @@ When an organizer records a payment for someone else (`paid`, `addPaid` or `paid
 
 - `amount` is what the member still owes (`left`), so the QR is for the remainder after a partial payment.
 - `addInfo` is `"<event title> <member name>"` stripped to ASCII letters/digits and spaces (via `norm`) and cut to 50 characters (the bank limit).
-- The member's own QR is shown only when the event has both `bankId` and `bankAccount` and they are not yet done. Below it, **everyone's QR codes** lists a card for every other confirmed attendee who owes something (their name, what is left, a sponsor badge, and a QR even once paid, with a paid badge) so one person can pay for others; it is hidden when the event is cancelled or has no bank account. Otherwise the page says the organizer has not entered a bank account and to pay directly.
+- The member's own QR is shown only when the event has both `bankId` and `bankAccount` and they are not yet done. Nobody else's QR is shown. Otherwise the page says the organizer has not entered a bank account and to pay directly.
 - If the image fails to load the component falls back (`qrFailed`).
 - Organizers can check the bank fields before anyone pays: the bank inputs (create page, Edit, Enter bill) have a **Preview QR** button (`BankQrPreview.vue`) that shows an open-amount code (amount 0) or an error if VietQR rejects the bank code or account. VietQR prints the holder name it is given; it does not verify it against the bank, so scanning the preview in a banking app is the real check.
 

@@ -19,12 +19,6 @@ const payers = computed(() =>
 const sponsors = computed(() => payers.value.filter((p) => p.sponsorAmount));
 const plainSeats = computed(() => payers.value.reduce((n, p) => n + (p.sponsorAmount ? 0 : 1) + p.guests, 0));
 const mine = computed(() => payers.value.find((p) => p.memberId === props.me?.id));
-// Everyone else's transfer code, so one person can pay for others; mine has its own panel above.
-const others = computed(() => (ev.value.bankId && ev.value.bankAccount && !ev.value.cancelledAt ? payers.value.filter((p) => p.memberId !== mine.value?.memberId && p.owes > 0) : []));
-const otherQr = (p: (typeof payers.value)[number]) =>
-  vietqrUrl(ev.value.bankId!, ev.value.bankAccount!, ev.value.bankHolder, p.done ? p.owes : p.left, `${ev.value.title} ${p.name}`);
-const failedQr = ref(new Set<number>());
-watch(others, () => failedQr.value.clear());
 const collected = computed(() => payers.value.reduce((s, p) => s + Math.min(p.paid, p.owes), 0));
 const total = computed(() => payers.value.reduce((s, p) => s + p.owes, 0));
 const stillOwe = computed(() => payers.value.filter((p) => !p.done).length);
@@ -100,18 +94,6 @@ async function setPaid(body: { paidAmount: null } | { addPaid: number }) {
         </template>
       </div>
       <p v-if="locked" class="text-sm text-muted">{{ t('bill.locked') }}</p>
-
-      <div v-if="others.length" class="space-y-3">
-        <h3 class="text-sm font-semibold text-highlighted">{{ t('bill.everyoneQr') }}</h3>
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div v-for="p in others" :key="p.memberId" class="rounded-2xl bg-elevated p-4 text-center">
-            <p class="truncate font-medium">{{ p.name }}<UBadge v-if="p.sponsorAmount" class="ml-1.5" size="sm" color="primary" variant="subtle">{{ t('bill.sponsor') }}</UBadge></p>
-            <p class="text-xl font-bold tabular-nums">{{ fmtVnd(p.done ? p.owes : p.left) }}</p>
-            <p v-if="p.done" class="flex items-center justify-center gap-1 text-sm text-success"><UIcon name="i-lucide-badge-check" class="size-4" />{{ t('bill.paidFull') }}</p>
-            <img v-if="!failedQr.has(p.memberId)" :src="otherQr(p)" :alt="t('bill.qrAlt')" loading="lazy" class="mx-auto mt-2 w-48 max-w-full rounded-xl bg-white shadow-sm" @error="failedQr.add(p.memberId)" />
-          </div>
-        </div>
-      </div>
 
       <p class="text-sm font-semibold tabular-nums">{{ t('bill.ledger', { paid: fmtVnd(collected), total: fmtVnd(total), n: stillOwe }) }}</p>
     </div>

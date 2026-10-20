@@ -342,8 +342,6 @@
     "perSeat": "Mỗi người",
     "rounded": "chia {n} chỗ, làm tròn lên 1.000 ₫",
     "sponsors": "Sponsor cố định: {list}",
-    "sponsor": "Sponsor",
-    "everyoneQr": "Mã QR của mọi người",
     "youOwe": "Bạn cần trả",
     "withGuests": "gồm {n} người đi cùng",
     "qrAlt": "Mã VietQR để chuyển khoản",

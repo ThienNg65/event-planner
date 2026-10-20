@@ -9,7 +9,6 @@ All notable changes to this project are documented here, following [Keep a Chang
 - The event page opens with a ticket in every look: cover, title and key facts on the left, and your part (what you need to do, and the organizer's next move) on the torn-off stub. The current step's section sits in its own card.
 - In Ticket, celebrations (first vote, joining, paying, locking, finishing) pop a small star from the button you pressed instead of confetti, your picked days and your RSVP answer get a clear indigo border, and day tiles press down when tapped.
 - Events with a seat limit show the seats as a row of punch holes next to the count: taken seats, your own seats, and walk-ins past the limit.
-- The payment step now shows a QR code for every attendee, not just you, with what each person still owes, so one person can pay for several others.
 - When entering the bill, you can set a sponsor amount for anyone who came. A sponsor pays exactly that amount, and the rest of the bill is split evenly among everyone else (rounded up to 1,000 ₫).
 
 ### Changed
