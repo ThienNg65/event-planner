@@ -37,6 +37,13 @@ test('facts: a change back (A→B→A) is a new fact, the same change twice is n
   assert.equal(timeFact(at('2026-10-20T00:00:00.123Z')), String(at('2026-10-20T00:00:00.123Z').getTime()));
 });
 
+test('a payment request carries each member their own amount, a sponsor their fixed one', () => {
+  const rows = [row(1, { sponsorAmount: 60_000 }), row(2), row(3, { guests: 1 })];
+  const bill = ev({ stage: 'bill', billTotal: 90_000 });
+  const a = audienceOf({ kind: 'paymentRequested', fact: billFact(null, 90_000), memberId: null }, bill, rows, NOW);
+  assert.deepEqual(a, [{ memberId: 1, owes: 60_000 }, { memberId: 2, owes: 10_000 }, { memberId: 3, owes: 20_000 }]);
+});
+
 test('a cancelled event drops every notice except its own cancellation', () => {
   const gone = ev({ cancelledAt: at('2026-10-19T00:00:00Z') });
   const rows = [row(1), row(2)];

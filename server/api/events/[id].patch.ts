@@ -111,7 +111,6 @@ export default defineEventHandler(async (event) => {
   const attended = 'attended' in b ? attendedList(b.attended) : null;
   if (attended && !(f.stage === 'bill' && ev.stage === 'rsvp')) fail(400, 'invalid');
   // Sponsors pay part of the bill up front, so together they can't exceed it.
-  if (attended && attended.reduce((n, a) => n + (a.sponsor ?? 0), 0) > ((f.billTotal ?? ev.billTotal) ?? 0)) fail(400, 'invalidSponsor');
   // Reopening voting always names the new deadline (a future time, or null for none) and needs the poll stage.
   const reopen = b.reopenVoting === true;
   if (reopen) {
@@ -142,6 +141,14 @@ export default defineEventHandler(async (event) => {
   const leavesRsvp = ev.stage === 'rsvp' && (f.stage === 'bill' || f.stage === 'settled');
   const planMoved =
     ev.stage === 'rsvp' && !f.stage && (('startsAt' in f && f.startsAt?.getTime() !== ev.startsAt?.getTime()) || ('venue' in f && f.venue !== ev.venue));
+  // Correcting the bill later can't leave it below what sponsors already pledged.
+  if ('billTotal' in f && f.billTotal != null && !attended) {
+    const [s] = await useDb()
+      .select({ n: sql<number>`coalesce(sum(${responses.sponsorAmount}), 0)::int` })
+      .from(responses)
+      .where(eq(responses.eventId, ev.id));
+    if (s!.n > f.billTotal) fail(400, 'invalidSponsor');
+  }
   const polled = lock || planMoved ? await useDb().select({ id: venues.id, name: venues.name }).from(venues).where(eq(venues.eventId, ev.id)) : [];
   // A fixed-date event with no poll has no votes to derive from.
   const derive = lock || (planMoved && (ev.pollDays.length > 0 || polled.length > 0));
@@ -152,7 +159,11 @@ export default defineEventHandler(async (event) => {
       .from(responses)
       .where(and(eq(responses.eventId, ev.id), or(isNotNull(responses.paidAt), gt(responses.paidAmount, 0))));
     if (paid!.n > 0 && b.acknowledgePayments !== true) fail(409, 'hasPayments');
-    extras.push(clearDerived(ev.id), clearNoShows(ev.id));
+    extras.push(
+      clearDerived(ev.id),
+      clearNoShows(ev.id),
+      useDb().update(responses).set({ sponsorAmount: null }).where(and(eq(responses.eventId, ev.id), isNull(responses.paidAt)))
+    );
     reconfirmBy = null;
   } else if (leavesRsvp) {
     if (attended) {
@@ -160,6 +171,8 @@ export default defineEventHandler(async (event) => {
       if (attended.some((a) => !rows.some((r) => r.memberId === a.memberId))) fail(400, 'invalid');
       const confirmed = rollCall(seated(rows, ev), ev.capacity).confirmed.map((r) => r.memberId);
       const check = attendanceCheck(rows, confirmed, attended, next.capacity);
+      // Sponsors pay part of the bill up front, so together they can't exceed it (paid rows are not rewritten, so they don't count).
+      if (check.going.reduce((n, a) => n + (a.sponsor ?? 0), 0) > (next.billTotal ?? 0)) fail(400, 'invalidSponsor');
       before.push(...checkInWrites(ev.id, check));
       // A party bigger than the limit raises it; the first original limit is kept, so the page can show "10 + 5".
       if (check.capacity !== next.capacity) raise = { capacity: check.capacity, plannedCapacity: sql`COALESCE(${events.plannedCapacity}, ${next.capacity})` };

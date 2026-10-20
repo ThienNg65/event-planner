@@ -472,7 +472,7 @@ test('compareDays: ties go to the day more honorees can make, then the earlier d
 });
 
 const team = [{ id: 1, name: 'An' }, { id: 2, name: 'Binh' }, { id: 3, name: 'Chi' }, { id: 4, name: 'Dung', archivedAt: new Date() }];
-const rrow = (memberId: number, o: Partial<{ days: string[]; venueIds: number[]; status: string | null; derived: string | null; guests: number; paidAt: unknown; paidAmount: number | null }> = {}) =>
+const rrow = (memberId: number, o: Partial<{ days: string[]; venueIds: number[]; status: string | null; derived: string | null; guests: number; paidAt: unknown; paidAmount: number | null; sponsorAmount: number | null }> = {}) =>
   ({ memberId, days: [], venueIds: [], status: null, derived: null, guests: 0, paidAt: null, ...o });
 
 test('reminderOf poll: names who have not voted, archived members skipped', () => {
@@ -514,6 +514,15 @@ test('reminderOf bill: confirmed attendees who still owe, guests count, legacy p
   assert.equal(reminderOf('bill', team, rs, [1, 2, 3], null, []), null);
   assert.deepEqual(reminderOf('bill', team, [rrow(2, { status: 'going', paidAmount: 50_000 })], [2], 25_000, [])?.names, []);
   assert.equal(reminderOf('settled', team, rs, [1], 1000, []), null);
+});
+
+test('sponsors flow through mineOf, allPaid and reminderOf', () => {
+  const sponsor = { status: 'going', guests: 0, sponsorAmount: 500_000, paidAt: null, paidAmount: null, days: [], venueIds: [] };
+  assert.equal(mineOf(sponsor, true, false, 100_000)!.owes, 500_000);
+  assert.equal(allPaid([{ guests: 0, sponsorAmount: 500_000, paidAt: null, paidAmount: 500_000 }, { guests: 0, paidAt: null, paidAmount: 100_000 }], 100_000), true);
+  assert.equal(allPaid([{ guests: 0, sponsorAmount: 500_000, paidAt: null, paidAmount: 100_000 }], 100_000), false, 'a sponsor owes their fixed amount, not a share');
+  const rs = [rrow(1, { status: 'going', sponsorAmount: 500_000, paidAmount: 100_000 }), rrow(2, { status: 'going', paidAmount: 100_000 })];
+  assert.deepEqual(reminderOf('bill', team, rs, [1, 2], 100_000, [])?.names, ['An']);
 });
 
 test('a PIN is six digits that are not all alike and not a run', () => {

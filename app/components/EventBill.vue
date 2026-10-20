@@ -24,6 +24,7 @@ const others = computed(() => (ev.value.bankId && ev.value.bankAccount && !ev.va
 const otherQr = (p: (typeof payers.value)[number]) =>
   vietqrUrl(ev.value.bankId!, ev.value.bankAccount!, ev.value.bankHolder, p.done ? p.owes : p.left, `${ev.value.title} ${p.name}`);
 const failedQr = ref(new Set<number>());
+watch(others, () => failedQr.value.clear());
 const collected = computed(() => payers.value.reduce((s, p) => s + Math.min(p.paid, p.owes), 0));
 const total = computed(() => payers.value.reduce((s, p) => s + p.owes, 0));
 const stillOwe = computed(() => payers.value.filter((p) => !p.done).length);

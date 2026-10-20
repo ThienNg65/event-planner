@@ -65,6 +65,8 @@ export default defineEventHandler(async (event) => {
     set.derived = null;
     // A fresh answer (or an organizer's fix) replaces the attendance check's "didn't come".
     set.noShow = false;
+    // A sponsor amount belongs to a seat at the bill; a changed answer drops it.
+    if (b.status !== 'going') set.sponsorAmount = null;
     // Declining a poll withdraws the votes too, so they no longer count toward a day or place.
     if (pollDecline && b.status === 'no') Object.assign(set, { days: [], venueIds: [], maybeDays: [], maybeVenueIds: [] });
   }
