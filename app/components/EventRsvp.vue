@@ -13,6 +13,8 @@ const shown = computed(() => (mine.value?.derived === 'reconfirm' ? null : (mine
 const held = computed(() => props.data.held.includes(props.me?.id ?? -1));
 const heldUntil = computed(() => (props.data.event.reconfirmBy ? fmtDateTime(props.data.event.reconfirmBy, locale.value) : ''));
 const limit = computed(() => guestLimit(props.data.event));
+// Your own seats (you plus your guests) once you have one, marked on the seat holes.
+const mySeats = computed(() => (props.me && props.data.confirmed.includes(props.me.id) ? 1 + (mine.value?.guests ?? 0) : 0));
 const guests = ref(0);
 // Guests save on their own, like the answer buttons; the pause sends a few taps on +/- as one write.
 // While a save is pending, the server's copy doesn't overwrite what is being typed.
@@ -62,6 +64,12 @@ async function answer(status: 'going' | 'maybe' | 'no') {
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-semibold text-highlighted">{{ t('rsvp.title') }}</h2>
       <span class="text-sm text-muted">{{ data.responses.filter((r) => r.status).length }} {{ t('rsvp.replies') }}</span>
+    </div>
+    <div v-if="data.event.capacity" class="flex items-center gap-3">
+      <SeatHoles class="min-w-0 flex-1" :seats="data.seats" :capacity="data.event.capacity" :planned-capacity="data.event.plannedCapacity" :mine="mySeats" />
+      <span class="shrink-0 text-sm text-muted tabular-nums">
+        <SeatCount :seats="data.seats" :capacity="data.event.capacity" :planned-capacity="data.event.plannedCapacity" /> {{ t('event.seats') }}
+      </span>
     </div>
 
     <div v-if="open" class="space-y-3">

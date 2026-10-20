@@ -860,3 +860,187 @@ html:not(.dark) [data-theme='acid'].themed-surface {
 [data-theme='candy'] .themed-side .themed-nav {
   color: #dce8ff;
 }
+
+/* ======================================================================
+   TICKET: every event is a ticket. Warm paper, white cards, Be Vietnam Pro, indigo for selection and links,
+   pear-yellow push buttons on an ink edge (hover lifts, a press sinks onto the edge), coral for money owed.
+   Pear also marks "you": your seat (SeatHoles). Contrast: text 5.3:1 or better, control edges 3:1 or better.
+   ====================================================================== */
+[data-theme='ticket'] {
+  --theme-font: 'Be Vietnam Pro';
+  --theme-head: 'Be Vietnam Pro';
+  --theme-head-weight: 700;
+  --theme-head-spacing: -0.03em;
+  --theme-title-size: 1.25rem;
+  --theme-wall: oklch(98% 0.007 90);
+  --theme-card-bg: #fff;
+  --theme-card-border: 1px solid oklch(90% 0.01 90);
+  --theme-card-radius: 1.125rem;
+  --theme-card-shadow: 0 1px 2px oklch(20% 0.02 265 / 0.06), 0 8px 24px -14px oklch(20% 0.02 265 / 0.14);
+  --theme-tile-border: 1px solid oklch(64% 0.012 265);
+  --theme-tile-shadow: none;
+  --theme-blur: 0px;
+  --ticket-ink: oklch(20% 0.02 265);
+  --ticket-pop: oklch(88% 0.17 98);
+  --ticket-pop-cast: oklch(76% 0.2 95 / 0.45);
+  --ticket-edge-soft: oklch(64% 0.012 265);
+  --seat-me: var(--ticket-pop);
+  --seat-me-ring: var(--ticket-ink);
+  --ui-bg: #fff;
+  --ui-bg-muted: oklch(95.8% 0.01 90);
+  --ui-bg-elevated: oklch(95.8% 0.01 90);
+  --ui-bg-accented: oklch(93% 0.013 90);
+  --ui-border: oklch(90% 0.01 90);
+  --ui-border-accented: oklch(64% 0.012 265);
+  --ui-text-highlighted: oklch(20% 0.02 265);
+  --ui-text: oklch(24% 0.02 265);
+  --ui-text-toned: oklch(34% 0.018 265);
+  --ui-text-muted: oklch(42% 0.018 265);
+  --ui-text-dimmed: oklch(50% 0.015 265);
+  --ui-text-inverted: #fff;
+  --ui-primary: oklch(50% 0.2 280);
+  --ui-secondary: oklch(53% 0.2 25);
+  --ui-radius: 0.375rem;
+  --side-bg: oklch(95.8% 0.01 90);
+  --side-border: 0;
+  --bar-bg: oklch(98% 0.007 90);
+  --bar-border: 1px solid oklch(90% 0.01 90);
+  --nav-radius: 0.625rem;
+  --nav-weight: 500;
+  --nav-on-bg: #fff;
+  --nav-on-shadow: 0 0 0 1px oklch(90% 0.01 90), 0 1px 2px oklch(20% 0.02 265 / 0.06);
+  --nav-on-fg: oklch(20% 0.02 265);
+  --tb-radius: 999px;
+  --tb-weight: 700;
+  --tb-border: 1.5px solid var(--ticket-ink);
+  --tb-shadow: 0 4px 0 0 var(--ticket-ink), 0 6px 12px -3px var(--ticket-pop-cast);
+  --tb-border-soft: 1.5px solid var(--ticket-edge-soft);
+  --tb-shadow-soft: 0 3px 0 0 var(--ticket-edge-soft);
+  --tb-press: translateY(3px);
+  --tf-radius: 0.75rem;
+  --tf-border: 1px solid oklch(64% 0.012 265);
+  --tf-focus: 0 0 0 3px oklch(50% 0.2 280 / 0.22);
+  --badge-radius: 999px;
+  --badge-weight: 600;
+  color-scheme: light;
+}
+.dark[data-theme='ticket'],
+.dark [data-theme='ticket'] {
+  --theme-wall: oklch(17% 0.012 265);
+  --theme-card-bg: oklch(20% 0.013 265);
+  --theme-card-border: 1px solid oklch(29% 0.014 265);
+  --theme-card-shadow: 0 1px 0 oklch(100% 0 0 / 0.03) inset, 0 12px 32px -18px oklch(0% 0 0 / 0.7);
+  --theme-tile-border: 1px solid oklch(56% 0.014 265);
+  --ticket-ink: oklch(96% 0.005 265);
+  --ticket-pop: oklch(86% 0.16 98);
+  --ticket-pop-cast: oklch(10% 0.02 95 / 0.6);
+  --ticket-edge-soft: oklch(56% 0.014 265);
+  --seat-me-ring: oklch(20% 0.02 265);
+  --ui-bg: oklch(20% 0.013 265);
+  --ui-bg-muted: oklch(17% 0.012 265);
+  --ui-bg-elevated: oklch(24% 0.014 265);
+  --ui-bg-accented: oklch(28% 0.014 265);
+  --ui-border: oklch(29% 0.014 265);
+  --ui-border-accented: oklch(56% 0.014 265);
+  --ui-text-highlighted: oklch(98% 0.004 265);
+  --ui-text: oklch(92% 0.006 265);
+  --ui-text-toned: oklch(86% 0.008 265);
+  --ui-text-muted: oklch(80% 0.01 265);
+  --ui-text-dimmed: oklch(70% 0.012 265);
+  --ui-text-inverted: oklch(16% 0.03 280);
+  --ui-primary: oklch(72% 0.14 280);
+  --ui-secondary: oklch(74% 0.16 22);
+  --side-bg: oklch(20.5% 0.013 265);
+  --bar-bg: oklch(17% 0.012 265);
+  --bar-border: 1px solid oklch(29% 0.014 265);
+  --nav-on-bg: oklch(24% 0.014 265);
+  --nav-on-shadow: 0 0 0 1px oklch(29% 0.014 265);
+  --nav-on-fg: oklch(98% 0.004 265);
+  --tf-border: 1px solid oklch(56% 0.014 265);
+  --tf-focus: 0 0 0 3px oklch(72% 0.14 280 / 0.3);
+  color-scheme: dark;
+}
+[data-theme='ticket'] .themed-side {
+  border-right: 1px solid var(--ui-border);
+}
+/* The main action is the round 1 push button: pear face, ink text, ink outline on a 4px ink edge. Other solid colours
+   (the chosen RSVP answer, errors) keep their own fill on the same edge. Unlayered, so it beats Nuxt UI's utilities. */
+[data-theme='ticket'] .tb-solid.bg-primary {
+  background: var(--ticket-pop);
+  color: oklch(20% 0.02 265);
+}
+[data-theme='ticket'] .tb-solid,
+[data-theme='ticket'] .tb-outline {
+  transition:
+    color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 140ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 140ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+[data-theme='ticket'] .tb-solid:not(:disabled, [aria-disabled='true']):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 var(--ticket-ink), 0 12px 22px -4px var(--ticket-pop-cast);
+}
+[data-theme='ticket'] .tb-outline:not(:disabled, [aria-disabled='true']):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 0 var(--ticket-edge-soft);
+}
+[data-theme='ticket'] .tb-solid:active {
+  box-shadow: 0 1px 0 0 var(--ticket-ink), 0 2px 6px -2px var(--ticket-pop-cast);
+  transition-duration: 70ms;
+}
+[data-theme='ticket'] .tb-outline:active {
+  box-shadow: 0 0 0 0 var(--ticket-edge-soft);
+  transition-duration: 70ms;
+}
+/* Day tiles: your pick is a 2px indigo border on a soft tint; "if need be" is dashed and striped, so neither relies on colour. */
+[data-theme='ticket'] .day-tile[aria-pressed='true'] {
+  outline: 0;
+  border: 2px solid var(--ui-primary);
+  background: color-mix(in oklab, var(--ui-primary) 8%, var(--theme-card-bg));
+}
+[data-theme='ticket'] .day-tile[aria-pressed='mixed'] {
+  border: 2px dashed var(--ui-primary);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--ui-primary) 8%, var(--theme-card-bg)) 0 6px, var(--theme-card-bg) 6px 12px);
+}
+/* RSVP: the chosen answer is a soft tint with a 2px indigo border and edge, the others stay white. */
+[data-theme='ticket'] #rsvp .tb-solid[aria-pressed='true'] {
+  background: color-mix(in oklab, var(--ui-primary) 10%, var(--ui-bg));
+  color: var(--ui-primary);
+  border: 2px solid var(--ui-primary);
+  box-shadow: 0 3px 0 0 var(--ui-primary);
+}
+/* The most pressing to-do on Home: pear tint with a pear edge. */
+[data-theme='ticket'] .todo-hot {
+  background: oklch(95.5% 0.07 98);
+  border: 1px solid oklch(66% 0.14 90);
+}
+.dark [data-theme='ticket'] .todo-hot,
+.dark[data-theme='ticket'] .todo-hot {
+  background: oklch(31% 0.06 98);
+  border-color: oklch(70% 0.14 90);
+}
+/* A home to-do's action label looks like the main button. */
+[data-theme='ticket'] .todo-cta {
+  background: var(--ticket-pop);
+  color: oklch(20% 0.02 265);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--ticket-ink), 0 3px 0 0 var(--ticket-ink);
+  font-weight: 700;
+}
+/* The current step on the stage path is "you are here": pear with an ink ring. */
+[data-theme='ticket'] .spine-now {
+  background: var(--ticket-pop);
+  color: oklch(20% 0.02 265);
+  --tw-ring-color: var(--ticket-ink);
+  box-shadow: 0 0 0 2px var(--ticket-ink), 0 0 0 6px oklch(95.5% 0.07 98 / 0.7);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='ticket'] .tb-solid:hover,
+  [data-theme='ticket'] .tb-outline:hover,
+  [data-theme='ticket'] .tb-solid:active,
+  [data-theme='ticket'] .tb-outline:active {
+    transform: none;
+  }
+}

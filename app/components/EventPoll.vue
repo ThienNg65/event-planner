@@ -276,12 +276,11 @@ async function remove() {
             :aria-pressed="myDays.includes(d.day) ? 'true' : myMaybe.includes(d.day) ? 'mixed' : 'false'"
             :aria-disabled="readOnly"
             :aria-label="t('poll.dayLabel', { day: d.label, people: t('poll.people', d.names.length), state: t(myDays.includes(d.day) ? 'poll.selected' : myMaybe.includes(d.day) ? 'poll.ifNeedBeState' : 'poll.notSelected') })"
-            class="themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary aria-disabled:cursor-not-allowed"
+            class="day-tile themed-tile relative flex w-full flex-col items-start gap-1 p-4 text-left transition focus-visible:outline-2 focus-visible:outline-primary not-aria-disabled:active:scale-[0.97] motion-reduce:active:scale-100 aria-disabled:cursor-not-allowed"
             :class="myMaybe.includes(d.day) && 'border-dashed'"
             :data-on="on(d.day)"
             @click="act(() => tapDay(d.day), { day: d.day, already: () => myDays.includes(d.day) || myMaybe.includes(d.day) })"
           >
-            <UBadge v-if="d.top" color="warning" variant="solid" size="sm" icon="i-lucide-crown" :label="t('poll.top')" class="absolute -top-2.5 left-3 shadow-sm" />
             <!-- Closed: no empty checkbox inviting a tap, only the check on days you picked. -->
             <span
               v-if="!readOnly || myDays.includes(d.day) || myMaybe.includes(d.day)"
@@ -290,7 +289,7 @@ async function remove() {
               aria-hidden="true"
             >
               <UIcon v-if="on(d.day)" name="i-lucide-check" class="size-3.5" />
-              <UIcon v-else-if="myMaybe.includes(d.day)" name="i-lucide-minus" class="size-3.5" />
+              <UIcon v-else-if="myMaybe.includes(d.day)" name="i-lucide-tilde" class="size-3.5" />
             </span>
             <span class="text-xs font-medium text-muted">{{ d.weekday }}</span>
             <span class="text-lg font-semibold text-highlighted">{{ d.date }}</span>
@@ -299,6 +298,7 @@ async function remove() {
               <UIcon name="i-lucide-users-round" class="size-3.5 text-dimmed" />
               {{ t('poll.chosen', { n: d.names.length }) }}<template v-if="d.maybeNames.length"> · {{ t('poll.maybeChosen', { n: d.maybeNames.length }) }}</template>
             </span>
+            <span v-if="d.top" class="day-lead flex items-center gap-1 text-xs font-semibold text-primary"><UIcon name="i-lucide-star" class="size-3.5" />{{ t('poll.top') }}</span>
             <span v-if="ev.honorees.length" class="mt-1 flex flex-wrap gap-1">
               <span
                 v-for="h in honoreesOn(d.day)"
@@ -307,11 +307,8 @@ async function remove() {
                 :class="h.in ? 'bg-success/15 text-success' : 'bg-elevated text-dimmed line-through'"
               >🎂 {{ h.name }}<span class="sr-only"> {{ t(h.in ? 'poll.honoreeIn' : 'poll.honoreeOut') }}</span></span>
             </span>
-            <span v-if="voted" class="mt-2 flex w-full items-center gap-2" aria-hidden="true">
-              <span class="h-1.5 flex-1 overflow-hidden rounded-full bg-accented">
-                <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${voted ? (d.names.length / voted) * 100 : 0}%` }" />
-              </span>
-              <span class="w-8 text-right text-xs text-muted tabular-nums">{{ voted ? Math.round((d.names.length / voted) * 100) : 0 }}%</span>
+            <span v-if="voted" class="mt-2 block h-1.5 w-full overflow-hidden rounded-full bg-accented" aria-hidden="true">
+              <span class="block h-full rounded-full bg-primary/70" :style="{ width: `${(d.names.length / voted) * 100}%` }" />
             </span>
           </button>
         </UTooltip>

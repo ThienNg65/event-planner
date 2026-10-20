@@ -54,7 +54,7 @@ One row per extra browser signed in with a PIN: `token_hash` (PK, SHA-256 of the
 | `max_guests` | integer | null = 10; check `between 0 and 10` (`events_max_guests`); see [05](05-rsvp-and-seats.md) |
 | `hide_votes` | boolean not null, default false | the poll hides results from visitors who have not voted yet, see [04](04-polling-and-locking.md) |
 | `honorees` | `integer[]` not null, default `{}` | member ids the event is for (max 20, validated; not a foreign key) |
-| `theme` | text not null, default `aurora` | one of `aurora, liquid, bento, brutal, acid, scrapbook, candy` |
+| `theme` | text not null, default `aurora` | one of `aurora, ticket, liquid, bento, brutal, acid, scrapbook, candy` |
 | `created_by` | integer FK → members, not null | the host by identity |
 | `manage_key_hash` | text not null | SHA-256 of the host key |
 | `repeat`, `repeat_until`, `series_id` | text (check `events_repeat`), date, integer | repeating events, see [04](04-polling-and-locking.md#48-repeating-events); `series_id` is the first event's own id (no foreign key), unique together with `starts_at` (`events_series_starts`) |

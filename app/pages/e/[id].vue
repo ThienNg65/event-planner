@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { HOST_MORE, type HostMoreItem } from '~/composables/useHostMore';
+
 const { t, locale } = useI18n();
 const toast = useToast();
 const id = Number(useRoute().params.id);
@@ -44,9 +46,6 @@ const when = computed(() => {
   if (ev.value.startsAt) return fmtDateTime(ev.value.startsAt, locale.value);
   return ev.value.pollDays.length ? t('event.dayOptions', { n: ev.value.pollDays.length }) : t('event.dateTbd');
 });
-const dateTile = computed(() => ev.value.startsAt && dateBlock(ev.value.startsAt, locale.value));
-// Steps are named by what happens in them; the current one uses the badge wording ("Đã chốt", "Awaiting the date"...).
-const steps = computed(() => STAGES.map((s) => ({ title: s === ev.value.stage ? t(`stage.${stageKey(ev.value)}`) : t(`stages.${s}`) })));
 const cover = computed(() => coverOf(ev.value.cover, ev.value.id));
 useEventTheme(() => ev.value.theme);
 const editing = ref(false);
@@ -118,15 +117,12 @@ const noteOpen = ref(false);
 const longNote = computed(() => (ev.value.note?.length ?? 0) > 100 || (ev.value.note?.split('\n').length ?? 0) > 2);
 // "@Dong Le" in the note shows as a chip.
 const noteParts = computed(() => splitMentions(ev.value.note ?? ''));
-const STAGES = ['poll', 'rsvp', 'bill', 'settled'] as const;
-const voters = computed(() => data.value!.responses.filter(hasPicked).length);
-// Finished stages collapse to one line each.
-const done = computed(() => {
-  const past = STAGES.indexOf(ev.value.stage);
-  const out: string[] = [];
-  if (past > 0 && voters.value) out.push(t('sum.poll', { n: voters.value }));
-  if (past > 1) out.push(t('sum.rsvp', { n: data.value!.seats }));
-  return out;
+// The next-step card's secondary organizer moves (close voting, preview, complete...) show in the Manage menu.
+provide(HOST_MORE, shallowRef<HostMoreItem[]>([]));
+// A home to-do links to /e/:id#poll (or #rsvp, #bill): the page body is its own scroll box, so the router cannot scroll there.
+onMounted(() => {
+  const target = location.hash.slice(1);
+  if (['poll', 'rsvp', 'bill'].includes(target)) document.getElementById(target)?.scrollIntoView({ block: 'start' });
 });
 
 // "New" dot on the host's update until this browser has seen that version of it.
@@ -236,19 +232,16 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
   <UDashboardPanel :id="`event-${id}`">
     <template #header>
       <!-- No navbar title here: the event title below is the page heading, and a second h1 would repeat it. -->
-      <UDashboardNavbar :ui="{ center: 'flex-1 justify-center' }">
-        <template #leading><UDashboardSidebarCollapse /></template>
-        <!-- The navbar centre shows only on lg+; smaller screens get the stage badge in the header instead. -->
-        <UStepper
-          v-if="data && role && !ev.cancelledAt"
-          :items="steps"
-          :model-value="STAGES.indexOf(ev.stage)"
-          :color="STAGE_COLOR[ev.stage]"
-          size="xs"
-          disabled
-          :aria-label="t('stages.label')"
-          class="w-full max-w-xl"
-        />
+      <UDashboardNavbar>
+        <!-- The breadcrumb sits in #leading: the #title slot is wrapped in an h1, and the ticket's title is the page's only h1. -->
+        <template #leading>
+          <UDashboardSidebarCollapse />
+          <nav v-if="data" :aria-label="t('nav.breadcrumb')" class="flex min-w-0 items-center gap-1.5 text-sm">
+            <NuxtLink to="/" class="shrink-0 text-muted hover:text-highlighted">{{ t('nav.events') }}</NuxtLink>
+            <span class="text-dimmed" aria-hidden="true">/</span>
+            <span class="truncate font-semibold text-highlighted" aria-current="page">{{ ev.title }}</span>
+          </nav>
+        </template>
         <template #right>
           <UButton icon="i-lucide-share" color="neutral" variant="outline" :aria-label="t('event.share')" @click="share">
             <span class="hidden sm:inline">{{ t('event.share') }}</span>
@@ -259,57 +252,61 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
     </template>
 
     <template #body>
-      <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 lg:max-w-7xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
-        <div class="rise min-w-0 space-y-6 lg:col-start-1">
-          <!-- Luma-style: on sm+ a square cover sits beside the title; on phones it is a strip on top. -->
-          <header class="space-y-3 sm:flex sm:items-start sm:gap-5 sm:space-y-0">
-            <div class="relative shrink-0 overflow-hidden rounded-xl sm:size-40" :class="['image' in cover ? 'h-44' : 'h-20', 'gradient' in cover && cover.gradient]">
-              <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
-              <UButton
-                v-if="can(role, 'edit')"
-                icon="i-lucide-camera"
-                size="sm"
-                :aria-label="t('event.changeCover')"
-                class="absolute right-2 bottom-2 bg-black/50 text-white backdrop-blur hover:bg-black/70"
-                @click="editing = true"
-              >
-                <span class="sm:sr-only">{{ t('event.changeCover') }}</span>
-              </UButton>
-            </div>
-            <div class="min-w-0 flex-1 space-y-3">
-              <!-- Organizers get the stage in the navbar stepper on lg+. -->
-              <div class="flex" :class="!ev.cancelledAt && role && 'lg:hidden'">
-                <UBadge v-if="ev.cancelledAt" color="neutral" variant="subtle" :label="t('stage.cancelled')" class="rounded-full px-2.5" />
-                <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="subtle" :label="t(`stage.${stageKey(ev)}`)" class="rounded-full px-2.5" />
-              </div>
-              <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-4xl">{{ ev.title }}</h1>
-              <!-- One row per key fact: an icon tile (the date tile once the date is set), then the fact. -->
-              <div class="flex items-center gap-3">
-                <div v-if="dateTile" class="grid size-12 shrink-0 place-content-center rounded-lg text-center ring ring-default">
-                  <span class="text-[0.625rem] leading-tight font-semibold whitespace-nowrap text-primary uppercase">{{ dateTile.month }}</span>
-                  <span class="text-base leading-tight font-bold text-highlighted">{{ dateTile.day }}</span>
+      <!-- max-lg:pb-24 keeps the last content clear of the phone action bar (EventNextStep). -->
+      <div v-if="data" class="mx-auto grid w-full max-w-3xl gap-x-8 gap-y-6 max-lg:pb-24 lg:max-w-[90rem] lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
+        <div class="rise order-1 min-w-0 space-y-6 lg:order-none lg:col-start-1 lg:row-start-1">
+          <!-- The ticket: head (cover band, stage, title, key facts, note) | perforation | stub (your part and the organizer's move,
+               EventNextStep). The stub is the torn-off right end on lg+, and sits under the perforation on smaller screens. -->
+          <article class="ticket themed-surface grid overflow-hidden lg:grid-cols-[minmax(0,1fr)_1.25rem_22rem]" :aria-label="ev.title">
+            <header class="min-w-0">
+              <div class="ticket-cover relative overflow-hidden" :class="['image' in cover ? 'h-40' : 'h-20', 'gradient' in cover && cover.gradient]">
+                <img v-if="'image' in cover" :src="cover.image" alt="" class="absolute inset-0 size-full object-cover" />
+                <UButton
+                  v-if="can(role, 'edit')"
+                  icon="i-lucide-camera"
+                  size="sm"
+                  :aria-label="t('event.changeCover')"
+                  class="absolute top-2 right-2 bg-black/50 text-white backdrop-blur hover:bg-black/70"
+                  @click="editing = true"
+                >
+                  <span class="sr-only">{{ t('event.changeCover') }}</span>
+                </UButton>
+                <div class="absolute bottom-2 left-4 flex gap-1.5">
+                  <UBadge v-if="ev.cancelledAt" color="neutral" variant="solid" :label="t('stage.cancelled')" class="rounded-full px-2.5 shadow-sm" />
+                  <UBadge v-else :color="STAGE_COLOR[ev.stage]" variant="solid" :label="t(`stage.${stageKey(ev)}`)" class="rounded-full px-2.5 shadow-sm" />
                 </div>
-                <span v-else class="grid size-12 shrink-0 place-items-center rounded-lg ring ring-default"><UIcon name="i-lucide-calendar" class="size-5 text-muted" /></span>
-                <p class="font-medium text-highlighted">{{ when }}</p>
               </div>
-              <div v-if="ev.venue" class="flex items-center gap-3">
-                <span class="grid size-12 shrink-0 place-items-center rounded-lg ring ring-default"><UIcon name="i-lucide-map-pin" class="size-5 text-muted" /></span>
-                <p class="min-w-0 font-medium break-words text-highlighted">
-                  <ULink v-if="ev.venueLink" :to="ev.venueLink" target="_blank" rel="noopener noreferrer" class="text-primary">{{ ev.venue }}</ULink>
-                  <template v-else>{{ ev.venue }}</template>
-                  <VenueMap :name="ev.venue" :link="ev.venueLink" />
-                </p>
+              <div class="space-y-3 p-4 sm:p-6">
+                <h1 class="text-2xl font-bold tracking-tight break-words text-highlighted sm:text-3xl">{{ ev.title }}</h1>
+                <!-- One compact row per key fact: a small icon, then the fact. -->
+                <ul class="space-y-1.5 text-sm">
+                  <li class="flex items-start gap-2.5"><UIcon name="i-lucide-calendar" class="mt-0.5 size-4 shrink-0 text-muted" /><span class="font-semibold text-highlighted">{{ when }}</span></li>
+                  <li v-if="ev.venue" class="flex items-start gap-2.5">
+                    <UIcon name="i-lucide-map-pin" class="mt-0.5 size-4 shrink-0 text-muted" />
+                    <span class="min-w-0 font-semibold break-words text-highlighted">
+                      <ULink v-if="ev.venueLink" :to="ev.venueLink" target="_blank" rel="noopener noreferrer" class="text-primary">{{ ev.venue }}</ULink>
+                      <template v-else>{{ ev.venue }}</template>
+                      <VenueMap :name="ev.venue" :link="ev.venueLink" />
+                    </span>
+                  </li>
+                  <li v-if="ev.capacity" class="flex items-start gap-2.5"><UIcon name="i-lucide-armchair" class="mt-0.5 size-4 shrink-0 text-muted" /><span class="text-toned">{{ t('ticket.limit', { n: ev.plannedCapacity ?? ev.capacity }) }}</span></li>
+                </ul>
+                <div v-if="ev.note" class="text-sm text-toned">
+                  <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-2'">
+                    <template v-for="(part, i) in noteParts" :key="i"><span v-if="i % 2" class="rounded bg-primary/10 px-1 font-medium text-primary">{{ part }}</span><template v-else>{{ part }}</template></template>
+                  </p>
+                  <button v-if="longNote" type="button" class="mt-1 text-primary underline underline-offset-2" :aria-expanded="noteOpen" @click="noteOpen = !noteOpen">
+                    {{ t(noteOpen ? 'event.less' : 'event.more') }}
+                  </button>
+                </div>
               </div>
-              <div v-if="ev.note" class="text-sm text-toned">
-                <p class="whitespace-pre-line" :class="!noteOpen && 'line-clamp-2'">
-                  <template v-for="(part, i) in noteParts" :key="i"><span v-if="i % 2" class="rounded bg-primary/10 px-1 font-medium text-primary">{{ part }}</span><template v-else>{{ part }}</template></template>
-                </p>
-                <button v-if="longNote" type="button" class="mt-1 text-primary underline underline-offset-2" :aria-expanded="noteOpen" @click="noteOpen = !noteOpen">
-                  {{ t(noteOpen ? 'event.less' : 'event.more') }}
-                </button>
-              </div>
+            </header>
+            <div class="ticket-perf" aria-hidden="true" />
+            <div class="ticket-stub min-w-0 p-4 sm:p-6 lg:self-center lg:pl-2">
+              <p class="mb-3 text-xs font-semibold tracking-wider text-muted uppercase">{{ t('ticket.yourPart') }}</p>
+              <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
             </div>
-          </header>
+          </article>
 
           <UAlert
             v-if="ev.cancelledAt"
@@ -355,7 +352,12 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
             </template>
           </UAlert>
 
-          <EventNextStep :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
+        </div>
+
+        <!-- The right rail on desktop (sticky): the reminder, then the details. On phones the wrapper dissolves (contents) so the
+             reminder follows the ticket and the details come last, after the stage path. -->
+        <div class="contents lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:block lg:space-y-4 lg:self-start lg:sticky lg:top-0">
+        <div class="rise order-2 min-w-0 space-y-6 lg:order-none">
           <!-- The message holds the page's own origin, which only the browser knows. -->
           <ClientOnly>
             <EventReminder v-if="reminding" :data="data" />
@@ -364,7 +366,7 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
         </div>
 
         <!-- order-last: on phones the stats come after the stage section, so the action is first. -->
-        <aside class="rise order-last space-y-3 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:sticky lg:top-0">
+        <aside class="rise order-last space-y-3 lg:order-none">
           <!-- One "Details" panel: closed on phones, always open in the rail. -->
           <UButton class="lg:hidden" color="neutral" variant="outline" block :trailing-icon="detailsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" :aria-expanded="detailsOpen" @click="detailsOpen = !detailsOpen">
             {{ t('details.title') }}
@@ -402,20 +404,17 @@ const reminding = computed(() => can(role.value, 'remind') && !ev.value.cancelle
           <EventOrganizers :data="data" :role="role" @manage="organizing = true" />
           </div>
         </aside>
+        </div>
 
-        <div class="rise min-w-0 space-y-6 lg:col-start-1">
-          <p v-for="line in done" :key="line" class="flex items-center gap-2 text-sm text-muted">
-            <UIcon name="i-lucide-circle-check" class="size-4 text-success" />{{ line }}
-          </p>
-
+        <div class="rise order-3 min-w-0 space-y-6 lg:order-none lg:col-start-1 lg:row-start-2">
           <!-- A wrapper, so a stage swap is animated only by the stage transition, not by .rise. -->
-          <div>
+          <EventSpine :data="data">
             <Transition name="stage" mode="out-in">
               <EventPoll v-if="ev.stage === 'poll'" :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
               <EventRsvp v-else-if="ev.stage === 'rsvp'" :data="data" :me="me" :manage-key="key" @changed="refresh" />
               <EventBill v-else :data="data" :me="me" :manage-key="key" @changed="refresh" />
             </Transition>
-          </div>
+          </EventSpine>
 
           <EventPeople :data="data" :me="me" :manage-key="key" :role="role" @changed="refresh" />
         </div>

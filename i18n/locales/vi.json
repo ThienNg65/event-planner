@@ -27,7 +27,16 @@
       "lock": "Chốt ngày",
       "bill": "Nhập hoá đơn",
       "settle": "Đánh dấu đã xong",
-      "confirm": "Xác nhận bạn có đi"
+      "confirm": "Xác nhận bạn có đi",
+      "cta": {
+        "vote": "Chọn ngày",
+        "rsvp": "Trả lời",
+        "confirm": "Xác nhận",
+        "pay": "Trả",
+        "lock": "Chốt",
+        "bill": "Nhập",
+        "settle": "Xong"
+      }
     },
     "seeAll": "Xem tất cả"
   },
@@ -43,7 +52,7 @@
   "stages": {
     "label": "Tiến trình",
     "poll": "Bình chọn",
-    "rsvp": "Chốt",
+    "rsvp": "Đã chốt",
     "bill": "Thu tiền",
     "settled": "Hoàn tất"
   },
@@ -360,7 +369,8 @@
     "events": "Sự kiện",
     "calendar": "Lịch",
     "new": "Tạo sự kiện",
-    "back": "Quay lại"
+    "back": "Quay lại",
+    "breadcrumb": "Bạn đang ở"
   },
   "calendar": {
     "title": "Lịch",
@@ -393,6 +403,7 @@
     "acid": "Acid Night",
     "scrapbook": "Sổ lưu niệm",
     "candy": "Game Candy",
+    "ticket": "Ticket",
     "preview": "Xem trước",
     "previewHint": "Xem một sự kiện mẫu ở từng giao diện trước khi chọn.",
     "use": "Dùng {name}",
@@ -421,7 +432,8 @@
     "paid": "Đã trả",
     "cancelled": "Đã huỷ",
     "closes": "Bình chọn đóng lúc {when}",
-    "confirm": "Xác nhận"
+    "confirm": "Xác nhận",
+    "days": "ngày"
   },
   "next": {
     "organizers": "ban tổ chức",
@@ -1006,5 +1018,25 @@
   "hint": {
     "tapDays": "Chạm ngày bạn rảnh",
     "tapAgain": "Chạm lần nữa để bỏ chọn"
+  },
+  "spine": {
+    "label": "Các bước của sự kiện",
+    "done": "xong",
+    "skipped": "Không cần bình chọn",
+    "noBill": "Không có hoá đơn",
+    "collected": "Đã thu {paid} / {total}",
+    "next": {
+      "rsvp": "Khi ban tổ chức chốt",
+      "bill": "Khi sự kiện bắt đầu và có hoá đơn",
+      "settled": "Khi ban tổ chức đánh dấu xong"
+    }
+  },
+  "seats": {
+    "holes": "{n} trên {cap} chỗ đã có người",
+    "yours": "{n} chỗ của bạn"
+  },
+  "ticket": {
+    "limit": "Giới hạn {n} chỗ. Ai đến trước được chỗ trước.",
+    "yourPart": "Phần của bạn"
   }
 }
