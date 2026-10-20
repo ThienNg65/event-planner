@@ -129,6 +129,8 @@ export const responses = pgTable(
     paidAt: timestamp({ withTimezone: true }),
     // Null with paidAt set (legacy rows) means paid in full.
     paidAmount: integer(),
+    // Fixed amount this member sponsors at the bill; they pay it instead of a per-seat share (guests still pay the share).
+    sponsorAmount: integer(),
     // Set once, on the member's first vote; derived attendance queues by it.
     firstVotedAt: timestamp({ withTimezone: true }),
     // Null for an explicit answer; 'going' = counted from votes; 'reconfirm' = seat held after a plan change.
@@ -141,6 +143,7 @@ export const responses = pgTable(
     check('responses_status', sql`${t.status} in ('going', 'maybe', 'no')`),
     check('responses_guests', sql`${t.guests} between 0 and 10`),
     check('responses_paid_amount', sql`${t.paidAmount} >= 0`),
+    check('responses_sponsor_amount', sql`${t.sponsorAmount} >= 0`),
     check('responses_derived', sql`${t.derived} in ('going', 'reconfirm')`),
     check('responses_derived_going', sql`${t.derived} is null or ${t.status} = 'going'`),
     check('responses_no_show', sql`not ${t.noShow} or ${t.status} = 'no'`),

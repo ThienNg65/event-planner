@@ -23,7 +23,7 @@ With email on, entering the bill (or changing the total while in `bill`) mails e
 
 ### Attendance check ("Who actually came?")
 
-The Enter bill dialog lists every member with a response row, confirmed first, pre-ticked with today's confirmed seats and their guests. The organizer ticks walk-ins (Maybe, Can't, no answer, waitlisted) with their guests and unticks people who didn't come. The dialog previews seats and the per-seat share. The UI always sends `attended: [{ memberId, guests }]` with the move; the field is optional, and without it the move works as before.
+The Enter bill dialog lists every member with a response row, confirmed first, pre-ticked with today's confirmed seats and their guests. The organizer ticks walk-ins (Maybe, Can't, no answer, waitlisted) with their guests and unticks people who didn't come. The dialog previews seats and the per-seat share. The UI always sends `attended: [{ memberId, guests, sponsor }]` with the move; the field is optional, and without it the move works as before.
 `attendanceCheck` in `shared/utils/event.ts` decides, and `checkInWrites` in `server/utils/attendance.ts` writes, in the same batch:
 
 | Member | Becomes |
@@ -44,6 +44,17 @@ seats = sum over confirmed parties of (1 + guests)
 share = ceil(billTotal / seats / 1000) * 1000        (null if no bill or no seats)
 owes(member) = share * (1 + member.guests)           (only confirmed members owe)
 ```
+
+With sponsors (`splitOf`, `owesOf`), a sponsor pays their fixed `sponsor_amount` instead of a share (their guests are plain seats), and the rest is split over the plain seats:
+
+```
+sponsored = sum of sponsor_amount over confirmed members
+plainSeats = sum over confirmed of (sponsor ? 0 : 1) + guests
+share = ceil(max(0, billTotal - sponsored) / plainSeats / 1000) * 1000   (0 if there are no plain seats)
+owes(sponsor) = sponsor_amount + share * guests
+```
+
+The Enter bill dialog has a sponsor amount field per ticked member; the PATCH refuses a negative or fractional amount, or a total above the bill (`invalidSponsor`). A member who is unticked or dropped loses their sponsor amount.
 
 - Rounding is **up to the next 1,000 VND** per seat, so the amount collected can exceed the bill by up to 999 VND per seat (a 100,000 ₫ bill over 3 seats is 34,000 ₫ each, 102,000 ₫ collectable). The page states the rounding.
 - Only **confirmed** attendees owe. Waitlisted, Maybe and Can't members, and held seats that lapsed, owe nothing. The attendance check (above) settles who owes when the bill is entered. Afterwards an organizer can still move a Maybe to Going during the bill stage (People list); that person then owes a share and everyone else's share drops.
@@ -87,7 +98,7 @@ When an organizer records a payment for someone else (`paid`, `addPaid` or `paid
 
 - `amount` is what the member still owes (`left`), so the QR is for the remainder after a partial payment.
 - `addInfo` is `"<event title> <member name>"` stripped to ASCII letters/digits and spaces (via `norm`) and cut to 50 characters (the bank limit).
-- The QR is shown only when the event has both `bankId` and `bankAccount` and the member is not yet done. Otherwise the page says the organizer has not entered a bank account and to pay directly.
+- The member's own QR is shown only when the event has both `bankId` and `bankAccount` and they are not yet done. Below it, **everyone's QR codes** lists a card for every other confirmed attendee who owes something (their name, what is left, a sponsor badge, and a QR even once paid, with a paid badge) so one person can pay for others; it is hidden when the event is cancelled or has no bank account. Otherwise the page says the organizer has not entered a bank account and to pay directly.
 - If the image fails to load the component falls back (`qrFailed`).
 - Organizers can check the bank fields before anyone pays: the bank inputs (create page, Edit, Enter bill) have a **Preview QR** button (`BankQrPreview.vue`) that shows an open-amount code (amount 0) or an error if VietQR rejects the bank code or account. VietQR prints the holder name it is given; it does not verify it against the bank, so scanning the preview in a banking app is the real check.
 

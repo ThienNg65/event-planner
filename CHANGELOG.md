@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here, following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.13.0] - 2026-10-20
+
+### Added
+- The payment step now shows a QR code for every attendee, not just you, with what each person still owes, so one person can pay for several others.
+- When entering the bill, you can set a sponsor amount for anyone who came. A sponsor pays exactly that amount, and the rest of the bill is split evenly among everyone else (rounded up to 1,000 ₫).
+
 ## [0.12.0] - 2026-10-15
 
 ### Added

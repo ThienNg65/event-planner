@@ -50,7 +50,7 @@ const derivedCount = computed(() => props.data.responses.filter((r) => r.derived
 const payers = computed(() =>
   props.data.responses
     .filter((r) => r.paidAt || (r.paidAmount ?? 0) > 0)
-    .map((r) => ({ name: r.name, paid: paymentOf(r, (props.data.share ?? 0) * (1 + r.guests)).paid }))
+    .map((r) => ({ name: r.name, paid: paymentOf(r, owesOf(r, props.data.share ?? 0)).paid }))
 );
 const ack = ref(false);
 const needsAck = computed(() => reopenTo.value === 'poll' && payers.value.length > 0);

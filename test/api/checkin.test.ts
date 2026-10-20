@@ -40,6 +40,24 @@ describe('attendance check at the bill', () => {
     assert.deepEqual(detail.waitlist, []);
   });
 
+  /** A (sponsor 60k) and C (+1 friend) came: A pays 60k, the other 30k splits over C and the friend. */
+  it('stores a sponsor amount and splits the rest over the other seats', async () => {
+    const ev = await party();
+    const res = await patch(ev.id, ev.key, { stage: 'bill', billTotal: 90_000, attended: [{ memberId: ev.a, guests: 0, sponsor: 60_000 }, { memberId: ev.c, guests: 1 }] });
+    assert.equal(res.status, 200);
+    assert.equal((await query(`SELECT sponsor_amount FROM responses WHERE event_id = $1 AND member_id = $2`, [ev.id, ev.a]))[0]!.sponsor_amount, 60_000);
+    assert.equal((await api(`/api/events/${ev.id}`, { key: ev.key })).body.share, 15_000);
+  });
+
+  it('refuses sponsors that exceed the bill or are not whole amounts', async () => {
+    const ev = await party();
+    for (const sponsor of [100_000, -1, 1.5]) {
+      const res = await patch(ev.id, ev.key, { stage: 'bill', billTotal: 90_000, attended: [{ memberId: ev.a, guests: 0, sponsor }] });
+      assert.equal(res.status, 400);
+    }
+    assert.equal((await rowOf(ev.id, ev.a))!.status, 'going');
+  });
+
   /** A party that fits keeps the limit and leaves no "planned" trace; a bill without the checklist works as before. */
   it('leaves the limit alone when everyone fits, and is optional', async () => {
     const fits = await party();

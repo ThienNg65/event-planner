@@ -60,15 +60,20 @@ export function checkInWrites(eventId: number, r: ReturnType<typeof attendanceCh
     sql`EXISTS (SELECT 1 FROM ${events} WHERE ${events.id} = ${eventId} AND ${events.stage} = 'rsvp')`
   );
   const writes: BatchItem<'pg'>[] = [useDb().select({ id: events.id }).from(events).where(eq(events.id, eventId)).for('update')];
-  // One statement per guest count; someone already going with as many guests keeps their queue spot.
-  for (const guests of new Set(r.going.map((a) => a.guests))) {
-    const ids = r.going.filter((a) => a.guests === guests).map((a) => a.memberId);
+  // One statement per guest count and sponsor amount; someone already going with as many guests keeps their queue spot.
+  const sponsorOf = (a: { sponsor?: number | null }) => a.sponsor || null;
+  const groups = new Set(r.going.map((a) => `${a.guests}:${sponsorOf(a) ?? ''}`));
+  for (const key of groups) {
+    const members = r.going.filter((a) => `${a.guests}:${sponsorOf(a) ?? ''}` === key);
+    const guests = members[0]!.guests;
+    const ids = members.map((a) => a.memberId);
     writes.push(
       useDb()
         .update(responses)
         .set({
           status: 'going',
           guests,
+          sponsorAmount: sponsorOf(members[0]!),
           derived: null,
           noShow: false,
           goingAt: sql`CASE WHEN ${responses.status} = 'going' AND ${responses.goingAt} IS NOT NULL AND ${responses.guests} >= ${guests} THEN ${responses.goingAt} ELSE now() END`,
@@ -80,7 +85,7 @@ export function checkInWrites(eventId: number, r: ReturnType<typeof attendanceCh
     [r.noShow, true],
     [r.dropped, false],
   ] as const) {
-    if (ids.length) writes.push(useDb().update(responses).set({ ...clear, guests: 0, status: 'no', noShow }).where(and(guard, inArray(responses.memberId, ids))));
+    if (ids.length) writes.push(useDb().update(responses).set({ ...clear, guests: 0, sponsorAmount: null, status: 'no', noShow }).where(and(guard, inArray(responses.memberId, ids))));
   }
   return writes;
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allPaid, attendanceCheck, overLimit, capacityImpact, guestLimit, hasPicked, hasVoted, planFit, hidesVotes, redactVotes, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, rollCall, shareOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
+import { allPaid, attendanceCheck, overLimit, capacityImpact, guestLimit, hasPicked, hasVoted, planFit, hidesVotes, redactVotes, deriveAttendance, heldOk, lockImpact, matchesPlan, planFor, planFrozen, seated, teamDay, pendingVoters, reminderOf, changedFields, dayRemovalImpact, mineOf, nextStep, norm, paymentOf, owesOf, rollCall, shareOf, splitOf, stageKey, compareDays, placeName, vietqrUrl, votingOpen } from '../shared/utils/event.ts';
 import { can, type Role } from '../shared/utils/roles.ts';
 import { pinProblem } from '../shared/utils/pin.ts';
 import { COVERS, COVER_STOPS, coverOf, coverStops, coverTag } from '../shared/utils/cover.ts';
@@ -50,6 +50,23 @@ test('share rounds up to 1,000 VND per seat', () => {
   assert.equal(shareOf(900_000, 3), 300_000);
   assert.equal(shareOf(1_000_000, 0), null);
   assert.equal(shareOf(null, 3), null);
+});
+
+test('a sponsor pays a fixed amount, the rest splits over the other seats', () => {
+  const rows = [{ guests: 0, sponsorAmount: 500_000 }, { guests: 0 }, { guests: 1 }, { guests: 0 }, { guests: 0 }];
+  const share = splitOf(3_000_000, rows)!;
+  assert.equal(share, 500_000); // 2.5M over 5 plain seats
+  assert.equal(owesOf(rows[0]!, share), 500_000);
+  assert.equal(owesOf(rows[2]!, share), 1_000_000);
+  assert.equal(owesOf({ guests: 1, sponsorAmount: 500_000 }, share), 1_000_000, 'a sponsor’s guest still pays a share');
+});
+
+test('splitOf: no sponsors matches shareOf; sponsors covering the bill leave a zero share; nothing without a bill or seats', () => {
+  assert.equal(splitOf(1_000_000, [{ guests: 0 }, { guests: 2 }]), shareOf(1_000_000, 4));
+  assert.equal(splitOf(500_000, [{ guests: 0, sponsorAmount: 500_000 }, { guests: 0 }]), 0);
+  assert.equal(splitOf(500_000, [{ guests: 0, sponsorAmount: 500_000 }]), 0);
+  assert.equal(splitOf(null, [{ guests: 0 }]), null);
+  assert.equal(splitOf(1000, []), null);
 });
 
 const checkRow = (memberId: number, status: string | null, guests = 0, paidAt: Date | null = null) => ({ memberId, status, guests, paidAt });

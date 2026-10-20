@@ -49,6 +49,23 @@ export function rollCall<T extends QueueEntry>(responses: T[], capacity: number 
 export const shareOf = (bill: number | null, seats: number) =>
   bill === null || seats === 0 ? null : Math.ceil(bill / seats / 1000) * 1000;
 
+type SponsorRow = { guests: number; sponsorAmount?: number | null };
+
+/**
+ * Per-seat share once sponsors are taken out: a sponsor pays their fixed amount (their guests are plain seats), everyone else
+ * splits the rest. Null when there is no bill or nobody seated; 0 when sponsors cover the whole bill.
+ */
+export function splitOf(bill: number | null, confirmed: SponsorRow[]) {
+  if (bill === null || confirmed.length === 0) return null;
+  const sponsored = confirmed.reduce((n, r) => n + (r.sponsorAmount ?? 0), 0);
+  const plain = confirmed.reduce((n, r) => n + (r.sponsorAmount == null ? 1 : 0) + r.guests, 0);
+  return plain === 0 ? 0 : shareOf(Math.max(0, bill - sponsored), plain);
+}
+
+/** What a confirmed attendee owes: their fixed sponsor amount plus a share per guest, or a share per seat. */
+export const owesOf = (row: SponsorRow, share: number) =>
+  row.sponsorAmount == null ? share * (1 + row.guests) : row.sponsorAmount + share * row.guests;
+
 /** VietQR quick-link image for a transfer of `amount` VND; the note is ASCII-only, max 50 chars (bank limit). */
 export function vietqrUrl(bankId: string, account: string, holder: string | null, amount: number, note: string) {
   const addInfo = norm(note).replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 50);
@@ -66,8 +83,8 @@ export function paymentOf(row: PayRow | undefined, owes: number) {
 }
 
 /** True when there is a share and every confirmed attendee has paid theirs. */
-export const allPaid = (confirmed: (PayRow & { guests: number })[], share: number | null) =>
-  share !== null && confirmed.length > 0 && confirmed.every((r) => paymentOf(r, share * (1 + r.guests)).done);
+export const allPaid = (confirmed: (PayRow & SponsorRow)[], share: number | null) =>
+  share !== null && confirmed.length > 0 && confirmed.every((r) => paymentOf(r, owesOf(r, share)).done);
 
 /** Voting is open while the event is polling, not cancelled and before the deadline (if any). */
 export const votingOpen = (ev: { stage: string; cancelledAt?: unknown; voteDeadline?: string | Date | null }, now = Date.now()) =>
@@ -185,11 +202,11 @@ export type Mine = {
   left: number;
 };
 
-type MyRow = PayRow & Picks & { status: string | null; guests: number; derived?: string | null };
+type MyRow = PayRow & Picks & SponsorRow & { status: string | null; derived?: string | null };
 
 /** `row` is the member's response (absent if they never answered); only confirmed attendees owe a share. `held`: a seated hold. */
 export function mineOf(row: MyRow | undefined, confirmed: boolean, waitlisted: boolean, share: number | null, held = false): Mine {
-  const owes = confirmed && share !== null ? share * (1 + row!.guests) : null;
+  const owes = confirmed && share !== null ? owesOf(row!, share) : null;
   const pay = owes === null ? null : paymentOf(row, owes);
   return {
     voted: !!row && hasPicked(row),
@@ -312,7 +329,8 @@ export function capacityImpact<T extends QueueEntry>(responses: T[], from: numbe
   };
 }
 
-export type Attended = { memberId: number; guests: number };
+/** `sponsor`: a fixed amount this member pays instead of a share (their guests still pay the share). */
+export type Attended = { memberId: number; guests: number; sponsor?: number | null };
 
 /**
  * What the attendance check at the bill does: ticked members become going with their guests, unticked members who had a
@@ -358,7 +376,7 @@ export type Reminder = {
   confirm: string[];
 };
 
-type RemindRow = Picks & { memberId: number; status?: string | null; derived?: string | null; guests: number } & PayRow;
+type RemindRow = Picks & { memberId: number; status?: string | null; derived?: string | null } & SponsorRow & PayRow;
 
 /**
  * Who to nudge at the current stage, for the organizer's reminder: poll = not voted, rsvp = not answered (`names`) or
@@ -389,7 +407,7 @@ export function reminderOf(
   if (stage === 'bill') {
     // No share yet (bill not entered, or nobody seated): nobody owes anything, so there is nothing to remind.
     if (share === null) return null;
-    const unpaid = (id: number) => !paymentOf(row(id), share * (1 + (row(id)?.guests ?? 0))).done;
+    const unpaid = (id: number) => !paymentOf(row(id), owesOf(row(id) ?? { guests: 0 }, share)).done;
     return { kind: 'bill', names: active.filter((m) => confirmed.includes(m.id) && unpaid(m.id)).map(nameOf), confirm: [] };
   }
   return null;

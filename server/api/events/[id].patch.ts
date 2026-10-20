@@ -11,13 +11,14 @@ function dayList(b: Record<string, unknown>, key: string) {
   return [...new Set(b[key] as string[])];
 }
 
-/** The attendance check's `[{ memberId, guests }]`: distinct members, 0 to 10 guests each. */
+/** The attendance check's `[{ memberId, guests, sponsor? }]`: distinct members, 0 to 10 guests each, an optional fixed sponsor amount. */
 function attendedList(v: unknown): Attended[] {
   if (!Array.isArray(v)) fail(400, 'invalid');
   const out = v.map((a) => {
     if (!a || typeof a !== 'object' || !Number.isInteger(a.memberId)) fail(400, 'invalid');
     if (!intIn(a.guests ?? 0, 0, 10)) fail(400, 'invalidGuests');
-    return { memberId: a.memberId as number, guests: (a.guests ?? 0) as number };
+    if (a.sponsor != null && !intIn(a.sponsor, 0, 1_000_000_000)) fail(400, 'invalidSponsor');
+    return { memberId: a.memberId as number, guests: (a.guests ?? 0) as number, sponsor: (a.sponsor ?? null) as number | null };
   });
   if (new Set(out.map((a) => a.memberId)).size !== out.length) fail(400, 'invalid');
   return out;
@@ -109,6 +110,8 @@ export default defineEventHandler(async (event) => {
   // The attendance check ("who actually came?") rides only on entering the bill.
   const attended = 'attended' in b ? attendedList(b.attended) : null;
   if (attended && !(f.stage === 'bill' && ev.stage === 'rsvp')) fail(400, 'invalid');
+  // Sponsors pay part of the bill up front, so together they can't exceed it.
+  if (attended && attended.reduce((n, a) => n + (a.sponsor ?? 0), 0) > ((f.billTotal ?? ev.billTotal) ?? 0)) fail(400, 'invalidSponsor');
   // Reopening voting always names the new deadline (a future time, or null for none) and needs the poll stage.
   const reopen = b.reopenVoting === true;
   if (reopen) {

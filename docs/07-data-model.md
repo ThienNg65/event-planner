@@ -90,11 +90,12 @@ Primary key `(event_id, member_id)`. **Each person writes only their own row** (
 | `going_at` | timestamptz | queue time |
 | `paid_at` | timestamptz | set when any payment is recorded |
 | `paid_amount` | integer | check ≥ 0; **null with `paid_at` set means paid in full** |
+| `sponsor_amount` | integer | check ≥ 0; fixed amount a sponsor pays instead of a share; null = none |
 | `first_voted_at` | timestamptz | set once, on the first write of days or places |
 | `derived` | text | `going` or `reconfirm`; null = the member's own answer |
 | `no_show` | boolean not null, default false | had a seat but was unticked in the attendance check; cleared by any later status write |
 
-Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `derived in (...)`, **`derived is null or status = 'going'`** and **`not no_show or status = 'no'`**.
+Checks: `status in (...)`, `guests between 0 and 10`, `paid_amount >= 0`, `sponsor_amount >= 0`, `derived in (...)`, **`derived is null or status = 'going'`** and **`not no_show or status = 'no'`**.
 
 ## `member_email`, `member_codes`, `mail_log` (R4)
 
@@ -140,5 +141,5 @@ Primary key `(event_id, member_id)`.
 ## Migrations
 
 `0000_init`, `0001_warm_whistler`, `0002_noisy_sunset_bain` (roles, deadline, cancel, notice, partial payments), `0003_new_marvel_zombies` (named co-hosts), `0004_past_rumiko_fujikawa`,
-`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_damp_fallen_one` (`planned_capacity`, `no_show`), `0012_phase2_host_tools_email_repeat` (Phase 2 in one migration: `max_guests`, `hide_votes`, `handover_to`, `handover_at`, `repeat`, `repeat_until`, `series_id`, `maybe_days`, `maybe_venue_ids`, and the tables `member_email`, `member_codes`, `mail_log`, `notifications`, `notification_sends`).
+`0005_event_theme`, `0006_member_token` (sign-in tokens), `0007_event_honorees`, `0008_member_archived`, `0009_nasty_gressill` (PIN and `member_sessions`), `0010_lyrical_the_hunter` (`join_key`), `0011_damp_fallen_one` (`planned_capacity`, `no_show`), `0012_phase2_host_tools_email_repeat` (Phase 2 in one migration: `max_guests`, `hide_votes`, `handover_to`, `handover_at`, `repeat`, `repeat_until`, `series_id`, `maybe_days`, `maybe_venue_ids`, and the tables `member_email`, `member_codes`, `mail_log`, `notifications`, `notification_sends`), `0013_thin_madame_web` (`sponsor_amount`).
 `netlify.toml` (and the Cloudflare build command in the README) runs `npm run db:migrate` before building, so **a pushed migration reaches the production database on deploy**. Keep migrations additive and backward compatible with the previous deploy.

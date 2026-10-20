@@ -39,7 +39,7 @@ const rsvpChips = computed(() => {
 const payers = computed(() =>
   props.data.confirmed.map((id) => {
     const r = rs.value.find((x) => x.memberId === id)!;
-    const owes = (props.data.share ?? 0) * (1 + r.guests);
+    const owes = owesOf(r, props.data.share ?? 0);
     return { owes, ...paymentOf(r, owes) };
   })
 );

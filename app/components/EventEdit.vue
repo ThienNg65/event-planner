@@ -76,7 +76,8 @@ const voteOpen = computed(() => votingOpen(ev.value));
 const billCorrectable = computed(() => ev.value.stage === 'bill' || ev.value.stage === 'settled');
 const shareChange = computed(() => {
   if (!billCorrectable.value || !('billTotal' in changes.value)) return null;
-  return { from: shareOf(ev.value.billTotal, props.data.seats), to: shareOf(changes.value.billTotal ?? null, props.data.seats) };
+  const seated = props.data.responses.filter((r) => props.data.confirmed.includes(r.memberId));
+  return { from: splitOf(ev.value.billTotal, seated), to: splitOf(changes.value.billTotal ?? null, seated) };
 });
 const fmtShare = (n: number | null) => (n === null ? t('edit.noShare') : fmtVnd(n));
 // Once the event has started or the bill is in, date and place only change through a correction.

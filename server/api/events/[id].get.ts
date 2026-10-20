@@ -102,7 +102,7 @@ export default defineEventHandler(async (event) => {
     // Seats held after a plan change that are still waiting for their owner to confirm.
     held: rs.filter((r) => r.derived === 'reconfirm' && heldOk(ev)).map((r) => r.memberId),
     seats,
-    share: shareOf(ev.billTotal, seats),
+    share: splitOf(ev.billTotal, confirmed),
     venues: venueList,
   };
 });

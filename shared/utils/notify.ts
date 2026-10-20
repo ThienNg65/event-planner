@@ -1,4 +1,4 @@
-import { paymentOf, rollCall, seated, shareOf } from './event.ts';
+import { owesOf, paymentOf, rollCall, seated, splitOf } from './event.ts';
 
 export const NOTIFY_KINDS = ['planSet', 'paymentRequested', 'paymentRecorded', 'cancelled', 'tomorrow', 'paymentReminder'] as const;
 export type NotifyKind = (typeof NOTIFY_KINDS)[number];
@@ -38,7 +38,7 @@ export type NoticeEvent = {
   cancelledAt: At;
   reconfirmBy: At;
 };
-export type NoticeRow = { memberId: number; status: string | null; guests: number; goingAt: Date | null; derived: string | null; paidAt: At; paidAmount: number | null };
+export type NoticeRow = { memberId: number; status: string | null; guests: number; goingAt: Date | null; derived: string | null; paidAt: At; paidAmount: number | null; sponsorAmount?: number | null };
 export type Audience = { memberId: number; owes?: number };
 
 /**
@@ -52,13 +52,13 @@ export function audienceOf(n: Notice, ev: NoticeEvent, rows: NoticeRow[], now = 
     const row = rows.find((r) => r.memberId === n.memberId);
     return row?.paidAt && timeFact(row.paidAt) === n.fact ? [{ memberId: row.memberId }] : null;
   }
-  const { confirmed, waitlist, seats } = rollCall(seated(rows, ev, now), ev.capacity);
+  const { confirmed, waitlist } = rollCall(seated(rows, ev, now), ev.capacity);
   if (n.kind === 'paymentRequested' || n.kind === 'paymentReminder') {
     if (ev.stage !== 'bill' || ev.billTotal === null) return null;
     if (n.kind === 'paymentRequested' ? !n.fact.endsWith(`→${ev.billTotal}`) : !n.fact.startsWith(`${ev.billTotal}#`)) return null;
-    const share = shareOf(ev.billTotal, seats);
+    const share = splitOf(ev.billTotal, confirmed);
     return confirmed.flatMap((r) => {
-      const owes = share === null ? 0 : paymentOf(r, share * (1 + r.guests)).left;
+      const owes = share === null ? 0 : paymentOf(r, owesOf(r, share)).left;
       return owes > 0 ? [{ memberId: r.memberId, owes }] : [];
     });
   }

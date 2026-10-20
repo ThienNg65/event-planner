@@ -40,6 +40,7 @@ export default defineEventHandler(async (event) => {
         goingAt: responses.goingAt,
         paidAt: responses.paidAt,
         paidAmount: responses.paidAmount,
+        sponsorAmount: responses.sponsorAmount,
       })
       .from(responses)
       .where(and(eq(responses.status, 'going'), inArray(responses.eventId, myEventIds))),
@@ -81,7 +82,7 @@ export default defineEventHandler(async (event) => {
       ),
       e.capacity
     );
-    const share = shareOf(e.billTotal, seats);
+    const share = splitOf(e.billTotal, confirmed);
     const row = mine.find((r) => r.eventId === e.id);
     return {
       ...e,

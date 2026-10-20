@@ -32,7 +32,7 @@ const rows = computed(() =>
       const lost = r.derived === 'reconfirm' && !props.data.held.includes(r.memberId);
       const kind = !answered || lost ? 'voted' : props.data.confirmed.includes(r.memberId) ? 'going' : waitPlace ? 'waitlist' : r.noShow ? 'noshow' : (r.status ?? 'voted');
       // No share yet (bill not entered): nothing is owed, so no payment state to show.
-      const owes = kind === 'going' && props.data.share !== null ? props.data.share * (1 + r.guests) : null;
+      const owes = kind === 'going' && props.data.share !== null ? owesOf(r, props.data.share) : null;
       return { r, kind: kind as (typeof ORDER)[number], waitPlace, owes, pay: owes === null ? null : paymentOf(r, owes) };
     })
     .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind) || a.r.name.localeCompare(b.r.name))

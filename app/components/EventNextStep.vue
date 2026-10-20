@@ -203,6 +203,8 @@ const billOpen = ref(false);
 const bill = reactive({ total: null as number | null, bankId: '', bankAccount: '', bankHolder: '' });
 // "Who actually came?": guests per ticked member, null = unticked. Pre-ticked with today's confirmed seats.
 const checkIn = ref<Record<number, number | null>>({});
+// Fixed amount a ticked member sponsors (empty = none): they pay it instead of a share.
+const sponsor = ref<Record<number, number | null>>({});
 const isPaid = (r: { paidAt: unknown; paidAmount: number | null }) => !!r.paidAt || (r.paidAmount ?? 0) > 0;
 const checkRank = (r: { memberId: number; status: string | null }) => {
   if (props.data.confirmed.includes(r.memberId)) return 0;
@@ -219,8 +221,9 @@ const checkLabel = (r: { memberId: number; status: string | null }) => {
 const attended = computed(() =>
   Object.entries(checkIn.value)
     .filter(([, g]) => g !== null)
-    .map(([id, g]) => ({ memberId: Number(id), guests: g ?? 0 }))
+    .map(([id, g]) => ({ memberId: Number(id), guests: g ?? 0, sponsor: sponsor.value[Number(id)] || null }))
 );
+const checkShare = computed(() => splitOf(bill.total, attended.value.map((a) => ({ guests: a.guests, sponsorAmount: a.sponsor }))));
 const checkSeen = computed(() => attendanceCheck(props.data.responses, props.data.confirmed, attended.value, ev.value.capacity));
 // Seats beyond the limit the event was planned with: shown, not refused (walk-ins came anyway).
 const plannedCap = computed(() => ev.value.plannedCapacity ?? ev.value.capacity);
@@ -234,6 +237,7 @@ watch(billOpen, (o) => {
     bankHolder: ev.value.bankHolder ?? '',
   });
   checkIn.value = Object.fromEntries(props.data.responses.map((r) => [r.memberId, props.data.confirmed.includes(r.memberId) ? r.guests : null]));
+  sponsor.value = Object.fromEntries(props.data.responses.map((r) => [r.memberId, r.sponsorAmount]));
 });
 async function saveBill() {
   const { total, ...bank } = bill;
@@ -253,7 +257,7 @@ async function settle() {
 const completeOpen = ref<'free' | 'anyway' | null>(null);
 const owing = computed(() =>
   payers.value
-    .map((r) => ({ name: r.name, left: paymentOf(r, (props.data.share ?? 0) * (1 + r.guests)).left }))
+    .map((r) => ({ name: r.name, left: paymentOf(r, owesOf(r, props.data.share ?? 0)).left }))
     .filter((r) => r.left > 0)
 );
 async function complete() {
@@ -464,6 +468,18 @@ async function complete() {
               <UBadge color="neutral" variant="subtle" size="sm" :label="checkLabel(r)" />
               <UInputNumber
                 v-if="checkIn[r.memberId] != null"
+                v-model="sponsor[r.memberId]"
+                :min="0"
+                :step="1000"
+                :format-options="{ maximumFractionDigits: 0 }"
+                size="xs"
+                class="w-32"
+                :placeholder="t('next.sponsor')"
+                :disabled="isPaid(r)"
+                :aria-label="t('next.sponsorOf', { name: r.name })"
+              />
+              <UInputNumber
+                v-if="checkIn[r.memberId] != null"
                 v-model="checkIn[r.memberId]"
                 :min="0"
                 :max="10"
@@ -476,7 +492,7 @@ async function complete() {
           </ul>
         </fieldset>
         <p v-if="checkSeen.seats && bill.total !== null" class="text-sm text-muted">
-          {{ t('next.checkShare', { n: checkSeen.seats, share: fmtVnd(shareOf(bill.total, checkSeen.seats) ?? 0) }) }}
+          {{ t('next.checkShare', { n: checkSeen.seats, share: fmtVnd(checkShare ?? 0) }) }}
         </p>
         <p v-if="checkOver" class="flex items-center gap-1.5 text-sm text-error">
           <UIcon name="i-lucide-info" class="size-4 shrink-0" />{{ t('next.checkOver', { cap: plannedCap, n: checkOver }) }}
